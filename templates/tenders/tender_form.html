@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{% if object %}Редактирование{% else %}Новый тендер{% endif %}{% endblock %}
+{% block content %}
+<div class="card shadow-sm p-4" style="max-width: 700px;">
+  <h4 class="mb-3">
+    {% if object %}
+      ✏️ Редактирование: {{ object.customer_name }}
+    {% else %}
+      📝 Регистрация нового тендера
+    {% endif %}
+  </h4>
+  
+  <form method="post">
+    {% csrf_token %}
+    
+    <!-- Отображение ошибок валидации (например, cost > final_amount) -->
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger">
+        {{ form.non_field_errors }}
+      </div>
+    {% endif %}
+
+    {{ form.as_p }}
+    
+    <div class="d-flex gap-2 mt-3">
+      <button type="submit" class="btn btn-success">💾 Сохранить</button>
+      <a href="{% url 'tenders:list' %}" class="btn btn-secondary">Отмена</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

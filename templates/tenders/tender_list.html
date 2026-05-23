@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Список тендеров{% endblock %}
+{% block content %}
+
+
+<div class="card mb-4 shadow-sm">
+  <div class="card-body">
+    <form method="get" class="row g-3 align-items-end">
+      <div class="col-md-4">
+        <label class="form-label small text-muted">🔍 Поиск по заказчику</label>
+        <input type="text" name="customer" class="form-control" 
+               value="{{ request.GET.customer }}" placeholder="Например, Газпром">
+      </div>
+      
+      <div class="col-md-3">
+        <label class="form-label small text-muted">👤 Исполнитель</label>
+        <input type="text" name="executor" class="form-control" 
+               value="{{ request.GET.executor }}" placeholder="ФИО">
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label small text-muted">🏁 Статус процедуры</label>
+        <select name="winner" class="form-select">
+          <option value="">Все статусы</option>
+          <option value="empty" {% if request.GET.winner == 'empty' %}selected{% endif %}>Торги идут / Нет победителя</option>
+          <option value="filled" {% if request.GET.winner == 'filled' %}selected{% endif %}>Есть победитель</option>
+        </select>
+      </div>
+
+      <div class="col-md-2 d-grid gap-2 d-md-flex">
+        <button type="submit" class="btn btn-primary flex-grow-1">Применить</button>
+        <a href="{% url 'tenders:list' %}" class="btn btn-outline-secondary flex-grow-1">Сброс</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<div class="card shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Заказчик</th>
+          <th>Создатель</th>
+          <th>Дедлайн</th>
+          <th>Итог</th>
+          <th>Себест.</th>
+          <th>Прибыль</th>
+          <th>Наценка</th>
+          <th>Действия</th> <!-- Новая колонка -->
+        </tr>
+      </thead>
+      <tbody>
+        {% for tender in tenders %}
+        <tr>
+          <td>
+            <strong>{{ tender.customer_name }}</strong><br>
+            <small class="text-muted">{{ tender.executor_name }}</small>
+          </td>
+          <td>
+            <small class="text-muted">{{ tender.author.username }}</small>
+          </td>
+          <td>{{ tender.initial_amount|floatformat:2 }} ₽</td>
+          <td>{{ tender.deadline|date:"d.m.Y H:i" }}</td>
+          <td>{{ tender.final_amount|default:"—" }}</td>
+          <td>{{ tender.cost|default:"—" }}</td>
+          <td class="{% if tender.profit and tender.profit < 0 %}text-danger{% else %}text-success{% endif %}">
+            {{ tender.profit|default:"—" }} ₽
+          </td>
+          <td>{{ tender.markup|floatformat:1|default:"—" }}%</td>
+          
+          <!-- Кнопки управления -->
+      <td>
+        {% if tender.author == user %}
+        <div class="btn-group">
+          <a href="{% url 'tenders:edit' tender.pk %}" class="btn btn-sm btn-outline-primary">✏️</a>
+          <a href="{% url 'tenders:delete' tender.pk %}" class="btn btn-sm btn-outline-danger">🗑</a>
+        </div>
+        {% else %}
+        <span class="badge bg-secondary">Чужой</span>
+        {% endif %}
+      </td>
+        </tr>
+        {% empty %}
+        <!-- Исправлено colspan на 8, так как теперь 8 колонок -->
+        <tr><td colspan="8" class="text-center text-muted py-4">Тендеров пока нет</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
