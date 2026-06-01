@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Удаление тендера{% endblock %}
+{% block content %}
+<div class="card shadow-sm p-4 mx-auto" style="max-width: 500px; border-color: #dc3545;">
+  <h4 class="mb-3 text-danger">⚠️ Подтверждение удаления</h4>
+  <p>Вы действительно хотите удалить тендер <strong>"{{ object.customer_name }}"</strong>?</p>
+  <p class="text-muted small">Это действие нельзя отменить. Все данные будут потеряны.</p>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger me-2">🗑 Да, удалить</button>
+    <a href="{% url 'tenders:list' %}" class="btn btn-secondary">Отмена</a>
+  </form>
+</div>
+{% endblock %}
