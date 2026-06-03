@@ -51,7 +51,7 @@ class TenderCreateView(LoginRequiredMixin, CreateView):
     model = Tender
     fields = [
         'customer_name', 'initial_amount', 'deadline', 'status', 'executor_name', 'procedure_url',
-        'winner', 'final_amount', 'cost'
+        'winner', 'final_amount', 'cost', 'comment'
     ]
     template_name = 'tenders/tender_form.html'
     success_url = reverse_lazy('tenders:list')
@@ -69,7 +69,7 @@ class TenderUpdateView(LoginRequiredMixin, UpdateView):
     model = Tender
     fields = [
         'customer_name', 'initial_amount', 'deadline', 'status', 'executor_name', 'procedure_url',
-        'winner', 'final_amount', 'cost'
+        'winner', 'final_amount', 'cost', 'comment'
     ]
     template_name = 'tenders/tender_form.html'
     success_url = reverse_lazy('tenders:list')

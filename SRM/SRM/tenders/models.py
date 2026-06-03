@@ -22,7 +22,11 @@ class Tender(models.Model):
     initial_amount = models.DecimalField(
         max_digits=12, decimal_places=2, verbose_name="Начальная сумма контракта (₽)"
     )
-    deadline = models.DateTimeField(verbose_name="Дата окончания подачи заявок")
+    deadline = models.DateTimeField(
+    verbose_name="Дата окончания подачи заявок",
+    null=True,      # ← добавили: разрешаем NULL в базе данных
+    blank=True      # ← добавили: разрешаем пустое значение в формах
+)
     executor_name = models.CharField(max_length=255, verbose_name="ФИО исполнителя")
     procedure_url = models.URLField(verbose_name="Ссылка на процедуру")
     
@@ -43,6 +47,12 @@ class Tender(models.Model):
         default=TenderStatus.DRAFT,
         verbose_name='Статус'
     )
+    comment = models.TextField(
+        'Комментарий', 
+        blank=True, 
+        null=True,
+        help_text='Дополнительная информация по тендеру'
+    )
 
     def get_status_badge_class(self):
         colors = {
@@ -58,6 +68,8 @@ class Tender(models.Model):
         verbose_name = "Тендер"
         verbose_name_plural = "Тендеры"
         ordering = ["-deadline"]
+        pass
+
 
     def clean(self):
         super().clean()

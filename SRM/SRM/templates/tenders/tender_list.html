@@ -49,6 +49,7 @@
       <thead class="table-light">
         <tr>
           <th>Статус</th>  <!-- ➕ Новая колонка -->
+          <th>Комментарий</th>  
           <th>Заказчик</th>
           <th>Создатель</th>
           <th>Дедлайн</th>
@@ -61,47 +62,58 @@
         </tr>
       </thead>
       <tbody>
-        {% for tender in tenders %}  <!-- 🔹 Открыли цикл -->
-        <tr>
-          <!-- ➕ Колонка статуса с цветом -->
-          <td>
-            <span class="badge bg-{% if tender.status == 'draft' %}secondary{% elif tender.status == 'submitted' %}info{% elif tender.status == 'won' %}success{% elif tender.status == 'lost' %}danger{% else %}secondary{% endif %}">
-              {{ tender.get_status_display }}
-            </span>
-          </td>
-          
-          <td>
-            <strong>{{ tender.customer_name }}</strong><br>
-            <small class="text-muted">{{ tender.executor_name }}</small>
-          </td>
-          <td>
-            <small class="text-muted">{{ tender.author.username }}</small>
-          </td>
-          <td>{{ tender.deadline|date:"d.m.Y H:i" }}</td>
-          <td>{{ tender.initial_amount|floatformat:2 }} ₽</td>
-          <td>{{ tender.final_amount|default:"—" }}</td>
-          <td>{{ tender.cost|default:"—" }}</td>
-          <td class="{% if tender.profit and tender.profit < 0 %}text-danger{% else %}text-success{% endif %}">
-            {{ tender.profit|default:"—" }} ₽
-          </td>
-          <td>{{ tender.markup|floatformat:1|default:"—" }}%</td>
-          
-          <!-- Кнопки управления -->
-          <td>
-            {% if tender.author == user %}
-            <div class="btn-group">
-              <a href="{% url 'tenders:edit' tender.pk %}" class="btn btn-sm btn-outline-primary">✏️</a>
-              <a href="{% url 'tenders:delete' tender.pk %}" class="btn btn-sm btn-outline-danger">🗑</a>
-            </div>
-            {% else %}
-            <span class="badge bg-secondary">Чужой</span>
-            {% endif %}
-          </td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="10" class="text-center text-muted py-4">Тендеров пока нет</td></tr>
-        {% endfor %}  <!-- 🔹 ✅ ЗАКРЫЛИ цикл ЗДЕСЬ -->
-      </tbody>
+  {% for tender in tenders %}
+  <tr>
+    <!-- Колонка статуса с цветом -->
+    <td>
+      <span class="badge bg-{% if tender.status == 'draft' %}secondary{% elif tender.status == 'submitted' %}info{% elif tender.status == 'won' %}success{% elif tender.status == 'lost' %}danger{% else %}secondary{% endif %}">
+        {{ tender.get_status_display }}
+      </span>
+    </td>
+    
+    <!-- ➕ КОЛОНКА КОММЕНТАРИЯ (добавили) -->
+    <td>
+      {% if tender.comment %}
+        <span class="text-truncate d-inline-block" style="max-width: 200px;" title="{{ tender.comment }}">
+          {{ tender.comment }}
+        </span>
+      {% else %}
+        <span class="text-muted">—</span>
+      {% endif %}
+    </td>
+    
+    <td>
+      <strong>{{ tender.customer_name }}</strong><br>
+      <small class="text-muted">{{ tender.executor_name }}</small>
+    </td>
+    <td>
+      <small class="text-muted">{{ tender.author.username }}</small>
+    </td>
+    <td>{{ tender.deadline|date:"d.m.Y H:i" }}</td>
+    <td>{{ tender.initial_amount|floatformat:2 }} ₽</td>
+    <td>{{ tender.final_amount|default:"—" }}</td>
+    <td>{{ tender.cost|default:"—" }}</td>
+    <td class="{% if tender.profit and tender.profit < 0 %}text-danger{% else %}text-success{% endif %}">
+      {{ tender.profit|default:"—" }} ₽
+    </td>
+    <td>{{ tender.markup|floatformat:1|default:"—" }}%</td>
+    
+    <!-- Кнопки управления -->
+    <td>
+      {% if tender.author == user %}
+      <div class="btn-group">
+        <a href="{% url 'tenders:edit' tender.pk %}" class="btn btn-sm btn-outline-primary">✏️</a>
+        <a href="{% url 'tenders:delete' tender.pk %}" class="btn btn-sm btn-outline-danger">🗑</a>
+      </div>
+      {% else %}
+      <span class="badge bg-secondary">Чужой</span>
+      {% endif %}
+    </td>
+  </tr>
+  {% empty %}
+  <tr><td colspan="11" class="text-center text-muted py-4">Тендеров пока нет</td></tr>  <!-- ← изменили с 10 на 11 -->
+  {% endfor %}
+</tbody>
     </table>
   </div>
 </div>

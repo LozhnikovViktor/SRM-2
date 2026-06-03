@@ -28,7 +28,7 @@ def export_tenders_to_excel(tenders_qs):
         headers = [
             'ID', 'Заказчик', 'Исполнитель', 'Начальная сумма',
             'Дедлайн', 'Статус', 'Победитель', 'Финальная сумма',
-            'Затраты', 'Прибыль'
+            'Затраты', 'Прибыль', 'Комментарий'
         ]
         
         for col, header in enumerate(headers):
@@ -48,6 +48,7 @@ def export_tenders_to_excel(tenders_qs):
             worksheet.write(row, 7, float(tender.final_amount) if tender.final_amount else 0, money_format)
             worksheet.write(row, 8, float(tender.cost) if tender.cost else 0, money_format)
             worksheet.write(row, 9, profit, money_format if profit else cell_format)
+            worksheet.write(row, 10, tender.comment or '', cell_format)  # ← добавили
         
         # Автоширина колонок
         worksheet.set_column(0, 0, 5)
@@ -56,6 +57,7 @@ def export_tenders_to_excel(tenders_qs):
         worksheet.set_column(4, 4, 12)
         worksheet.set_column(5, 5, 12)
         worksheet.set_column(6, 9, 15)
+        worksheet.set_column(10, 10, 30)  # ← добавили (ширина для комментария)
     
     output.seek(0)
     return output
