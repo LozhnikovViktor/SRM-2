@@ -132,14 +132,14 @@ def dashboard(request):
     
     # 5. Собираем контекст и отдаем в шаблон
     context = {
-        'total_tenders': total_tenders,
-        'active_tenders': active_tenders,
-        'won_tenders': won_tenders,
-        'conversion': conversion,
-        'profit': profit,
-        'markup_percent': markup_percent,
-        'monthly_stats': monthly_stats,
-        'upcoming_deadlines': upcoming_deadlines,
-    }
+    'total_tenders': total_tenders,
+    'active_tenders': active_tenders,
+    'won_tenders': won_tenders,
+    'win_rate': conversion,  # ← изменили с 'conversion' на 'win_rate'
+    'total_profit': profit,  # ← изменили с 'profit' на 'total_profit'
+    'avg_markup': markup_percent,  # ← изменили с 'markup_percent' на 'avg_markup'
+    'monthly_stats': monthly_stats,
+    'upcoming_deadlines': upcoming_deadlines,
+}
     
     return render(request, 'tenders/dashboard.html', context)
