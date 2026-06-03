@@ -4,6 +4,11 @@
 {% block content %}
 <h2 class="mb-4">📊 Дашборд</h2>
 
+<div class="mb-3">
+    <a href="{% url 'tenders:export_dashboard_excel' %}" class="btn btn-outline-success">
+        <i class="bi bi-download"></i> Скачать отчет в Excel
+    </a>
+</div>
 <!-- Карточки статистики -->
 <div class="row g-4 mb-4">
     <!-- Всего тендеров -->

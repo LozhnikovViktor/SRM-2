@@ -35,6 +35,13 @@
   </div>
 </div>
 
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Тендеры</h2>
+    <a href="{% url 'tenders:export_excel' %}" class="btn btn-success">
+        <i class="bi bi-file-earmark-excel"></i> Экспорт в Excel
+    </a>
+</div>
+
 <!-- Таблица тендеров -->
 <div class="card shadow-sm">
   <div class="table-responsive">

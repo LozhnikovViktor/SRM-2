@@ -15,5 +15,7 @@ urlpatterns = [
     path('logout/', LogoutView.as_view(next_page='tenders:list'), name='logout'),
     path('edit/<int:pk>/', views.TenderUpdateView.as_view(), name='edit'),
     path('delete/<int:pk>/', views.TenderDeleteView.as_view(), name='delete'),
+    path('export/excel/', views.export_tenders_excel, name='export_excel'),
+    path('dashboard/export/excel/', views.export_dashboard_excel, name='export_dashboard_excel'),
 ]
 

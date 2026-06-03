@@ -8,6 +8,8 @@ from django.contrib.auth import login
 from django.contrib.auth.forms import UserCreationForm
 from django.utils import timezone
 from datetime import timedelta
+from django.http import HttpResponse
+from .utils import export_tenders_to_excel, export_dashboard_stats_to_excel
 
 from .models import Tender
 
@@ -143,3 +145,26 @@ def dashboard(request):
 }
     
     return render(request, 'tenders/dashboard.html', context)
+def export_tenders_excel(request):
+    """Экспорт всех тендеров в Excel"""
+    tenders_qs = Tender.objects.all().order_by('-deadline')
+    excel_file = export_tenders_to_excel(tenders_qs)
+    
+    response = HttpResponse(
+        excel_file,
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename=tenders_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+    return response
+
+
+def export_dashboard_excel(request):
+    """Экспорт статистики дашборда в Excel"""
+    excel_file = export_dashboard_stats_to_excel()
+    
+    response = HttpResponse(
+        excel_file,
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename=dashboard_stats_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+    return response
