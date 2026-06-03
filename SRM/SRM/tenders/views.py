@@ -11,7 +11,6 @@ from datetime import timedelta
 
 from .models import Tender
 
-
 class RegisterView(CreateView):
     form_class = UserCreationForm
     template_name = 'tenders/register.html'
@@ -21,7 +20,6 @@ class RegisterView(CreateView):
         user = form.save()
         login(self.request, user)
         return super().form_valid(form)
-
 
 class TenderListView(LoginRequiredMixin, ListView):
     model = Tender
@@ -47,7 +45,6 @@ class TenderListView(LoginRequiredMixin, ListView):
             queryset = queryset.filter(executor_name__icontains=executor)
         return queryset
 
-
 class TenderCreateView(LoginRequiredMixin, CreateView):
     model = Tender
     fields = [
@@ -61,12 +58,10 @@ class TenderCreateView(LoginRequiredMixin, CreateView):
         form.instance.author = self.request.user
         return super().form_valid(form)
 
-
 class TenderDeleteView(LoginRequiredMixin, DeleteView):
     model = Tender
     template_name = 'tenders/tender_confirm_delete.html'
     success_url = reverse_lazy('tenders:list')
-
 
 class TenderUpdateView(LoginRequiredMixin, UpdateView):
     model = Tender
@@ -77,25 +72,47 @@ class TenderUpdateView(LoginRequiredMixin, UpdateView):
     template_name = 'tenders/tender_form.html'
     success_url = reverse_lazy('tenders:list')
 
-
 def dashboard(request):
     """Дашборд со статистикой"""
     now = timezone.now()
-    
-    # ... (статистика, прибыль, наценка — без изменений) ...
-    
-    # 📈 График: тендеры по месяцам (группировка в Python)
-    from collections import defaultdict  # ❌ Лучше убрать отсюда, если уже импортировано вверху
-    
     six_months_ago = now - timedelta(days=180)
     
-    # 1. Получаем сырые данные
+    # 1. Считаем общее количество и выигранные
+    total_tenders = Tender.objects.count()
+    won_tenders = Tender.objects.filter(status='won').count()
+    # Активные = отправленные или опубликованные
+    active_tenders = Tender.objects.filter(status__in=['submitted', 'published']).count() 
+    
+    # Конверсия (в процентах)
+    conversion = round((won_tenders / total_tenders * 100), 1) if total_tenders > 0 else 0
+    
+    # 2. Расчет прибыли и наценки (только для выигранных 'won')
+    won_qs = Tender.objects.filter(status='won')
+    
+    # Собираем суммы (если полей нет, берем 0)
+    totals = won_qs.aggregate(
+        total_final=Sum('final_amount'),
+        total_cost=Sum('cost')
+    )
+    total_final = totals['total_final'] or 0
+    total_cost = totals['total_cost'] or 0
+    
+    profit = total_final - total_cost
+    
+    # Наценка в процентах
+    if total_cost > 0:
+        markup_percent = round((profit / total_cost) * 100, 1)
+    else:
+        markup_percent = 0
+
+    # 3. График: тендеры по месяцам
+    from collections import defaultdict
+    
     tenders_qs = Tender.objects.filter(
         deadline__isnull=False,
         deadline__gte=six_months_ago
     ).values('deadline', 'status')
     
-    # 2. Группируем по месяцам в Python
     monthly_data = defaultdict(lambda: {'total': 0, 'won': 0})
     for t in tenders_qs:
         month = t['deadline'].strftime('%Y-%m')
@@ -103,18 +120,26 @@ def dashboard(request):
         if t['status'] == 'won':
             monthly_data[month]['won'] += 1
     
-    # 3. Преобразуем в список для шаблона
     monthly_stats = [
         {'month': month, 'total': data['total'], 'won': data['won']}
         for month, data in sorted(monthly_data.items())
     ]
     
-    # ... (дедлайны и контекст) ...
+    # 4. Ближайшие дедлайны (только для активных)
+    upcoming_deadlines = Tender.objects.filter(
+        deadline__gte=now,
+    ).order_by('deadline')[:5]
     
+    # 5. Собираем контекст и отдаем в шаблон
     context = {
-        # ... другие переменные ...
-        'monthly_stats': monthly_stats,  # 🔹 Передаём в шаблон
-        # ...
+        'total_tenders': total_tenders,
+        'active_tenders': active_tenders,
+        'won_tenders': won_tenders,
+        'conversion': conversion,
+        'profit': profit,
+        'markup_percent': markup_percent,
+        'monthly_stats': monthly_stats,
+        'upcoming_deadlines': upcoming_deadlines,
     }
     
-    return render(request, 'tenders/dashboard.html', context)  # 🔹 Один return в конце
+    return render(request, 'tenders/dashboard.html', context)
