@@ -193,9 +193,12 @@ DEADLINE_REMINDER_DAYS = 1
 
 # Настройки Email
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+#EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 EMAIL_HOST = 'smtp.yandex.ru'
-EMAIL_PORT = 465
-EMAIL_USE_SSL = True
-EMAIL_HOST_USER = 'viktorlozhnikov@yandex.ru'  # Замените на ваш email
-EMAIL_HOST_PASSWORD = 'kuzmina60'  # Не обычный пароль, а пароль приложения из настроек Яндекса!
-DEFAULT_FROM_EMAIL = 'viktorlozhnikov@yandex.ru'
+EMAIL_PORT = 587
+EMAIL_USE_SSL = False  # ← ВАЖНО: False для порта 587
+EMAIL_USE_TLS = True   # ← ВАЖНО: True для порта 587
+EMAIL_HOST_USER = 'vicktorlozhnikov@yandex.ru'  # Замените на ваш email
+EMAIL_HOST_PASSWORD = 'gkucvjszmwpikpno'  # Не обычный пароль, а пароль приложения из настроек Яндекса!
+DEFAULT_FROM_EMAIL = 'vicktorlozhnikov@yandex.ru'
+DEADLINE_REMINDER_DAYS = 1

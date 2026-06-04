@@ -8,13 +8,14 @@ from django.contrib.auth import login
 from django.contrib.auth.forms import UserCreationForm
 from django.utils import timezone
 from datetime import timedelta
+from .forms import CustomUserCreationForm  # Добавьте этот импорт в начало файла
 from django.http import HttpResponse
 from .utils import export_tenders_to_excel, export_dashboard_stats_to_excel
 
 from .models import Tender
 
 class RegisterView(CreateView):
-    form_class = UserCreationForm
+    form_class = CustomUserCreationForm  # ← Изменили с UserCreationForm на CustomUserCreationForm
     template_name = 'tenders/register.html'
     success_url = reverse_lazy('tenders:list')
 
