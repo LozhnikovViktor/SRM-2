@@ -2,6 +2,7 @@ import xlsxwriter
 from io import BytesIO
 from django.utils import timezone
 from .models import Tender
+from django.db import models  # ← ДОБАВЬТЕ ЭТУ СТРОК
 
 
 def export_tenders_to_excel(tenders_qs):
