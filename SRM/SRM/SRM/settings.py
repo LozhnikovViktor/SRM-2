@@ -183,3 +183,19 @@ SPECTACULAR_SETTINGS = {
     'SERVE_INCLUDE_SCHEMA': False,
     'COMPONENT_SPLIT_REQUEST': True,
 }
+# ============================================
+# 📧 НАСТРОЙКИ EMAIL-УВЕДОМЛЕНИЙ
+# ============================================
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'noreply@srm-system.local'
+DEADLINE_REMINDER_DAYS = 1
+
+
+# Настройки Email
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.yandex.ru'
+EMAIL_PORT = 465
+EMAIL_USE_SSL = True
+EMAIL_HOST_USER = 'viktorlozhnikov@yandex.ru'  # Замените на ваш email
+EMAIL_HOST_PASSWORD = 'kuzmina60'  # Не обычный пароль, а пароль приложения из настроек Яндекса!
+DEFAULT_FROM_EMAIL = 'viktorlozhnikov@yandex.ru'
