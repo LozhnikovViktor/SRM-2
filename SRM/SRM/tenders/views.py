@@ -11,7 +11,11 @@ from datetime import timedelta
 from .forms import CustomUserCreationForm  # Добавьте этот импорт в начало файла
 from django.http import HttpResponse
 from .utils import export_tenders_to_excel, export_dashboard_stats_to_excel
-
+from django.views import View
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .forms import SearchTenderForm
+from .utils import search_tenders_on_zakupki
 from .models import Tender
 
 class RegisterView(CreateView):
@@ -169,3 +173,56 @@ def export_dashboard_excel(request):
     )
     response['Content-Disposition'] = f'attachment; filename=dashboard_stats_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
     return response
+
+class ExternalSearchView(LoginRequiredMixin, View):
+    """Поиск тендеров на zakupki.gov.ru"""
+    
+    def get(self, request):
+        form = SearchTenderForm()
+        return render(request, 'tenders/external_search.html', {'form': form})
+    
+    def post(self, request):
+        form = SearchTenderForm(request.POST)
+        
+        if form.is_valid():
+            keyword = form.cleaned_data['keyword']
+            region = form.cleaned_data['region'] or None
+            max_results = form.cleaned_data['max_results']
+            
+            # Поиск тендеров
+            tenders = search_tenders_on_zakupki(keyword, region, max_results)
+            
+            return render(request, 'tenders/external_search.html', {
+                'form': form,
+                'tenders': tenders,
+                'search_performed': True,
+                'keyword': keyword,
+            })
+        
+        return render(request, 'tenders/external_search.html', {'form': form})
+
+
+class ImportTenderView(LoginRequiredMixin, View):
+    """Импорт тендера с zakupki.gov.ru в нашу систему"""
+    
+    def post(self, request):
+        # Получаем данные из формы
+        try:
+            tender = Tender(
+                customer_name=request.POST.get('customer_name', 'Не указан')[:200],
+                initial_amount=request.POST.get('initial_amount') or 0,
+                deadline=request.POST.get('deadline') or None,
+                status='draft',
+                executor_name='',
+                procedure_url=request.POST.get('source_url', ''),
+                author=request.user,
+                source_url=request.POST.get('source_url', ''),
+                external_id=request.POST.get('external_id', ''),
+                comment=f"Импортирован с zakupki.gov.ru: {request.POST.get('title', '')}"[:1000],
+            )
+            tender.save()
+            messages.success(request, f'✅ Тендер "{tender.customer_name}" успешно импортирован!')
+        except Exception as e:
+            messages.error(request, f'❌ Ошибка импорта: {e}')
+        
+        return redirect('tenders:external_search')

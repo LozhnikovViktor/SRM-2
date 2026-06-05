@@ -37,9 +37,14 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h2>Тендеры</h2>
-    <a href="{% url 'tenders:export_excel' %}" class="btn btn-success">
-        <i class="bi bi-file-earmark-excel"></i> Экспорт в Excel
-    </a>
+    <div class="d-flex gap-2">
+        <a href="{% url 'tenders:external_search' %}" class="btn btn-info">
+            <i class="bi bi-search"></i> Найти тендеры онлайн
+        </a>
+        <a href="{% url 'tenders:export_excel' %}" class="btn btn-success">
+            <i class="bi bi-file-earmark-excel"></i> Экспорт в Excel
+        </a>
+    </div>
 </div>
 
 <!-- Таблица тендеров -->

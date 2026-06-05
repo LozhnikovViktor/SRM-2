@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Поиск тендеров{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4">🔍 Поиск тендеров на zakupki.gov.ru</h2>
+    
+    <!-- Форма поиска -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <label class="form-label">🔑 Ключевое слово</label>
+                        {{ form.keyword }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">📍 Регион</label>
+                        {{ form.region }}
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">📊 Максимум</label>
+                        {{ form.max_results }}
+                    </div>
+                    <div class="col-md-1 d-grid align-self-end">
+                        <button type="submit" class="btn btn-primary">
+                            🔍 Найти
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    {% if search_performed %}
+    <div class="alert alert-info">
+        Найдено тендеров: <strong>{{ tenders|length }}</strong> по запросу "<strong>{{ keyword }}</strong>"
+    </div>
+    
+    <!-- Результаты поиска -->
+    <div class="row">
+        {% for tender in tenders %}
+        <div class="col-md-6 mb-3">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">{{ tender.title|truncatewords:20 }}</h5>
+                    
+                    <p class="mb-1">
+                        <strong>🏢 Заказчик:</strong> {{ tender.customer_name|default:"Не указан" }}
+                    </p>
+                    <p class="mb-1">
+                        <strong>💰 Сумма:</strong> 
+                        {% if tender.initial_amount %}
+                            {{ tender.initial_amount|floatformat:2 }} ₽
+                        {% else %}
+                            <span class="text-muted">Не указана</span>
+                        {% endif %}
+                    </p>
+                    <p class="mb-1">
+                        <strong>📅 Дата публикации:</strong> {{ tender.pub_date|default:"—" }}
+                    </p>
+                    <p class="mb-1">
+                        <strong>🆔 Номер закупки:</strong> {{ tender.external_id|default:"—" }}
+                    </p>
+                    
+                    {% if tender.description %}
+                    <details class="mt-2">
+                        <summary class="text-primary" style="cursor:pointer">📄 Описание</summary>
+                        <small class="text-muted">{{ tender.description|truncatewords:50 }}</small>
+                    </details>
+                    {% endif %}
+                    
+                    <div class="d-flex gap-2 mt-3">
+                        <a href="{{ tender.source_url }}" target="_blank" class="btn btn-sm btn-outline-info">
+                            🔗 Открыть на площадке
+                        </a>
+                        
+                        <!-- Кнопка импорта -->
+                        <form method="post" action="{% url 'tenders:import_tender' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="customer_name" value="{{ tender.customer_name }}">
+                            <input type="hidden" name="initial_amount" value="{{ tender.initial_amount }}">
+                            <input type="hidden" name="deadline" value="{{ tender.deadline|date:'Y-m-d H:i' }}">
+                            <input type="hidden" name="source_url" value="{{ tender.source_url }}">
+                            <input type="hidden" name="external_id" value="{{ tender.external_id }}">
+                            <input type="hidden" name="title" value="{{ tender.title }}">
+                            <button type="submit" class="btn btn-sm btn-success">
+                                ⬇️ Импортировать
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-warning">
+                ⚠️ Тендеры не найдены. Попробуйте изменить ключевое слово или регион.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

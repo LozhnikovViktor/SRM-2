@@ -53,6 +53,20 @@ class Tender(models.Model):
         null=True,
         help_text='Дополнительная информация по тендеру'
     )
+    # Добавьте в конец модели Tender (перед class Meta, если он есть)
+    source_url = models.URLField(
+        'Ссылка на источник',
+        blank=True,
+        null=True,
+        help_text='URL на торговой площадке'
+)
+    external_id = models.CharField(
+        'ID на площадке',
+        max_length=50,
+        blank=True,
+        null=True,
+        help_text='Уникальный номер закупки'
+)
 
     def get_status_badge_class(self):
         colors = {
@@ -63,6 +77,7 @@ class Tender(models.Model):
             'cancelled': 'light text-dark',
         }
         return colors.get(self.status, 'secondary')
+
 
     class Meta:
         verbose_name = "Тендер"

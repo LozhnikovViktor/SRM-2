@@ -17,5 +17,7 @@ urlpatterns = [
     path('delete/<int:pk>/', views.TenderDeleteView.as_view(), name='delete'),
     path('export/excel/', views.export_tenders_excel, name='export_excel'),
     path('dashboard/export/excel/', views.export_dashboard_excel, name='export_dashboard_excel'),
+    path('search/', views.ExternalSearchView.as_view(), name='external_search'),
+    path('import/', views.ImportTenderView.as_view(), name='import_tender'),
 ]
 

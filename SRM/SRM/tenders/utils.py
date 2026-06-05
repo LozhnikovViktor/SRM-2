@@ -3,8 +3,127 @@ from io import BytesIO
 from django.utils import timezone
 from .models import Tender
 from django.db import models  # ← ДОБАВЬТЕ ЭТУ СТРОК
+import requests
+from bs4 import BeautifulSoup
+import xml.etree.ElementTree as ET
+from urllib.parse import quote
+from datetime import datetime
+import time
+from decimal import Decimal
 
 
+def search_tenders_on_zakupki(keyword, region=None, max_results=20):
+    """
+    Поиск тендеров на zakupki.gov.ru через RSS-ленту
+    
+    Args:
+        keyword: Ключевое слово для поиска
+        region: Код региона (необязательно)
+        max_results: Максимальное количество результатов
+    
+    Returns:
+        Список словарей с данными тендеров
+    """
+    # Формируем URL для RSS-поиска
+    base_url = 'https://zakupki.gov.ru/epz/order/extendedsearch/rss.html'
+    
+    params = {
+        'morphology': 'on',
+        'searchString': keyword,
+        'fz44': 'on',       # Федеральный закон 44-ФЗ (государственные закупки)
+        'fz223': 'on',      # Федеральный закон 223-ФЗ (закупки госкомпаний)
+        'sortBy': 'UPDATE_DATE',
+        'showLotsInfoHidden': 'false',
+    }
+    
+    if region:
+        params['regionId'] = region
+    
+    try:
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'application/rss+xml,application/xml,text/xml'
+        }
+        
+        response = requests.get(base_url, params=params, headers=headers, timeout=15)
+        response.raise_for_status()
+        
+        # Парсим RSS-ленту
+        root = ET.fromstring(response.content)
+        tenders = []
+        
+        # Namespace для RSS
+        namespaces = {
+            'ns0': 'http://zakupki.gov.ru/223fz/lot/1',
+            'ns1': 'http://zakupki.gov.ru/223fz/dishonestSupplier/1',
+        }
+        
+        for item in root.findall('.//item')[:max_results]:
+            try:
+                title = item.find('title').text if item.find('title') is not None else ''
+                link = item.find('link').text if item.find('link') is not None else ''
+                description = item.find('description').text if item.find('description') is not None else ''
+                pub_date = item.find('pubDate').text if item.find('pubDate') is not None else ''
+                
+                # Извлекаем ID из ссылки (например, 0123456789)
+                external_id = link.split('/')[-1] if '/' in link else ''
+                
+                # Парсим описание для извлечения суммы
+                initial_amount = 0
+                customer_name = ''
+                deadline = None
+                
+                # Пытаемся извлечь информацию из HTML описания
+                soup = BeautifulSoup(description, 'lxml')
+                text_desc = soup.get_text()
+                
+                # Ищем сумму (например, "1 234 567,89 руб")
+                import re
+                price_match = re.search(r'([\d\s]+[,.]?\d*)\s*(?:руб|₽)', text_desc)
+                if price_match:
+                    price_str = price_match.group(1).replace(' ', '').replace(',', '.')
+                    try:
+                        initial_amount = Decimal(price_str)
+                    except:
+                        initial_amount = 0
+                
+                # Ищем заказчика
+                customer_match = re.search(r'Заказчик[:\s]+([^\n,]+)', text_desc)
+                if customer_match:
+                    customer_name = customer_match.group(1).strip()
+                
+                # Пытаемся распарсить дату публикации
+                try:
+                    # Формат: "Mon, 03 Jun 2026 10:00:00 +0300"
+                    from email.utils import parsedate_to_datetime
+                    deadline = parsedate_to_datetime(pub_date)
+                except:
+                    deadline = None
+                
+                tenders.append({
+                    'title': title[:500] if title else 'Без названия',
+                    'customer_name': customer_name[:200] if customer_name else 'Не указан',
+                    'external_id': external_id,
+                    'source_url': link,
+                    'description': text_desc[:1000],
+                    'initial_amount': initial_amount,
+                    'deadline': deadline,
+                    'pub_date': pub_date,
+                })
+                
+            except Exception as e:
+                print(f"Ошибка парсинга элемента: {e}")
+                continue
+        
+        return tenders
+        
+    except requests.RequestException as e:
+        print(f"Ошибка HTTP запроса: {e}")
+        return []
+    except ET.ParseError as e:
+        print(f"Ошибка парсинга XML: {e}")
+        return []
+    
 def export_tenders_to_excel(tenders_qs):
     """Экспорт списка тендеров в Excel"""
     output = BytesIO()
