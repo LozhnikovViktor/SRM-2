@@ -190,17 +190,19 @@ class ExternalSearchView(LoginRequiredMixin, View):
             max_results = form.cleaned_data['max_results']
             
             # Поиск тендеров
-            tenders = search_tenders_on_zakupki(keyword, region, max_results)
-            
+            tenders = search_tenders_on_zakupki(
+                keyword, 
+                region, 
+                max_results,
+            )
+        
             return render(request, 'tenders/external_search.html', {
                 'form': form,
                 'tenders': tenders,
                 'search_performed': True,
                 'keyword': keyword,
             })
-        
         return render(request, 'tenders/external_search.html', {'form': form})
-
 
 class ImportTenderView(LoginRequiredMixin, View):
     """Импорт тендера с zakupki.gov.ru в нашу систему"""
