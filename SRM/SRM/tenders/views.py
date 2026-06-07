@@ -67,7 +67,31 @@ class TenderListView(LoginRequiredMixin, ListView):
             queryset = queryset.filter(executor_name__icontains=executor)
         return queryset
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        now = timezone.now()
+        context['now'] = now
 
+        # Индикаторы срочности
+        context['overdue_count'] = Tender.objects.filter(
+            deadline__lt=now,
+            status__in=['submitted', 'published', 'draft']
+        ).count()
+
+        context['urgent_count'] = Tender.objects.filter(
+            deadline__gte=now,
+            deadline__lte=now + timedelta(hours=24),
+            status__in=['submitted', 'published', 'draft']
+        ).count()
+
+        context['upcoming_count'] = Tender.objects.filter(
+            deadline__gte=now,
+            deadline__lte=now + timedelta(days=3),
+            status__in=['submitted', 'published', 'draft']
+        ).count()
+
+        return context
+        
 class TenderCreateView(LoginRequiredMixin, CreateView):
     model = Tender
     form_class = TenderForm  # ← было fields = [...]
@@ -230,6 +254,28 @@ def dashboard(request):
     client_labels = [c['client__name'][:20] for c in client_profit]
     client_data = [float(c['profit_sum'] or 0) for c in client_profit]
     
+    # 🔹 ВОРОНКА ПРОДАЖ
+    funnel_data = {
+        'draft': Tender.objects.filter(status='draft').count(),
+        'submitted': Tender.objects.filter(status__in=['submitted', 'published']).count(),
+        'won': Tender.objects.filter(status='won').count(),
+    }
+    
+    funnel_conversion = {}
+    if funnel_data['draft'] > 0:
+        funnel_conversion['draft_to_submitted'] = round(
+            (funnel_data['submitted'] / funnel_data['draft']) * 100, 1
+        )
+    else:
+        funnel_conversion['draft_to_submitted'] = 0
+    
+    if funnel_data['submitted'] > 0:
+        funnel_conversion['submitted_to_won'] = round(
+            (funnel_data['won'] / funnel_data['submitted']) * 100, 1
+        )
+    else:
+        funnel_conversion['submitted_to_won'] = 0
+    
     # 🔹 Ближайшие дедлайны
     upcoming_deadlines = Tender.objects.filter(
         deadline__gte=now,
@@ -240,30 +286,68 @@ def dashboard(request):
     print("📊 DEBUG status_data:", status_data)
     print("📊 DEBUG month_labels:", month_labels)
     print("📊 DEBUG client_labels:", client_labels)
+    print("📊 DEBUG funnel_data:", funnel_data)
     
     # 🔹 КОНТЕКСТ
     context = {
-    'total_tenders': total_tenders,
-    'active_tenders': active_tenders,
-    'won_tenders': won_tenders,
-    'lost_tenders': lost_tenders,
-    'draft_tenders': draft_tenders,
-    'win_rate': conversion,
-    'total_profit': profit,
-    'avg_markup': markup_percent,
-    'upcoming_deadlines': upcoming_deadlines,
+        'total_tenders': total_tenders,
+        'active_tenders': active_tenders,
+        'won_tenders': won_tenders,
+        'lost_tenders': lost_tenders,
+        'draft_tenders': draft_tenders,
+        'win_rate': conversion,
+        'total_profit': profit,
+        'avg_markup': markup_percent,
+        'upcoming_deadlines': upcoming_deadlines,
+        
+        # Данные для графиков - как JSON строки
+        'status_labels_json': json.dumps(status_labels, ensure_ascii=False),
+        'status_data_json': json.dumps(status_data),
+        'status_colors_json': json.dumps([status_colors.get(s['status'], '#6c757d') for s in status_stats]),
+        'month_labels_json': json.dumps(month_labels),
+        'month_totals_json': json.dumps(month_totals),
+        'month_won_json': json.dumps(month_won),
+        'client_labels_json': json.dumps(client_labels, ensure_ascii=False),
+        'client_data_json': json.dumps(client_data),
+        
+        # Воронка продаж
+        'funnel_data': funnel_data,
+        'funnel_conversion': funnel_conversion,
+        'funnel_data_json': json.dumps(funnel_data),
+    }
     
-    # Обычные списки (json_script сам их сериализует)
-    'status_labels': status_labels,
-    'status_data': status_data,
-    'status_colors': [status_colors.get(s['status'], '#6c757d') for s in status_stats],
-    'month_labels': month_labels,
-    'month_totals': month_totals,
-    'month_won': month_won,
-    'client_labels': client_labels,
-    'client_data': client_data,
-}
+    return render(request, 'tenders/dashboard.html', context)
+
+
     
+        # 🔹 ДАННЫЕ ДЛЯ ВОРОНКИ ПРОДАЖ
+    funnel_data = {
+        'draft': Tender.objects.filter(status='draft').count(),
+        'submitted': Tender.objects.filter(status__in=['submitted', 'published']).count(),
+        'won': Tender.objects.filter(status='won').count(),
+    }
+
+    # Рассчитываем конверсию между этапами
+    funnel_conversion = {}
+    if funnel_data['draft'] > 0:
+        funnel_conversion['draft_to_submitted'] = round(
+            (funnel_data['submitted'] / funnel_data['draft']) * 100, 1
+        )
+    else:
+        funnel_conversion['draft_to_submitted'] = 0
+    
+    if funnel_data['submitted'] > 0:
+        funnel_conversion['submitted_to_won'] = round(
+            (funnel_data['won'] / funnel_data['submitted']) * 100, 1
+        )
+    else:
+        funnel_conversion['submitted_to_won'] = 0
+    
+    # Добавляем в контекст
+    context['funnel_data'] = funnel_data
+    context['funnel_conversion'] = funnel_conversion
+    context['funnel_data_json'] = json.dumps(funnel_data)  # ← ДОБАВЬТЕ ЭТУ СТРОКУ!
+
     return render(request, 'tenders/dashboard.html', context)
 
 # ============================================
@@ -408,9 +492,31 @@ class ClientListView(LoginRequiredMixin, ListView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # 🔹 ВАЖНО: в ListView нет self.object!
-        context['managers'] = User.objects.filter(is_active=True)
-        context['status_choices'] = Client.STATUS_CHOICES
+        context['now'] = timezone.now() 
+        
+        # 🔹 Индикаторы срочности
+        now = timezone.now()
+        
+        # Количество просроченных тендеров
+        context['overdue_count'] = Tender.objects.filter(
+            deadline__lt=now,
+            status__in=['submitted', 'published', 'draft']
+        ).count()
+        
+        # Количество срочных (в ближайшие 24 часа)
+        context['urgent_count'] = Tender.objects.filter(
+            deadline__gte=now,
+            deadline__lte=now + timedelta(hours=24),
+            status__in=['submitted', 'published', 'draft']
+        ).count()
+        
+        # Количество с дедлайном в ближайшие 3 дня
+        context['upcoming_count'] = Tender.objects.filter(
+            deadline__gte=now,
+            deadline__lte=now + timedelta(days=3),
+            status__in=['submitted', 'published', 'draft']
+        ).count()
+        
         return context
 
 class ClientCreateView(LoginRequiredMixin, CreateView):
@@ -448,7 +554,7 @@ class ClientDetailView(LoginRequiredMixin, DetailView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
+        context['now'] = timezone.now()
         # 🔹 Здесь self.object — это текущий клиент (правильно!)
         related_tenders = Tender.objects.filter(client=self.object).order_by('-deadline')
         

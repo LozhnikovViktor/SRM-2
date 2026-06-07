@@ -45,7 +45,7 @@
         </div>
     </div>
     
-    <!-- ГРАФИКИ -->
+    <!-- ГРАФИКИ 1 РЯД -->
     <div class="row mb-4">
         <div class="col-md-4">
             <div class="card shadow-sm h-100">
@@ -70,6 +70,7 @@
         </div>
     </div>
     
+    <!-- ГРАФИКИ 2 РЯД -->
     <div class="row mb-4">
         <div class="col-md-8">
             <div class="card shadow-sm h-100">
@@ -114,6 +115,64 @@
         </div>
     </div>
     
+    <!-- 🔹 ВОРОНКА ПРОДАЖ -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">🎯 Воронка продаж</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="funnelChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">📊 Конверсия по этапам</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Черновики → Поданные</span>
+                            <strong class="text-primary">{{ funnel_conversion.draft_to_submitted }}%</strong>
+                        </div>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-primary" role="progressbar" 
+                                 style="width: {{ funnel_conversion.draft_to_submitted }}%;">
+                                {{ funnel_data.draft }} → {{ funnel_data.submitted }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Поданные → Выигранные</span>
+                            <strong class="text-success">{{ funnel_conversion.submitted_to_won }}%</strong>
+                        </div>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: {{ funnel_conversion.submitted_to_won }}%;">
+                                {{ funnel_data.submitted }} → {{ funnel_data.won }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info mt-3 mb-0">
+                        <h6 class="alert-heading">📈 Общая конверсия</h6>
+                        <p class="mb-0">
+                            Из <strong>{{ funnel_data.draft }}</strong> черновиков 
+                            выиграно <strong>{{ funnel_data.won }}</strong> тендеров
+                            (<strong>{{ win_rate }}%</strong>)
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <div class="d-flex gap-2 mb-4">
         <a href="{% url 'tenders:export_dashboard_excel' %}" class="btn btn-success">
             📊 Экспорт статистики в Excel
@@ -124,43 +183,39 @@
     </div>
 </div>
 
-<!-- 🔹 БЕЗОПАСНАЯ ПЕРЕДАЧА ДАННЫХ -->
-{{ status_labels|json_script:"status-labels-data" }}
-{{ status_data|json_script:"status-data-data" }}
-{{ status_colors|json_script:"status-colors-data" }}
-{{ month_labels|json_script:"month-labels-data" }}
-{{ month_totals|json_script:"month-totals-data" }}
-{{ month_won|json_script:"month-won-data" }}
-{{ client_labels|json_script:"client-labels-data" }}
-{{ client_data|json_script:"client-data-data" }}
+<!-- 🔹 ПЕРЕДАЧА ДАННЫХ В JAVASCRIPT -->
+<script id="chart-data" type="application/json">
+{
+    "statusLabels": {{ status_labels_json|safe }},
+    "statusData": {{ status_data_json|safe }},
+    "statusColors": {{ status_colors_json|safe }},
+    "monthLabels": {{ month_labels_json|safe }},
+    "monthTotals": {{ month_totals_json|safe }},
+    "monthWon": {{ month_won_json|safe }},
+    "clientLabels": {{ client_labels_json|safe }},
+    "clientData": {{ client_data_json|safe }},
+    "funnelData": {{ funnel_data_json|safe }}
+}
+</script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     
-    // Получаем данные из JSON
-    const statusLabels = JSON.parse(document.getElementById('status-labels-data').textContent);
-    const statusData = JSON.parse(document.getElementById('status-data-data').textContent);
-    const statusColors = JSON.parse(document.getElementById('status-colors-data').textContent);
-    const monthLabels = JSON.parse(document.getElementById('month-labels-data').textContent);
-    const monthTotals = JSON.parse(document.getElementById('month-totals-data').textContent);
-    const monthWon = JSON.parse(document.getElementById('month-won-data').textContent);
-    const clientLabels = JSON.parse(document.getElementById('client-labels-data').textContent);
-    const clientData = JSON.parse(document.getElementById('client-data-data').textContent);
+    // Получаем все данные из одного JSON
+    const chartData = JSON.parse(document.getElementById('chart-data').textContent);
     
-    console.log('📊 Данные загружены:', {
-        statusLabels, statusData, monthLabels, clientLabels
-    });
+    console.log('📊 Данные загружены:', chartData);
     
-    // ГРАФИК 1: Круговая диаграмма статусов
+    // 🥧 ГРАФИК 1: Круговая диаграмма статусов
     const statusCtx = document.getElementById('statusChart');
-    if (statusCtx && statusLabels.length > 0) {
+    if (statusCtx && chartData.statusLabels.length > 0) {
         new Chart(statusCtx, {
             type: 'doughnut',
             data: {
-                labels: statusLabels,
+                labels: chartData.statusLabels,
                 datasets: [{
-                    data: statusData,
-                    backgroundColor: statusColors,
+                    data: chartData.statusData,
+                    backgroundColor: chartData.statusColors,
                     borderWidth: 2,
                     borderColor: '#fff'
                 }]
@@ -184,17 +239,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // ГРАФИК 2: Линейный график по месяцам
+    // 📈 ГРАФИК 2: Линейный график по месяцам
     const monthlyCtx = document.getElementById('monthlyChart');
-    if (monthlyCtx && monthLabels.length > 0) {
+    if (monthlyCtx && chartData.monthLabels.length > 0) {
         new Chart(monthlyCtx, {
             type: 'line',
             data: {
-                labels: monthLabels,
+                labels: chartData.monthLabels,
                 datasets: [
                     {
                         label: 'Всего тендеров',
-                        data: monthTotals,
+                        data: chartData.monthTotals,
                         borderColor: '#0d6efd',
                         backgroundColor: 'rgba(13, 110, 253, 0.1)',
                         tension: 0.3,
@@ -202,7 +257,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     },
                     {
                         label: 'Выиграно',
-                        data: monthWon,
+                        data: chartData.monthWon,
                         borderColor: '#198754',
                         backgroundColor: 'rgba(25, 135, 84, 0.1)',
                         tension: 0.3,
@@ -219,16 +274,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // ГРАФИК 3: Столбчатый график прибыли по клиентам
+    // 💰 ГРАФИК 3: Столбчатый график прибыли по клиентам
     const clientCtx = document.getElementById('clientChart');
-    if (clientCtx && clientLabels.length > 0) {
+    if (clientCtx && chartData.clientLabels.length > 0) {
         new Chart(clientCtx, {
             type: 'bar',
             data: {
-                labels: clientLabels,
+                labels: chartData.clientLabels,
                 datasets: [{
                     label: 'Прибыль, ₽',
-                    data: clientData,
+                    data: chartData.clientData,
                     backgroundColor: 'rgba(255, 193, 7, 0.7)',
                     borderColor: 'rgba(255, 193, 7, 1)',
                     borderWidth: 1
@@ -261,8 +316,55 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // 🎯 ГРАФИК 4: Воронка продаж
+    const funnelCtx = document.getElementById('funnelChart');
+    if (funnelCtx) {
+        const funnelData = chartData.funnelData;
+        
+        new Chart(funnelCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Черновики', 'Поданные', 'Выигранные'],
+                datasets: [{
+                    label: 'Количество тендеров',
+                    data: [funnelData.draft, funnelData.submitted, funnelData.won],
+                    backgroundColor: [
+                        'rgba(108, 117, 125, 0.7)',
+                        'rgba(13, 110, 253, 0.7)',
+                        'rgba(25, 135, 84, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(108, 117, 125, 1)',
+                        'rgba(13, 110, 253, 1)',
+                        'rgba(25, 135, 84, 1)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.raw + ' тендеров';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
+                    }
+                }
+            }
+        });
+    }
 });
 </script>
-
-
 {% endblock %}

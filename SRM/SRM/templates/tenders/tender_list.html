@@ -47,6 +47,37 @@
     </div>
 </div>
 
+<!-- 🔹 ИНДИКАТОРЫ СРОЧНОСТИ -->
+{% if overdue_count > 0 or urgent_count > 0 %}
+<div class="alert alert-danger d-flex align-items-center mb-3" role="alert">
+    <i class="bi bi-exclamation-triangle-fill fs-3 me-3"></i>
+    <div>
+        <h5 class="alert-heading mb-1">⚠️ Внимание! Срочные дедлайны</h5>
+        <p class="mb-0">
+            {% if overdue_count > 0 %}
+            <strong class="text-danger">{{ overdue_count }}</strong> просрочено |
+            {% endif %}
+            {% if urgent_count > 0 %}
+            <strong class="text-warning">{{ urgent_count }}</strong> в ближайшие 24 часа
+            {% endif %}
+        </p>
+    </div>
+    <a href="{% url 'tenders:list' %}?sort=deadline" class="btn btn-danger ms-auto">
+        🔍 Показать срочные
+    </a>
+</div>
+{% endif %}
+
+{% if upcoming_count > 0 and urgent_count == 0 and overdue_count == 0 %}
+<div class="alert alert-warning d-flex align-items-center mb-3" role="alert">
+    <i class="bi bi-clock-history fs-3 me-3"></i>
+    <div>
+        <h5 class="alert-heading mb-1">⏰ Приближающиеся дедлайны</h5>
+        <p class="mb-0">У вас <strong>{{ upcoming_count }}</strong> тендеров с дедлайном в ближайшие 3 дня</p>
+    </div>
+</div>
+{% endif %}
+
 <!-- Таблица тендеров -->
 <div class="card shadow-sm">
   <div class="table-responsive">
@@ -67,61 +98,34 @@
         </tr>
       </thead>
       <tbody>
-  {% for tender in tenders %}
-  <tr>
-    <!-- Колонка статуса с цветом -->
+        
+{% for tender in tenders %}
+<tr class="{% if tender.deadline and tender.deadline < now %}table-danger{% elif tender.deadline and tender.deadline|timeuntil:'days' == '0' %}table-warning{% endif %}">
     <td>
       <span class="badge bg-{% if tender.status == 'draft' %}secondary{% elif tender.status == 'submitted' %}info{% elif tender.status == 'won' %}success{% elif tender.status == 'lost' %}danger{% else %}secondary{% endif %}">
         {{ tender.get_status_display }}
       </span>
     </td>
-    
-    <!-- ➕ КОЛОНКА КОММЕНТАРИЯ (добавили) -->
     <td>
-      {% if tender.comment %}
-        <span class="text-truncate d-inline-block" style="max-width: 200px;" title="{{ tender.comment }}">
-          {{ tender.comment }}
-        </span>
-      {% else %}
-        <span class="text-muted">—</span>
-      {% endif %}
+        <a href="{% url 'tenders:update' tender.pk %}">{{ tender.customer_name }}</a>
+        {% if tender.client %}
+        <br><small class="text-muted">👥 {{ tender.client.name }}</small>
+        {% endif %}
     </td>
-    
+    <td>{{ tender.initial_amount|floatformat:0 }} ₽</td>
+    <td class="{% if tender.deadline and tender.deadline < now %}text-danger fw-bold{% endif %}">
+        {{ tender.deadline|date:"d.m.Y H:i"|default:"—" }}
+        {% if tender.deadline and tender.deadline < now %}
+        <br><small>⚠️ Просрочено</small>
+        {% endif %}
+    </td>
+    <td>{{ tender.executor_name|default:"—" }}</td>
     <td>
-      <strong>{{ tender.customer_name }}</strong><br>
-      <small class="text-muted">{{ tender.executor_name }}</small>
+        <a href="{% url 'tenders:update' tender.pk %}" class="btn btn-sm btn-outline-primary">✏️</a>
+        <a href="{% url 'tenders:delete' tender.pk %}" class="btn btn-sm btn-outline-danger">🗑️</a>
     </td>
-    <td>
-      <small class="text-muted">{{ tender.author.username }}</small>
-    </td>
-    <td>{{ tender.deadline|date:"d.m.Y H:i" }}</td>
-    <td>{{ tender.initial_amount|floatformat:2 }} ₽</td>
-    <td>{{ tender.final_amount|default:"—" }}</td>
-    <td>{{ tender.cost|default:"—" }}</td>
-    <td class="{% if tender.profit and tender.profit < 0 %}text-danger{% else %}text-success{% endif %}">
-      {{ tender.profit|default:"—" }} ₽
-    </td>
-    <td>{{ tender.markup|floatformat:1|default:"—" }}%</td>
-    
-    <!-- Кнопки управления -->
-    <td>
-      {% if tender.author == user %}
-      <div class="btn-group">
-      <a href="{% url 'tenders:update' tender.pk %}" class="btn btn-sm btn-outline-primary">✏️</a>
-      <a href="{% url 'tenders:delete' tender.pk %}" class="btn btn-sm btn-outline-danger">🗑</a>
-      </div>
-      {% else %}
-      <span class="badge bg-secondary">Чужой</span>
-      {% endif %}
-    </td>
-  </tr>
-  {% empty %}
-  <tr><td colspan="11" class="text-center text-muted py-4">Тендеров пока нет</td></tr>  <!-- ← изменили с 10 на 11 -->
-  {% endfor %}
-</tbody>
-    </table>
-  </div>
-</div>
+</tr>
+{% endfor %}
 
 <!-- ➕ Пагинация с сохранением фильтров -->
 {% if is_paginated %}
