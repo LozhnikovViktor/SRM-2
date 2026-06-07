@@ -1,25 +1,32 @@
 # tenders/views.py
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.db.models import F, Sum, Count, Avg, Q, ExpressionWrapper, DecimalField
-from django.views.generic import ListView, CreateView, DeleteView, UpdateView
+from django.db import models as db_models  # ← Добавлено для models.Q
+from django.views.generic import ListView, CreateView, DeleteView, UpdateView, DetailView, View
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.models import User  # ← Добавлено для User.objects
 from django.urls import reverse_lazy
 from django.contrib.auth import login
 from django.contrib.auth.forms import UserCreationForm
-from django.utils import timezone
-from datetime import timedelta
-from .forms import CustomUserCreationForm  # Добавьте этот импорт в начало файла
-from django.http import HttpResponse
-from .utils import export_tenders_to_excel, export_dashboard_stats_to_excel
-from django.views import View
-from django.shortcuts import render, redirect
 from django.contrib import messages
-from .forms import SearchTenderForm
-from .utils import search_tenders_on_zakupki
-from .models import Tender
+from django.utils import timezone
+from django.http import HttpResponse
+from datetime import timedelta
+from collections import defaultdict
+from .forms import CustomUserCreationForm, SearchTenderForm, ClientForm, TenderForm
+from .forms import TenderForm
 
+# Импорты из приложения
+from .forms import CustomUserCreationForm, SearchTenderForm, ClientForm, TenderForm
+from .utils import export_tenders_to_excel, export_dashboard_stats_to_excel, search_tenders_on_zakupki
+from .models import Tender, Client
+
+
+# ============================================
+# 🔹 АВТОРИЗАЦИЯ
+# ============================================
 class RegisterView(CreateView):
-    form_class = CustomUserCreationForm  # ← Изменили с UserCreationForm на CustomUserCreationForm
+    form_class = CustomUserCreationForm
     template_name = 'tenders/register.html'
     success_url = reverse_lazy('tenders:list')
 
@@ -28,6 +35,10 @@ class RegisterView(CreateView):
         login(self.request, user)
         return super().form_valid(form)
 
+
+# ============================================
+# 🔹 ТЕНДЕРЫ
+# ============================================
 class TenderListView(LoginRequiredMixin, ListView):
     model = Tender
     template_name = 'tenders/tender_list.html'
@@ -45,40 +56,65 @@ class TenderListView(LoginRequiredMixin, ListView):
             queryset = queryset.filter(customer_name__icontains=customer)
         if winner:
             if winner == 'empty':
-                queryset = queryset.filter(winner__isnull=True) | queryset.filter(winner='')
+                queryset = queryset.filter(Q(winner__isnull=True) | Q(winner=''))
             elif winner == 'filled':
                 queryset = queryset.exclude(winner__isnull=True).exclude(winner='')
         if executor:
             queryset = queryset.filter(executor_name__icontains=executor)
         return queryset
 
+
 class TenderCreateView(LoginRequiredMixin, CreateView):
     model = Tender
-    fields = [
-        'customer_name', 'initial_amount', 'deadline', 'status', 'executor_name', 'procedure_url',
-        'winner', 'final_amount', 'cost', 'comment'
-    ]
+    form_class = TenderForm  # ← было fields = [...]
     template_name = 'tenders/tender_form.html'
     success_url = reverse_lazy('tenders:list')
 
     def form_valid(self, form):
         form.instance.author = self.request.user
-        return super().form_valid(form)
+        
+        # 🔹 АВТОЗАПОЛНЕНИЕ: если выбран клиент — подставляем его название
+        if form.instance.client and not form.cleaned_data.get('customer_name'):
+            form.instance.customer_name = form.instance.client.name
+        
+        response = super().form_valid(form)
+        messages.success(self.request, f'✅ Тендер "{self.object.customer_name}" создан!')
+        return response
 
-class TenderDeleteView(LoginRequiredMixin, DeleteView):
-    model = Tender
-    template_name = 'tenders/tender_confirm_delete.html'
-    success_url = reverse_lazy('tenders:list')
 
 class TenderUpdateView(LoginRequiredMixin, UpdateView):
     model = Tender
-    fields = [
-        'customer_name', 'initial_amount', 'deadline', 'status', 'executor_name', 'procedure_url',
-        'winner', 'final_amount', 'cost', 'comment'
-    ]
+    form_class = TenderForm  # ← было fields = [...]
     template_name = 'tenders/tender_form.html'
     success_url = reverse_lazy('tenders:list')
 
+    def delete(self, request, *args, **kwargs):
+        tender = self.get_object()
+        messages.success(request, f'🗑️ Тендер "{tender.customer_name}" удалён')
+        return super().delete(request, *args, **kwargs)
+    
+    def form_valid(self, form):
+        if form.instance.client:
+            form.instance.customer_name = form.instance.client.name
+        response = super().form_valid(form)
+        messages.success(self.request, f'✅ Тендер "{self.object.customer_name}" обновлён!')
+        return response
+    
+class TenderDeleteView(LoginRequiredMixin, DeleteView):
+    """Удаление тендера"""
+    model = Tender
+    template_name = 'tenders/tender_confirm_delete.html'
+    success_url = reverse_lazy('tenders:list')
+    
+    def delete(self, request, *args, **kwargs):
+        tender = self.get_object()
+        messages.success(request, f'🗑️ Тендер "{tender.customer_name}" удалён')
+        return super().delete(request, *args, **kwargs)
+
+
+# ============================================
+# 🔹 ДАШБОРД
+# ============================================
 def dashboard(request):
     """Дашборд со статистикой"""
     now = timezone.now()
@@ -87,34 +123,26 @@ def dashboard(request):
     # 1. Считаем общее количество и выигранные
     total_tenders = Tender.objects.count()
     won_tenders = Tender.objects.filter(status='won').count()
-    # Активные = отправленные или опубликованные
     active_tenders = Tender.objects.filter(status__in=['submitted', 'published']).count() 
     
-    # Конверсия (в процентах)
     conversion = round((won_tenders / total_tenders * 100), 1) if total_tenders > 0 else 0
     
-    # 2. Расчет прибыли и наценки (только для выигранных 'won')
+    # 2. Расчет прибыли и наценки
     won_qs = Tender.objects.filter(status='won')
-    
-    # Собираем суммы (если полей нет, берем 0)
     totals = won_qs.aggregate(
         total_final=Sum('final_amount'),
         total_cost=Sum('cost')
     )
     total_final = totals['total_final'] or 0
     total_cost = totals['total_cost'] or 0
-    
     profit = total_final - total_cost
     
-    # Наценка в процентах
     if total_cost > 0:
         markup_percent = round((profit / total_cost) * 100, 1)
     else:
         markup_percent = 0
 
     # 3. График: тендеры по месяцам
-    from collections import defaultdict
-    
     tenders_qs = Tender.objects.filter(
         deadline__isnull=False,
         deadline__gte=six_months_ago
@@ -132,24 +160,28 @@ def dashboard(request):
         for month, data in sorted(monthly_data.items())
     ]
     
-    # 4. Ближайшие дедлайны (только для активных)
+    # 4. Ближайшие дедлайны
     upcoming_deadlines = Tender.objects.filter(
         deadline__gte=now,
     ).order_by('deadline')[:5]
     
-    # 5. Собираем контекст и отдаем в шаблон
     context = {
-    'total_tenders': total_tenders,
-    'active_tenders': active_tenders,
-    'won_tenders': won_tenders,
-    'win_rate': conversion,  # ← изменили с 'conversion' на 'win_rate'
-    'total_profit': profit,  # ← изменили с 'profit' на 'total_profit'
-    'avg_markup': markup_percent,  # ← изменили с 'markup_percent' на 'avg_markup'
-    'monthly_stats': monthly_stats,
-    'upcoming_deadlines': upcoming_deadlines,
-}
+        'total_tenders': total_tenders,
+        'active_tenders': active_tenders,
+        'won_tenders': won_tenders,
+        'win_rate': conversion,
+        'total_profit': profit,
+        'avg_markup': markup_percent,
+        'monthly_stats': monthly_stats,
+        'upcoming_deadlines': upcoming_deadlines,
+    }
     
     return render(request, 'tenders/dashboard.html', context)
+
+
+# ============================================
+# 🔹 ЭКСПОРТ В EXCEL
+# ============================================
 def export_tenders_excel(request):
     """Экспорт всех тендеров в Excel"""
     tenders_qs = Tender.objects.all().order_by('-deadline')
@@ -174,6 +206,10 @@ def export_dashboard_excel(request):
     response['Content-Disposition'] = f'attachment; filename=dashboard_stats_{timezone.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
     return response
 
+
+# ============================================
+# 🔹 ПОИСК ТЕНДЕРОВ ОНЛАЙН
+# ============================================
 class ExternalSearchView(LoginRequiredMixin, View):
     """Поиск тендеров на zakupki.gov.ru"""
     
@@ -189,12 +225,7 @@ class ExternalSearchView(LoginRequiredMixin, View):
             region = form.cleaned_data['region'] or None
             max_results = form.cleaned_data['max_results']
             
-            # Поиск тендеров
-            tenders = search_tenders_on_zakupki(
-                keyword, 
-                region, 
-                max_results,
-            )
+            tenders = search_tenders_on_zakupki(keyword, region, max_results)
         
             return render(request, 'tenders/external_search.html', {
                 'form': form,
@@ -204,14 +235,26 @@ class ExternalSearchView(LoginRequiredMixin, View):
             })
         return render(request, 'tenders/external_search.html', {'form': form})
 
+
 class ImportTenderView(LoginRequiredMixin, View):
     """Импорт тендера с zakupki.gov.ru в нашу систему"""
     
     def post(self, request):
-        # Получаем данные из формы
         try:
+            customer_name = request.POST.get('customer_name', 'Не указан')[:200]
+            
+            # 🔹 АВТОПОИСК клиента по названию заказчика
+            client = None
+            if customer_name and customer_name != 'Не указан':
+                # Ищем точное совпадение или похожее
+                client = Client.objects.filter(
+                    Q(name__iexact=customer_name) | 
+                    Q(name__icontains=customer_name)
+                ).first()
+            
             tender = Tender(
-                customer_name=request.POST.get('customer_name', 'Не указан')[:200],
+                customer_name=customer_name,
+                client=client,  # ← Привязываем клиента, если найден
                 initial_amount=request.POST.get('initial_amount') or 0,
                 deadline=request.POST.get('deadline') or None,
                 status='draft',
@@ -223,8 +266,129 @@ class ImportTenderView(LoginRequiredMixin, View):
                 comment=f"Импортирован с zakupki.gov.ru: {request.POST.get('title', '')}"[:1000],
             )
             tender.save()
-            messages.success(request, f'✅ Тендер "{tender.customer_name}" успешно импортирован!')
+            
+            if client:
+                messages.success(
+                    request, 
+                    f'✅ Тендер "{customer_name}" импортирован и привязан к клиенту "{client.name}"!'
+                )
+            else:
+                messages.warning(
+                    request, 
+                    f'⚠️ Тендер "{customer_name}" импортирован. Клиент не найден — '
+                    f'<a href="{reverse_lazy("tenders:client_add")}">создайте нового</a>.'
+                )
         except Exception as e:
             messages.error(request, f'❌ Ошибка импорта: {e}')
         
         return redirect('tenders:external_search')
+
+
+# ============================================
+# 🔹 CRM: КЛИЕНТЫ
+# ============================================
+class ClientListView(LoginRequiredMixin, ListView):
+    """Список клиентов"""
+    model = Client
+    template_name = 'tenders/client_list.html'
+    context_object_name = 'clients'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        queryset = Client.objects.select_related('manager', 'created_by')
+        
+        # Фильтрация по поиску
+        search = self.request.GET.get('search')
+        if search:
+            queryset = queryset.filter(
+                db_models.Q(name__icontains=search) |
+                db_models.Q(inn__icontains=search) |
+                db_models.Q(email__icontains=search) |
+                db_models.Q(contact_person__icontains=search)
+            )
+        
+        # Фильтрация по статусу
+        status = self.request.GET.get('status')
+        if status:
+            queryset = queryset.filter(status=status)
+        
+        # Фильтрация по менеджеру
+        manager = self.request.GET.get('manager')
+        if manager:
+            queryset = queryset.filter(manager_id=manager)
+        
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # 🔹 ВАЖНО: в ListView нет self.object!
+        context['managers'] = User.objects.filter(is_active=True)
+        context['status_choices'] = Client.STATUS_CHOICES
+        return context
+
+class ClientCreateView(LoginRequiredMixin, CreateView):
+    """Создание клиента"""
+    model = Client
+    form_class = ClientForm
+    template_name = 'tenders/client_form.html'
+    success_url = reverse_lazy('tenders:client_list')
+    
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        response = super().form_valid(form)
+        messages.success(self.request, f'✅ Клиент "{self.object.name}" успешно добавлен!')
+        return response
+
+
+class ClientUpdateView(LoginRequiredMixin, UpdateView):
+    """Редактирование клиента"""
+    model = Client
+    form_class = ClientForm
+    template_name = 'tenders/client_form.html'
+    success_url = reverse_lazy('tenders:client_list')
+    
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, f'✅ Данные клиента "{self.object.name}" обновлены!')
+        return response
+
+
+class ClientDetailView(LoginRequiredMixin, DetailView):
+    """Детальная информация о клиенте"""
+    model = Client
+    template_name = 'tenders/client_detail.html'
+    context_object_name = 'client'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # 🔹 Здесь self.object — это текущий клиент (правильно!)
+        related_tenders = Tender.objects.filter(client=self.object).order_by('-deadline')
+        
+        # Статистика по клиенту
+        total_tenders = related_tenders.count()
+        won_tenders = related_tenders.filter(status='won').count()
+        total_profit = related_tenders.filter(status='won').aggregate(
+            total=Sum(F('final_amount') - F('cost'))
+        )['total'] or 0
+        
+        context['related_tenders'] = related_tenders[:10]
+        context['client_stats'] = {
+            'total_tenders': total_tenders,
+            'won_tenders': won_tenders,
+            'win_rate': round(won_tenders / total_tenders * 100, 1) if total_tenders > 0 else 0,
+            'total_profit': total_profit,
+        }
+        
+        return context
+
+class ClientDeleteView(LoginRequiredMixin, DeleteView):
+    """Удаление клиента"""
+    model = Client
+    template_name = 'tenders/client_confirm_delete.html'
+    success_url = reverse_lazy('tenders:client_list')
+    
+    def delete(self, request, *args, **kwargs):
+        client = self.get_object()
+        messages.success(request, f'🗑️ Клиент "{client.name}" удалён')
+        return super().delete(request, *args, **kwargs)

@@ -1,6 +1,8 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from .models import Client
+from .models import Tender, Client
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -60,3 +62,87 @@ class SearchTenderForm(forms.Form):
         max_value=50,
         widget=forms.NumberInput(attrs={'class': 'form-control'})
     )
+
+
+class ClientForm(forms.ModelForm):
+    #Форма для создания/редактирования клиента"""
+    
+    class Meta:
+        model = Client
+        fields = [
+            'name', 'inn', 'email', 'phone', 
+            'contact_person', 'contact_position',
+            'manager', 'address', 'website', 
+            'notes', 'status'
+        ]
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'ООО "Ромашка"'}),
+            'inn': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '1234567890', 'maxlength': '12'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'info@company.ru'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+7 (999) 123-45-67'}),
+            'contact_person': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Иванов Иван Иванович'}),
+            'contact_position': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Директор'}),
+            'manager': forms.Select(attrs={'class': 'form-select'}),
+            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': '2'}),
+            'website': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://company.ru'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': '3'}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
+        }
+        labels = {
+            'name': 'Наименование организации',
+            'inn': 'ИНН',
+            'email': 'Email',
+            'phone': 'Телефон',
+            'contact_person': 'Контактное лицо',
+            'contact_position': 'Должность контактного лица',
+            'manager': 'Менеджер',
+            'address': 'Адрес',
+            'website': 'Сайт',
+            'notes': 'Примечания',
+            'status': 'Статус',
+        }
+    
+    def clean_inn(self):
+        inn = self.cleaned_data.get('inn')
+        if inn and not inn.isdigit():
+            raise forms.ValidationError('ИНН должен содержать только цифры')
+        if inn and len(inn) not in (10, 12):
+            raise forms.ValidationError('ИНН должен содержать 10 или 12 цифр')
+        return inn
+    
+class TenderForm(forms.ModelForm):
+    #Форма для создания/редактирования тендера"""
+    
+    class Meta:
+        model = Tender
+        fields = [
+            'client', 'customer_name', 'initial_amount', 'deadline', 
+            'status', 'executor_name', 'procedure_url',
+            'winner', 'final_amount', 'cost', 'comment'
+        ]
+        widgets = {
+            'client': forms.Select(attrs={'class': 'form-select'}),
+            'customer_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Название организации'}),
+            'initial_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'deadline': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
+            'executor_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'ФИО исполнителя'}),
+            'procedure_url': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'https://...'}),
+            'winner': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Победитель'}),
+            'final_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'cost': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'comment': forms.Textarea(attrs={'class': 'form-control', 'rows': '3'}),
+        }
+        labels = {
+            'client': 'Клиент',
+            'customer_name': 'Заказчик',
+            'initial_amount': 'Начальная сумма',
+            'deadline': 'Дедлайн',
+            'status': 'Статус',
+            'executor_name': 'Исполнитель',
+            'procedure_url': 'Ссылка на процедуру',
+            'winner': 'Победитель',
+            'final_amount': 'Итоговая сумма',
+            'cost': 'Себестоимость',
+            'comment': 'Комментарий',
+        }

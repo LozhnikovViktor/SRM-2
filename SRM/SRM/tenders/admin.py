@@ -2,6 +2,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from .models import Tender
+from .models import Tender, Client
 
 
 @admin.register(Tender)
@@ -86,4 +87,33 @@ class TenderAdmin(admin.ModelAdmin):
         if not obj.pk and not obj.author:
             obj.author = request.user
         obj.full_clean()
+        super().save_model(request, obj, form, change)
+
+@admin.register(Client)
+class ClientAdmin(admin.ModelAdmin):
+    list_display = ('name', 'inn', 'email', 'manager', 'status', 'updated_at')
+    list_filter = ('status', 'manager', 'created_at')
+    search_fields = ('name', 'inn', 'email', 'contact_person')
+    list_editable = ('status', 'manager')
+    readonly_fields = ('created_at', 'updated_at', 'created_by')
+    
+    fieldsets = (
+        ('Основная информация', {
+            'fields': ('name', 'inn', 'status')
+        }),
+        ('Контактная информация', {
+            'fields': ('email', 'phone', 'contact_person', 'contact_position', 'website', 'address')
+        }),
+        ('Менеджер и примечания', {
+            'fields': ('manager', 'notes')
+        }),
+        ('Системная информация', {
+            'fields': ('created_by', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def save_model(self, request, obj, form, change):
+        if not change:  # Если объект создаётся
+            obj.created_by = request.user
         super().save_model(request, obj, form, change)

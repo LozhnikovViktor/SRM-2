@@ -1,20 +1,50 @@
 # tenders/api/serializers.py
 from decimal import Decimal, InvalidOperation
 from rest_framework import serializers
-from ..models import Tender
+from ..models import Tender, Client
+from django.contrib.auth.models import User
 
+
+class UserSerializer(serializers.ModelSerializer):
+    """Сериализатор для пользователей"""
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name']
+        read_only_fields = ['id']
+
+
+class ClientSerializer(serializers.ModelSerializer):
+    """Сериализатор для клиентов"""
+    manager = UserSerializer(read_only=True)
+    created_by = UserSerializer(read_only=True)
+    
+    class Meta:
+        model = Client
+        fields = [
+            'id', 'name', 'inn', 'email', 'phone', 
+            'contact_person', 'contact_position',
+            'manager', 'address', 'website', 'notes', 
+            'status', 'created_at', 'updated_at', 'created_by'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'created_by']
 
 class TenderSerializer(serializers.ModelSerializer):
-    """Сериализатор для тендера"""
-    
-    # 🔹 Вычисляемые поля (только для чтения)
+    """Сериализатор для тендеров"""
+    author = UserSerializer(read_only=True)
+    client = ClientSerializer(read_only=True)
+    client_id = serializers.PrimaryKeyRelatedField(
+        queryset=Client.objects.all(),
+        source='client',
+        write_only=True,
+        required=False,
+        allow_null=True
+    )
     profit = serializers.DecimalField(
         max_digits=12, 
         decimal_places=2, 
-        read_only=True,
-        allow_null=True,
-        coerce_to_string=False  # 🔹 Возвращаем число, не строку
+        read_only=True
     )
+
     
     # 🔹 Увеличили max_digits до 10 (наценка может быть > 1000%)
     markup = serializers.DecimalField(
@@ -28,26 +58,17 @@ class TenderSerializer(serializers.ModelSerializer):
     status_display = serializers.CharField(
         source='get_status_display', read_only=True
     )
-    
     class Meta:
         model = Tender
         fields = [
-            'id', 
-            'customer_name', 
-            'initial_amount', 
-            'deadline', 
-            'status', 
-            'status_display', 
-            'executor_name', 
-            'procedure_url',
-            'winner', 
-            'final_amount', 
-            'cost', 
-            'profit', 
-            'markup',
-            'author'
+            'id', 'client', 'client_id', 'customer_name', 'initial_amount',
+            'deadline', 'status', 'executor_name', 'procedure_url',
+            'winner', 'final_amount', 'cost', 'profit', 'markup',
+            'comment', 'author', 'source_url', 'external_id',
+            'created_at', 'updated_at'
         ]
-        read_only_fields = ['author', 'profit', 'markup']
+        read_only_fields = ['id', 'author', 'created_at', 'updated_at']
+    
     
     def to_representation(self, instance):
         """Безопасная сериализация вычисляемых полей"""

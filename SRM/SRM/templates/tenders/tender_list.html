@@ -107,8 +107,8 @@
     <td>
       {% if tender.author == user %}
       <div class="btn-group">
-        <a href="{% url 'tenders:edit' tender.pk %}" class="btn btn-sm btn-outline-primary">✏️</a>
-        <a href="{% url 'tenders:delete' tender.pk %}" class="btn btn-sm btn-outline-danger">🗑</a>
+      <a href="{% url 'tenders:update' tender.pk %}" class="btn btn-sm btn-outline-primary">✏️</a>
+      <a href="{% url 'tenders:delete' tender.pk %}" class="btn btn-sm btn-outline-danger">🗑</a>
       </div>
       {% else %}
       <span class="badge bg-secondary">Чужой</span>
