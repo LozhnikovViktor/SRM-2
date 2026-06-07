@@ -42,4 +42,7 @@ urlpatterns = [
     path('documents/<int:pk>/delete/', views.TenderDocumentDeleteView.as_view(), name='document_delete'),
         # 🔹 Аудит-лог
     path('audit/', views.AuditLogView.as_view(), name='audit_log'),
+        # 🔹 Канбан-доска
+    path('kanban/', views.TenderKanbanView.as_view(), name='kanban'),
+    path('api/tender/status/', views.TenderStatusUpdateView.as_view(), name='api_tender_status'),
 ]

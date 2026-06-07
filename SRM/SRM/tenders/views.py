@@ -571,3 +571,58 @@ class AuditLogView(LoginRequiredMixin, ListView):
         context['actions'] = AuditLog.ACTION_CHOICES
         context['models'] = ['Tender', 'Client', 'AuditLog']
         return context
+    
+class TenderKanbanView(LoginRequiredMixin, View):
+    """Канбан-доска для визуального управления тендерами"""
+    template_name = 'tenders/kanban.html'
+    
+    def get(self, request):
+        tenders = Tender.objects.all().order_by('-deadline')
+        
+        # Группируем тендеры по статусам
+        context = {
+            'draft': tenders.filter(status='draft'),
+            'process': tenders.filter(status__in=['submitted', 'published']),
+            'won': tenders.filter(status='won'),
+            'lost': tenders.filter(status__in=['lost', 'cancelled']),
+        }
+        
+        return render(request, self.template_name, context)
+
+
+class TenderStatusUpdateView(LoginRequiredMixin, View):
+    """API endpoint для обновления статуса через Drag&Drop"""
+    
+    def post(self, request):
+        try:
+            import json
+            data = json.loads(request.body)
+            tender_id = data.get('tender_id')
+            new_status = data.get('status')
+            
+            if not tender_id or not new_status:
+                return HttpResponse(json.dumps({'status': 'error', 'message': 'Missing data'}), content_type='application/json', status=400)
+            
+            tender = Tender.objects.get(pk=tender_id)
+            old_status = tender.status
+            tender.status = new_status
+            tender.save()
+            
+            # 🔹 Логирование изменения
+            from .audit import log_action
+            log_action(
+                user=request.user,
+                action='update',
+                model_name='Tender',
+                object_id=tender.pk,
+                object_repr=str(tender),
+                changes={'status': {'old': old_status, 'new': new_status}},
+                request=request
+            )
+            
+            return HttpResponse(json.dumps({'status': 'success'}), content_type='application/json')
+            
+        except Tender.DoesNotExist:
+            return HttpResponse(json.dumps({'status': 'error', 'message': 'Tender not found'}), content_type='application/json', status=404)
+        except Exception as e:
+            return HttpResponse(json.dumps({'status': 'error', 'message': str(e)}), content_type='application/json', status=500)
