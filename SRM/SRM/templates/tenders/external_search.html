@@ -95,18 +95,17 @@
                             🔗 Открыть на площадке
                         </a>
                         
-                        <form method="post" action="{% url 'tenders:import_tender' %}">
-                            {% csrf_token %}
-                            <input type="hidden" name="customer_name" value="{{ tender.customer_name }}">
-                            <input type="hidden" name="initial_amount" value="{{ tender.initial_amount }}">
-                            <input type="hidden" name="deadline" value="{{ tender.deadline|date:'Y-m-d H:i' }}">
-                            <input type="hidden" name="source_url" value="{{ tender.source_url }}">
-                            <input type="hidden" name="external_id" value="{{ tender.external_id }}">
-                            <input type="hidden" name="title" value="{{ tender.title }}">
-                            <button type="submit" class="btn btn-sm btn-success">
-                                ⬇️ Импортировать
-                            </button>
-                        </form>
+                        <!-- 🔹 КНОПКА ИМПОРТА (БЕЗ ФОРМЫ!) -->
+                        <button type="button" 
+                                class="btn btn-sm btn-success import-tender-btn"
+                                data-customer="{{ tender.customer_name|escapejs }}"
+                                data-amount="{{ tender.initial_amount }}"
+                                data-deadline="{{ tender.deadline|date:'Y-m-d H:i' }}"
+                                data-url="{{ tender.source_url|default:'' }}"
+                                data-external-id="{{ tender.external_id|default:'' }}"
+                                data-title="{{ tender.title|escapejs }}">
+                            📥 Импортировать
+                        </button>
                     </div>
                 </div>
             </div>
@@ -121,4 +120,126 @@
     </div>
     {% endif %}
 </div>
+
+<!-- 🔹 TOAST-УВЕДОМЛЕНИЯ (ВНУТРИ БЛОКА!) -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
+    <div id="importToast" class="toast" role="alert">
+        <div class="toast-header">
+            <strong class="me-auto" id="toastTitle">Импорт тендера</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body" id="toastMessage"></div>
+    </div>
+</div>
+
+<!-- 🔹 СКРИПТ AJAX (ВНУТРИ БЛОКА!) -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ Скрипт импорта загружен');
+    
+    // Получаем CSRF токен
+    const csrfToken = '{{ csrf_token }}';
+    console.log('🔑 CSRF токен:', csrfToken ? 'получен' : 'ОТСУТСТВУЕТ');
+    
+    // Обработчик клика по кнопке "Импортировать"
+    const buttons = document.querySelectorAll('.import-tender-btn');
+    console.log('🔍 Найдено кнопок импорта:', buttons.length);
+    
+    buttons.forEach(button => {
+        button.addEventListener('click', function() {
+            console.log('🖱️ Клик по кнопке импорта');
+            
+            const btn = this;
+            const originalText = btn.innerHTML;
+            
+            // Блокируем кнопку на время запроса
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Импорт...';
+            
+            // Собираем данные тендера
+            const formData = new FormData();
+            formData.append('customer_name', btn.dataset.customer);
+            formData.append('initial_amount', btn.dataset.amount);
+            formData.append('deadline', btn.dataset.deadline);
+            formData.append('source_url', btn.dataset.url);
+            formData.append('external_id', btn.dataset.externalId);
+            formData.append('title', btn.dataset.title);
+            
+            console.log('📤 Отправляем данные:', Object.fromEntries(formData));
+            
+            // Отправляем AJAX-запрос
+            fetch('{% url "tenders:import_tender" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(response => {
+                console.log('📥 Ответ сервера:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('📊 Данные:', data);
+                
+                // Восстанавливаем кнопку
+                btn.disabled = false;
+                
+                if (data.success) {
+                    // Меняем кнопку на "Импортировано"
+                    btn.innerHTML = '✅ Импортировано';
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-secondary');
+                    btn.disabled = true;
+                    
+                    // Показываем уведомление
+                    showToast(data.message, data.status);
+                } else {
+                    btn.innerHTML = originalText;
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('❌ Ошибка:', error);
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                showToast('❌ Ошибка соединения с сервером', 'error');
+            });
+        });
+    });
+    
+    // Функция показа уведомлений
+    function showToast(message, type) {
+        console.log('🔔 Показ уведомления:', message);
+        
+        const toastEl = document.getElementById('importToast');
+        const toastTitle = document.getElementById('toastTitle');
+        const toastMessage = document.getElementById('toastMessage');
+        
+        // Сбрасываем классы
+        toastEl.className = 'toast';
+        
+        // Устанавливаем цвет в зависимости от типа
+        if (type === 'success') {
+            toastEl.classList.add('bg-success', 'text-white');
+            toastTitle.textContent = '✅ Успешно';
+        } else if (type === 'warning') {
+            toastEl.classList.add('bg-warning', 'text-dark');
+            toastTitle.textContent = '⚠️ Внимание';
+        } else if (type === 'error') {
+            toastEl.classList.add('bg-danger', 'text-white');
+            toastTitle.textContent = '❌ Ошибка';
+        } else {
+            toastEl.classList.add('bg-info', 'text-white');
+            toastTitle.textContent = 'ℹ️ Информация';
+        }
+        
+        toastMessage.textContent = message;
+        
+        const toast = new bootstrap.Toast(toastEl, { delay: 5000 });
+        toast.show();
+    }
+});
+</script>
 {% endblock %}

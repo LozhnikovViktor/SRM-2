@@ -512,17 +512,25 @@ class ExternalSearchView(LoginRequiredMixin, View):
         return render(request, 'tenders/external_search.html', {'form': form})
 
 
+
+
+
 class ImportTenderView(LoginRequiredMixin, View):
-    #Импорт тендера с zakupki.gov.ru в нашу систему"""
+    """Импорт тендера с zakupki.gov.ru в нашу систему"""
+    
+    def get(self, request):
+        """Простая страница-заглушка"""
+        messages.info(request, 'ℹ️ Используйте страницу поиска для импорта тендеров')
+        return redirect('tenders:external_search')
     
     def post(self, request):
+        """Обработка импорта тендера (AJAX)"""
         try:
             customer_name = request.POST.get('customer_name', 'Не указан')[:200]
             
             # 🔹 АВТОПОИСК клиента по названию заказчика
             client = None
             if customer_name and customer_name != 'Не указан':
-                # Ищем точное совпадение или похожее
                 client = Client.objects.filter(
                     Q(name__iexact=customer_name) | 
                     Q(name__icontains=customer_name)
@@ -530,7 +538,7 @@ class ImportTenderView(LoginRequiredMixin, View):
             
             tender = Tender(
                 customer_name=customer_name,
-                client=client,  # ← Привязываем клиента, если найден
+                client=client,
                 initial_amount=request.POST.get('initial_amount') or 0,
                 deadline=request.POST.get('deadline') or None,
                 status='draft',
@@ -543,21 +551,28 @@ class ImportTenderView(LoginRequiredMixin, View):
             )
             tender.save()
             
+            # 🔹 Формируем ответ для AJAX
             if client:
-                messages.success(
-                    request, 
-                    f'✅ Тендер "{customer_name}" импортирован и привязан к клиенту "{client.name}"!'
-                )
+                message = f'✅ Тендер "{customer_name}" импортирован и привязан к клиенту "{client.name}"!'
+                status_type = 'success'
             else:
-                messages.warning(
-                    request, 
-                    f'⚠️ Тендер "{customer_name}" импортирован. Клиент не найден — '
-                    f'<a href="{reverse_lazy("tenders:client_add")}">создайте нового</a>.'
-                )
+                message = f'⚠️ Тендер "{customer_name}" импортирован. Клиент не найден.'
+                status_type = 'warning'
+            
+            return JsonResponse({
+                'success': True,
+                'message': message,
+                'status': status_type,
+                'tender_id': tender.pk,
+                'tender_name': customer_name,
+            })
+            
         except Exception as e:
-            messages.error(request, f'❌ Ошибка импорта: {e}')
-        
-        return redirect('tenders:external_search')
+            return JsonResponse({
+                'success': False,
+                'message': f'❌ Ошибка импорта: {e}',
+                'status': 'error',
+            }, status=500)
 
 
 # ============================================
