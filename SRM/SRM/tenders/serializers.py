@@ -39,17 +39,9 @@ class TenderSerializer(serializers.ModelSerializer):
         allow_null=True
     )
     
-    # Вычисляемые поля
-    profit = serializers.DecimalField(
-        max_digits=12, 
-        decimal_places=2, 
-        read_only=True
-    )
-    markup = serializers.DecimalField(
-        max_digits=5, 
-        decimal_places=1, 
-        read_only=True
-    )
+    # Вычисляемые поля через SerializerMethodField
+    profit = serializers.SerializerMethodField()
+    markup = serializers.SerializerMethodField()
     
     class Meta:
         model = Tender
@@ -58,11 +50,23 @@ class TenderSerializer(serializers.ModelSerializer):
             'deadline', 'status', 'executor_name', 'procedure_url',
             'winner', 'final_amount', 'cost', 'profit', 'markup',
             'comment', 'author', 'source_url', 'external_id',
-            'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'author', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'author']
+    
+    def get_profit(self, obj):
+        """Вычисляем прибыль"""
+        if obj.final_amount and obj.cost:
+            return float(obj.final_amount) - float(obj.cost)
+        return 0
+    
+    def get_markup(self, obj):
+        """Вычисляем наценку"""
+        if obj.cost and obj.final_amount:
+            profit = float(obj.final_amount) - float(obj.cost)
+            return round((profit / float(obj.cost)) * 100, 1)
+        return 0
     
     def create(self, validated_data):
-        # Автоматически устанавливаем автора
+        """Автоматически устанавливаем автора"""
         validated_data['author'] = self.context['request'].user
         return super().create(validated_data)

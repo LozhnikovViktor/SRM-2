@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block title %}Календарь дедлайнов{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>📆 Календарь дедлайнов</h2>
+        <a href="{% url 'tenders:kanban' %}" class="btn btn-outline-secondary">← К канбану</a>
+    </div>
+    
+    <!-- Фильтры -->
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <form id="calendar-filters" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">👤 Исполнитель</label>
+                    <input type="text" id="filter-executor" class="form-control" placeholder="Введите имя">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small text-muted">📊 Статус</label>
+                    <select id="filter-status" class="form-select">
+                        <option value="">Все статусы</option>
+                        <option value="draft">Черновики</option>
+                        <option value="submitted">Поданные</option>
+                        <option value="published">Опубликованные</option>
+                        <option value="won">Выигранные</option>
+                        <option value="lost">Проигранные</option>
+                    </select>
+                </div>
+                <div class="col-md-4 d-grid align-self-end">
+                    <button type="button" id="apply-filters" class="btn btn-primary">🔍 Применить фильтры</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Календарь -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div id="calendar"></div>
+        </div>
+    </div>
+</div>
+
+<!-- FullCalendar CSS -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" rel="stylesheet">
+
+<!-- FullCalendar JS -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/locales/ru.global.min.js"></script>
+<link href="https://unpkg.com/@fullcalendar/core@6.1.10/main.min.css" rel="stylesheet">
+<script src="https://unpkg.com/@fullcalendar/core@6.1.10/index.global.min.js"></script>
+<script src="https://unpkg.com/@fullcalendar/daygrid@6.1.10/index.global.min.js"></script>
+<script src="https://unpkg.com/@fullcalendar/timegrid@6.1.10/index.global.min.js"></script>
+<script src="https://unpkg.com/@fullcalendar/list@6.1.10/index.global.min.js"></script>
+<script src="https://unpkg.com/@fullcalendar/core@6.1.10/locales/ru.global.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    const calendarEl = document.getElementById('calendar');
+    
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'ru',
+        firstDay: 1, // Понедельник - первый день недели
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,listWeek'
+        },
+        buttonText: {
+            today: 'Сегодня',
+            month: 'Месяц',
+            week: 'Неделя',
+            list: 'Список'
+        },
+        
+        // Загрузка событий
+        events: function(info, successCallback, failureCallback) {
+            const executor = document.getElementById('filter-executor').value;
+            const status = document.getElementById('filter-status').value;
+            
+            let url = '{% url "tenders:api_calendar_data" %}';
+            const params = new URLSearchParams({
+                start: info.startStr,
+                end: info.endStr
+            });
+            
+            if (executor) params.append('executor', executor);
+            if (status) params.append('status', status);
+            
+            fetch(url + '?' + params.toString())
+                .then(response => response.json())
+                .then(data => {
+                    successCallback(data);
+                })
+                .catch(error => {
+                    console.error('Error loading events:', error);
+                    failureCallback(error);
+                });
+        },
+        
+        // Клик по событию
+        eventClick: function(info) {
+            info.jsEvent.preventDefault(); // Не переходим по ссылке сразу
+            
+            // Показываем модальное окно с деталями
+            const modal = new bootstrap.Modal(document.getElementById('eventModal'));
+            document.getElementById('eventTitle').textContent = info.event.title;
+            document.getElementById('eventDate').textContent = info.event.start.toLocaleDateString('ru-RU');
+            document.getElementById('eventStatus').textContent = info.event.extendedProps.status;
+            document.getElementById('eventAmount').textContent = info.event.extendedProps.amount.toLocaleString('ru-RU') + ' ₽';
+            document.getElementById('eventExecutor').textContent = info.event.extendedProps.executor;
+            document.getElementById('eventLink').href = info.event.url;
+            
+            modal.show();
+        },
+        
+        // Наведение на событие
+        eventMouseEnter: function(info) {
+            info.el.style.cursor = 'pointer';
+        }
+    });
+    
+    calendar.render();
+    
+    // Применение фильтров
+    document.getElementById('apply-filters').addEventListener('click', function() {
+        calendar.refetchEvents(); // Перезагружаем события с новыми фильтрами
+    });
+    
+    // Фильтрация по Enter
+    document.getElementById('filter-executor').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            calendar.refetchEvents();
+        }
+    });
+});
+</script>
+
+<!-- Модальное окно с деталями события -->
+<div class="modal fade" id="eventModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eventTitle">Детали тендера</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th style="width: 40%">📅 Дата дедлайна:</th>
+                        <td id="eventDate"></td>
+                    </tr>
+                    <tr>
+                        <th>📊 Статус:</th>
+                        <td id="eventStatus"></td>
+                    </tr>
+                    <tr>
+                        <th>💰 Сумма:</th>
+                        <td id="eventAmount"></td>
+                    </tr>
+                    <tr>
+                        <th>👤 Исполнитель:</th>
+                        <td id="eventExecutor"></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                <a href="#" id="eventLink" class="btn btn-primary">✏️ Редактировать</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

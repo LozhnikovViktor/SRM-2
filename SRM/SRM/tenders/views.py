@@ -17,6 +17,7 @@ from collections import defaultdict
 from .forms import CustomUserCreationForm, SearchTenderForm, ClientForm, TenderForm, TenderDocumentForm
 from .forms import TenderForm
 from .models import AuditLog
+from django.http import JsonResponse
 
 
 # Импорты из приложения
@@ -626,3 +627,64 @@ class TenderStatusUpdateView(LoginRequiredMixin, View):
             return HttpResponse(json.dumps({'status': 'error', 'message': 'Tender not found'}), content_type='application/json', status=404)
         except Exception as e:
             return HttpResponse(json.dumps({'status': 'error', 'message': str(e)}), content_type='application/json', status=500)
+        
+
+
+
+class TenderCalendarView(LoginRequiredMixin, View):
+    """Интерактивный календарь дедлайнов"""
+    template_name = 'tenders/calendar.html'
+    
+    def get(self, request):
+        return render(request, self.template_name)
+
+
+class TenderCalendarDataView(LoginRequiredMixin, View):
+    """API endpoint для получения данных календаря"""
+    
+    def get(self, request):
+        # Получаем параметры фильтрации
+        start = request.GET.get('start')
+        end = request.GET.get('end')
+        
+        tenders = Tender.objects.filter(deadline__isnull=False)
+        
+        # Фильтрация по исполнителю
+        executor = request.GET.get('executor')
+        if executor:
+            tenders = tenders.filter(executor_name__icontains=executor)
+        
+        # Фильтрация по статусу
+        status = request.GET.get('status')
+        if status:
+            tenders = tenders.filter(status=status)
+        
+        # Формируем данные для календаря
+        events = []
+        for tender in tenders:
+            # Цвет в зависимости от статуса
+            color_map = {
+                'draft': '#6c757d',      # серый
+                'submitted': '#0dcaf0',  # голубой
+                'published': '#0d6efd',  # синий
+                'won': '#198754',        # зелёный
+                'lost': '#dc3545',       # красный
+                'cancelled': '#adb5bd',  # светло-серый
+            }
+            
+            color = color_map.get(tender.status, '#6c757d')
+            
+            events.append({
+                'id': tender.pk,
+                'title': f"{tender.customer_name[:30]} ({tender.initial_amount:,.0f}₽)",
+                'start': tender.deadline.isoformat(),
+                'url': f"/tenders/{tender.pk}/edit/",
+                'color': color,
+                'extendedProps': {
+                    'status': tender.get_status_display(),
+                    'amount': tender.initial_amount,
+                    'executor': tender.executor_name or 'Не указан'
+                }
+            })
+        
+        return JsonResponse(events, safe=False)

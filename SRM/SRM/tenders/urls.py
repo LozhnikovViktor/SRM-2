@@ -45,4 +45,7 @@ urlpatterns = [
         # 🔹 Канбан-доска
     path('kanban/', views.TenderKanbanView.as_view(), name='kanban'),
     path('api/tender/status/', views.TenderStatusUpdateView.as_view(), name='api_tender_status'),
+        # 🔹 Календарь дедлайнов
+    path('calendar/', views.TenderCalendarView.as_view(), name='calendar'),
+    path('api/calendar/data/', views.TenderCalendarDataView.as_view(), name='api_calendar_data'),
 ]
