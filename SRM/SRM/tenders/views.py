@@ -15,9 +15,9 @@ from django.http import HttpResponse
 from datetime import timedelta
 from collections import defaultdict
 from .forms import CustomUserCreationForm, SearchTenderForm, ClientForm, TenderForm, TenderDocumentForm
-from .forms import TenderForm
 from .models import AuditLog
 from django.http import JsonResponse
+from .forms import CustomUserCreationForm, SearchTenderForm, ClientForm, TenderForm, TenderDocumentForm, TenderFilterForm
 
 
 # Импорты из приложения
@@ -43,55 +43,160 @@ class RegisterView(CreateView):
 # ============================================
 # 🔹 ТЕНДЕРЫ
 # ============================================
+
+from .forms import TenderFilterForm
+
+
 class TenderListView(LoginRequiredMixin, ListView):
+    """Расширенный список тендеров с фильтрацией"""
     model = Tender
     template_name = 'tenders/tender_list.html'
     context_object_name = 'tenders'
-    ordering = ['-deadline']
-    paginate_by = 5
+    paginate_by = 10
+
+    def get_form(self):
+        """Создаёт форму с данными из GET-параметров"""
+        return TenderFilterForm(self.request.GET)
 
     def get_queryset(self):
-        queryset = Tender.objects.all()
-        customer = self.request.GET.get('customer')
-        winner = self.request.GET.get('winner')
-        executor = self.request.GET.get('executor')
-
-        if customer:
-            queryset = queryset.filter(customer_name__icontains=customer)
-        if winner:
-            if winner == 'empty':
-                queryset = queryset.filter(Q(winner__isnull=True) | Q(winner=''))
-            elif winner == 'filled':
-                queryset = queryset.exclude(winner__isnull=True).exclude(winner='')
-        if executor:
-            queryset = queryset.filter(executor_name__icontains=executor)
+        queryset = Tender.objects.select_related('client', 'author', 'client__manager')
+        form = self.get_form()
+        
+        if not form.is_valid():
+            return queryset
+        
+        data = form.cleaned_data
+        
+        # 🔹 Текстовый поиск (по нескольким полям сразу)
+        if data.get('search'):
+            search = data['search']
+            queryset = queryset.filter(
+                Q(customer_name__icontains=search) |
+                Q(executor_name__icontains=search) |
+                Q(winner__icontains=search) |
+                Q(comment__icontains=search) |
+                Q(client__name__icontains=search) |
+                Q(client__inn__icontains=search)
+            )
+        
+        #  Фильтр по статусу (мульти-выбор)
+        if data.get('status'):
+            queryset = queryset.filter(status__in=data['status'])
+        
+        # 🔹 Диапазон сумм
+        if data.get('amount_from'):
+            queryset = queryset.filter(initial_amount__gte=data['amount_from'])
+        if data.get('amount_to'):
+            queryset = queryset.filter(initial_amount__lte=data['amount_to'])
+        
+        # 🔹 Диапазон дат дедлайна
+        if data.get('deadline_from'):
+            queryset = queryset.filter(deadline__date__gte=data['deadline_from'])
+        if data.get('deadline_to'):
+            queryset = queryset.filter(deadline__date__lte=data['deadline_to'])
+        
+        # 🔹 Фильтр по клиенту
+        if data.get('client'):
+            queryset = queryset.filter(client=data['client'])
+        
+        # 🔹 Фильтр по исполнителю
+        if data.get('executor'):
+            queryset = queryset.filter(executor_name__icontains=data['executor'])
+        
+        # 🔹 Быстрые фильтры
+        now = timezone.now()
+        
+        if data.get('urgent_only'):
+            queryset = queryset.filter(
+                deadline__gte=now,
+                deadline__lte=now + timedelta(hours=24),
+                status__in=['submitted', 'published', 'draft']
+            )
+        
+        if data.get('overdue_only'):
+            queryset = queryset.filter(
+                deadline__lt=now,
+                status__in=['submitted', 'published', 'draft']
+            )
+        
+        if data.get('has_documents'):
+            queryset = queryset.filter(documents__isnull=False).distinct()
+        
+        # 🔹 Сортировка
+        sort = data.get('sort') or '-deadline'
+        queryset = queryset.order_by(sort)
+        
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['filter_form'] = self.get_form()
+        context['total_count'] = self.get_queryset().count()
+        
         now = timezone.now()
         context['now'] = now
-
+        
         # Индикаторы срочности
         context['overdue_count'] = Tender.objects.filter(
             deadline__lt=now,
             status__in=['submitted', 'published', 'draft']
         ).count()
-
+        
         context['urgent_count'] = Tender.objects.filter(
             deadline__gte=now,
             deadline__lte=now + timedelta(hours=24),
             status__in=['submitted', 'published', 'draft']
         ).count()
-
-        context['upcoming_count'] = Tender.objects.filter(
-            deadline__gte=now,
-            deadline__lte=now + timedelta(days=3),
-            status__in=['submitted', 'published', 'draft']
-        ).count()
-
-        return context
         
+        # Активные фильтры для отображения бейджей
+        context['active_filters'] = self._get_active_filters()
+        
+        return context
+    
+    def _get_active_filters(self):
+        """Возвращает список активных фильтров для отображения"""
+        form = self.get_form()
+        if not form.is_valid():
+            return []
+        
+        data = form.cleaned_data
+        filters = []
+        
+        if data.get('search'):
+            filters.append({'name': 'Поиск', 'value': data['search'], 'param': 'search'})
+        
+        if data.get('status'):
+            status_labels = dict(TenderFilterForm.base_fields['status'].choices)
+            for s in data['status']:
+                filters.append({'name': 'Статус', 'value': status_labels.get(s, s), 'param': 'status', 'value_param': s})
+        
+        if data.get('amount_from'):
+            filters.append({'name': 'Сумма от', 'value': f'{data["amount_from"]:,.0f} ₽', 'param': 'amount_from'})
+        if data.get('amount_to'):
+            filters.append({'name': 'Сумма до', 'value': f'{data["amount_to"]:,.0f} ₽', 'param': 'amount_to'})
+        
+        if data.get('deadline_from'):
+            filters.append({'name': 'Дедлайн от', 'value': data['deadline_from'].strftime('%d.%m.%Y'), 'param': 'deadline_from'})
+        if data.get('deadline_to'):
+            filters.append({'name': 'Дедлайн до', 'value': data['deadline_to'].strftime('%d.%m.%Y'), 'param': 'deadline_to'})
+        
+        if data.get('client'):
+            filters.append({'name': 'Клиент', 'value': str(data['client']), 'param': 'client'})
+        
+        if data.get('executor'):
+            filters.append({'name': 'Исполнитель', 'value': data['executor'], 'param': 'executor'})
+        
+        if data.get('urgent_only'):
+            filters.append({'name': 'Срочные', 'value': '24 часа', 'param': 'urgent_only'})
+        
+        if data.get('overdue_only'):
+            filters.append({'name': 'Просроченные', 'value': '', 'param': 'overdue_only'})
+        
+        if data.get('has_documents'):
+            filters.append({'name': 'С документами', 'value': '', 'param': 'has_documents'})
+        
+        return filters
+
 class TenderCreateView(LoginRequiredMixin, CreateView):
     model = Tender
     form_class = TenderForm  # ← было fields = [...]

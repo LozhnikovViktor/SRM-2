@@ -196,3 +196,135 @@ class TenderDocumentForm(forms.ModelForm):
                 )
         
         return file
+
+class TenderFilterForm(forms.Form):
+    """Форма расширенного поиска и фильтрации тендеров"""
+    
+    # Текстовый поиск
+    search = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': '🔍 Поиск по названию, заказчику, ИНН...'
+        })
+    )
+    
+    # Статус (мульти-выбор)
+    status = forms.MultipleChoiceField(
+        required=False,
+        choices=[
+            ('draft', 'Черновик'),
+            ('submitted', 'Подан'),
+            ('published', 'Опубликован'),
+            ('won', 'Выигран'),
+            ('lost', 'Проигран'),
+            ('cancelled', 'Отменён'),
+        ],
+        widget=forms.SelectMultiple(attrs={
+            'class': 'form-select',
+            'size': '6'
+        })
+    )
+    
+    # Диапазон сумм
+    amount_from = forms.DecimalField(
+        required=False,
+        label='Сумма от',
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': '0',
+            'step': '1000'
+        })
+    )
+    
+    amount_to = forms.DecimalField(
+        required=False,
+        label='Сумма до',
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'placeholder': '∞',
+            'step': '1000'
+        })
+    )
+    
+    # Диапазон дат
+    deadline_from = forms.DateField(
+        required=False,
+        label='Дедлайн от',
+        widget=forms.DateInput(attrs={
+            'class': 'form-control',
+            'type': 'date'
+        })
+    )
+    
+    deadline_to = forms.DateField(
+        required=False,
+        label='Дедлайн до',
+        widget=forms.DateInput(attrs={
+            'class': 'form-control',
+            'type': 'date'
+        })
+    )
+    
+    # Клиент
+    client = forms.ModelChoiceField(
+        required=False,
+        queryset=Client.objects.all(),
+        label='Клиент',
+        widget=forms.Select(attrs={
+            'class': 'form-select'
+        })
+    )
+    
+    # Исполнитель
+    executor = forms.CharField(
+        required=False,
+        label='Исполнитель',
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Имя исполнителя'
+        })
+    )
+    
+    # Сортировка
+    sort = forms.ChoiceField(
+        required=False,
+        choices=[
+            ('-deadline', 'Дедлайн (сначала ближайшие)'),
+            ('deadline', 'Дедлайн (сначала дальние)'),
+            ('-initial_amount', 'Сумма (по убыванию)'),
+            ('initial_amount', 'Сумма (по возрастанию)'),
+            ('-created_at', 'Дата создания (новые)'),
+            ('created_at', 'Дата создания (старые)'),
+            ('customer_name', 'Название заказчика (А-Я)'),
+            ('-customer_name', 'Название заказчика (Я-А)'),
+        ],
+        widget=forms.Select(attrs={
+            'class': 'form-select'
+        })
+    )
+    
+    # Быстрые фильтры (чекбоксы)
+    urgent_only = forms.BooleanField(
+        required=False,
+        label='Только срочные (24 часа)',
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input'
+        })
+    )
+    
+    overdue_only = forms.BooleanField(
+        required=False,
+        label='Только просроченные',
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input'
+        })
+    )
+    
+    has_documents = forms.BooleanField(
+        required=False,
+        label='Только с документами',
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input'
+        })
+    )
