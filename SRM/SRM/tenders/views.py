@@ -1,4 +1,5 @@
 # tenders/views.py
+import json
 from django.shortcuts import render, redirect
 from django.db.models import F, Sum, Count, Avg, Q, ExpressionWrapper, DecimalField
 from django.db import models as db_models  # ← Добавлено для models.Q
@@ -116,19 +117,25 @@ class TenderDeleteView(LoginRequiredMixin, DeleteView):
 # ============================================
 # 🔹 ДАШБОРД
 # ============================================
+import json
+from collections import defaultdict
+
 def dashboard(request):
-    """Дашборд со статистикой"""
+    """Дашборд со статистикой и графиками"""
     now = timezone.now()
     six_months_ago = now - timedelta(days=180)
     
-    # 1. Считаем общее количество и выигранные
+    # 🔹 БАЗОВАЯ СТАТИСТИКА
     total_tenders = Tender.objects.count()
     won_tenders = Tender.objects.filter(status='won').count()
-    active_tenders = Tender.objects.filter(status__in=['submitted', 'published']).count() 
+    active_tenders = Tender.objects.filter(status__in=['submitted', 'published']).count()
+    lost_tenders = Tender.objects.filter(status='lost').count()
+    draft_tenders = Tender.objects.filter(status='draft').count()
     
+    # Конверсия
     conversion = round((won_tenders / total_tenders * 100), 1) if total_tenders > 0 else 0
     
-    # 2. Расчет прибыли и наценки
+    # 🔹 ФИНАНСЫ
     won_qs = Tender.objects.filter(status='won')
     totals = won_qs.aggregate(
         total_final=Sum('final_amount'),
@@ -143,7 +150,33 @@ def dashboard(request):
     else:
         markup_percent = 0
 
-    # 3. График: тендеры по месяцам
+    # 🔹 ГРАФИК 1: Статусы тендеров (круговая)
+    status_stats = Tender.objects.values('status').annotate(count=Count('id')).order_by('status')
+    status_labels = []
+    status_data = []
+    status_colors = {
+        'draft': '#6c757d',
+        'submitted': '#0dcaf0',
+        'published': '#0d6efd',
+        'won': '#198754',
+        'lost': '#dc3545',
+        'cancelled': '#adb5bd',
+    }
+    status_display = {
+        'draft': 'Черновики',
+        'submitted': 'Поданные',
+        'published': 'Опубликованные',
+        'won': 'Выигранные',
+        'lost': 'Проигранные',
+        'cancelled': 'Отменённые',
+    }
+    
+    for item in status_stats:
+        status = item['status']
+        status_labels.append(status_display.get(status, status))
+        status_data.append(item['count'])
+    
+    # 🔹 ГРАФИК 2: Тендеры по месяцам (линейный)
     tenders_qs = Tender.objects.filter(
         deadline__isnull=False,
         deadline__gte=six_months_ago
@@ -156,29 +189,57 @@ def dashboard(request):
         if t['status'] == 'won':
             monthly_data[month]['won'] += 1
     
-    monthly_stats = [
-        {'month': month, 'total': data['total'], 'won': data['won']}
-        for month, data in sorted(monthly_data.items())
-    ]
+    monthly_stats = sorted(monthly_data.items())
+    month_labels = [m[0] for m in monthly_stats]
+    month_totals = [m[1]['total'] for m in monthly_stats]
+    month_won = [m[1]['won'] for m in monthly_stats]
     
-    # 4. Ближайшие дедлайны
+    # 🔹 ГРАФИК 3: Прибыль по клиентам (столбчатый)
+    client_profit = Tender.objects.filter(
+        status='won',
+        client__isnull=False
+    ).values('client__name').annotate(
+        profit_sum=Sum(F('final_amount') - F('cost'))
+    ).order_by('-profit_sum')[:10]
+    
+    client_labels = [c['client__name'][:20] for c in client_profit]
+    client_data = [float(c['profit_sum'] or 0) for c in client_profit]
+    
+    # 🔹 Ближайшие дедлайны
     upcoming_deadlines = Tender.objects.filter(
         deadline__gte=now,
     ).order_by('deadline')[:5]
     
+    # 🔹 ОТЛАДКА
+    print("📊 DEBUG status_labels:", status_labels)
+    print("📊 DEBUG status_data:", status_data)
+    print("📊 DEBUG month_labels:", month_labels)
+    print("📊 DEBUG client_labels:", client_labels)
+    
+    # 🔹 КОНТЕКСТ
     context = {
-        'total_tenders': total_tenders,
-        'active_tenders': active_tenders,
-        'won_tenders': won_tenders,
-        'win_rate': conversion,
-        'total_profit': profit,
-        'avg_markup': markup_percent,
-        'monthly_stats': monthly_stats,
-        'upcoming_deadlines': upcoming_deadlines,
-    }
+    'total_tenders': total_tenders,
+    'active_tenders': active_tenders,
+    'won_tenders': won_tenders,
+    'lost_tenders': lost_tenders,
+    'draft_tenders': draft_tenders,
+    'win_rate': conversion,
+    'total_profit': profit,
+    'avg_markup': markup_percent,
+    'upcoming_deadlines': upcoming_deadlines,
+    
+    # Обычные списки (json_script сам их сериализует)
+    'status_labels': status_labels,
+    'status_data': status_data,
+    'status_colors': [status_colors.get(s['status'], '#6c757d') for s in status_stats],
+    'month_labels': month_labels,
+    'month_totals': month_totals,
+    'month_won': month_won,
+    'client_labels': client_labels,
+    'client_data': client_data,
+}
     
     return render(request, 'tenders/dashboard.html', context)
-
 
 # ============================================
 # 🔹 ЭКСПОРТ В EXCEL

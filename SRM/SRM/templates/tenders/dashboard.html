@@ -2,137 +2,267 @@
 {% block title %}Дашборд{% endblock %}
 
 {% block content %}
-<h2 class="mb-4">📊 Дашборд</h2>
-
-<div class="mb-3">
-    <a href="{% url 'tenders:export_dashboard_excel' %}" class="btn btn-outline-success">
-        <i class="bi bi-download"></i> Скачать отчет в Excel
-    </a>
-</div>
-<!-- Карточки статистики -->
-<div class="row g-4 mb-4">
-    <!-- Всего тендеров -->
-    <div class="col-md-3">
-        <div class="card bg-primary text-white h-100">
-            <div class="card-body">
-                <h5 class="card-title">📋 Всего тендеров</h5>
-                <h2 class="display-4">{{ total_tenders }}</h2>
-                <small>Активных: {{ active_tenders }}</small>
+<div class="container-fluid">
+    <h2 class="mb-4">📊 Дашборд</h2>
+    
+    <!-- КАРТОЧКИ СО СТАТИСТИКОЙ -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm border-primary h-100">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Всего тендеров</h6>
+                    <h2 class="text-primary mb-0">{{ total_tenders }}</h2>
+                    <small class="text-muted">Активных: {{ active_tenders }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-success h-100">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Выиграно</h6>
+                    <h2 class="text-success mb-0">{{ won_tenders }}</h2>
+                    <small class="text-muted">Конверсия: {{ win_rate }}%</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-warning h-100">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Общая прибыль</h6>
+                    <h2 class="text-warning mb-0">{{ total_profit|floatformat:0 }} ₽</h2>
+                    <small class="text-muted">Наценка: {{ avg_markup }}%</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-danger h-100">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Проиграно</h6>
+                    <h2 class="text-danger mb-0">{{ lost_tenders }}</h2>
+                    <small class="text-muted">Черновики: {{ draft_tenders }}</small>
+                </div>
             </div>
         </div>
     </div>
     
-    <!-- Выиграно -->
-    <div class="col-md-3">
-        <div class="card bg-success text-white h-100">
-            <div class="card-body">
-                <h5 class="card-title">✅ Выиграно</h5>
-                <h2 class="display-4">{{ won_tenders }}</h2>
-                <small>Конверсия: {{ win_rate }}%</small>
+    <!-- ГРАФИКИ -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">🥧 Распределение по статусам</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="statusChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">📈 Динамика тендеров по месяцам</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="monthlyChart" height="120"></canvas>
+                </div>
             </div>
         </div>
     </div>
     
-    <!-- Общая прибыль -->
-    <div class="col-md-3">
-        <div class="card bg-info text-white h-100">
-            <div class="card-body">
-                <h5 class="card-title">💰 Общая прибыль</h5>
-                <h2 class="display-6">{{ total_profit|floatformat:0 }} ₽</h2>
-                <small>По выигранным сделкам</small>
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">💰 Прибыль по клиентам (ТОП-10)</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="clientChart" height="140"></canvas>
+                </div>
             </div>
         </div>
-    </div>
-    
-    <!-- Средняя наценка -->
-    <div class="col-md-3">
-        <div class="card bg-warning text-dark h-100">
-            <div class="card-body">
-                <h5 class="card-title">📊 Ср. наценка</h5>
-                <h2 class="display-6">{{ avg_markup|floatformat:1 }}%</h2>
-                <small>По выигранным тендерам</small>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <!-- График -->
-    <div class="col-md-8 mb-4">
-        <div class="card shadow-sm">
-            <div class="card-header bg-white">
-                <h5 class="mb-0">📈 Динамика за последние 6 месяцев</h5>
-            </div>
-            <div class="card-body">
-                <canvas id="tendersChart" height="100"></canvas>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Ближайшие дедлайны -->
-    <div class="col-md-4 mb-4">
-        <div class="card shadow-sm">
-            <div class="card-header bg-white">
-                <h5 class="mb-0">⏰ Ближайшие дедлайны</h5>
-            </div>
-            <div class="card-body">
-                {% if upcoming_deadlines %}
-                    <ul class="list-group list-group-flush">
+        
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">⏰ Ближайшие дедлайны</h5>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_deadlines %}
+                    <div class="list-group list-group-flush">
                         {% for tender in upcoming_deadlines %}
-                        <li class="list-group-item px-0">
-                            <div class="d-flex w-100 justify-content-between">
-                                <strong class="mb-1">{{ tender.customer_name }}</strong>
-                                <small class="text-danger">{{ tender.deadline|date:"d.m" }}</small>
+                        <div class="list-group-item px-0">
+                            <div class="d-flex justify-content-between">
+                                <strong class="text-truncate" style="max-width: 200px;">
+                                    {{ tender.customer_name }}
+                                </strong>
+                                <small class="text-danger">
+                                    {{ tender.deadline|date:"d.m" }}
+                                </small>
                             </div>
-                            <small class="text-muted">{{ tender.executor_name }}</small>
-                        </li>
+                            <small class="text-muted">
+                                {{ tender.initial_amount|floatformat:0 }} ₽
+                            </small>
+                        </div>
                         {% endfor %}
-                    </ul>
-                {% else %}
-                    <p class="text-muted mb-0">Нет ближайших дедлайнов</p>
-                {% endif %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center mb-0">Нет активных дедлайнов</p>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>
+    
+    <div class="d-flex gap-2 mb-4">
+        <a href="{% url 'tenders:export_dashboard_excel' %}" class="btn btn-success">
+            📊 Экспорт статистики в Excel
+        </a>
+        <a href="{% url 'tenders:export_excel' %}" class="btn btn-outline-success">
+            📋 Экспорт всех тендеров
+        </a>
+    </div>
 </div>
 
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- 🔹 БЕЗОПАСНАЯ ПЕРЕДАЧА ДАННЫХ -->
+{{ status_labels|json_script:"status-labels-data" }}
+{{ status_data|json_script:"status-data-data" }}
+{{ status_colors|json_script:"status-colors-data" }}
+{{ month_labels|json_script:"month-labels-data" }}
+{{ month_totals|json_script:"month-totals-data" }}
+{{ month_won|json_script:"month-won-data" }}
+{{ client_labels|json_script:"client-labels-data" }}
+{{ client_data|json_script:"client-data-data" }}
+
 <script>
-const ctx = document.getElementById('tendersChart').getContext('2d');
-new Chart(ctx, {
-    type: 'line',
-    data: {
-        labels: [{% for item in monthly_stats %}'{{ item.month }}',{% endfor %}],
-        datasets: [
-            {
-                label: 'Всего тендеров',
-                data: [{% for item in monthly_stats %}{{ item.total }},{% endfor %}],
-                borderColor: '#0d6efd',
-                backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                tension: 0.3,
-                fill: true
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // Получаем данные из JSON
+    const statusLabels = JSON.parse(document.getElementById('status-labels-data').textContent);
+    const statusData = JSON.parse(document.getElementById('status-data-data').textContent);
+    const statusColors = JSON.parse(document.getElementById('status-colors-data').textContent);
+    const monthLabels = JSON.parse(document.getElementById('month-labels-data').textContent);
+    const monthTotals = JSON.parse(document.getElementById('month-totals-data').textContent);
+    const monthWon = JSON.parse(document.getElementById('month-won-data').textContent);
+    const clientLabels = JSON.parse(document.getElementById('client-labels-data').textContent);
+    const clientData = JSON.parse(document.getElementById('client-data-data').textContent);
+    
+    console.log('📊 Данные загружены:', {
+        statusLabels, statusData, monthLabels, clientLabels
+    });
+    
+    // ГРАФИК 1: Круговая диаграмма статусов
+    const statusCtx = document.getElementById('statusChart');
+    if (statusCtx && statusLabels.length > 0) {
+        new Chart(statusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: statusLabels,
+                datasets: [{
+                    data: statusData,
+                    backgroundColor: statusColors,
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
             },
-            {
-                label: 'Выиграно',
-                data: [{% for item in monthly_stats %}{{ item.won }},{% endfor %}],
-                borderColor: '#198754',
-                backgroundColor: 'rgba(25, 135, 84, 0.1)',
-                tension: 0.3,
-                fill: true
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { padding: 15 } },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((context.raw / total) * 100).toFixed(1);
+                                return context.label + ': ' + context.raw + ' (' + percentage + '%)';
+                            }
+                        }
+                    }
+                }
             }
-        ]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        scales: {
-            y: {
-                beginAtZero: true,
-                ticks: { stepSize: 1 }
+        });
+    }
+    
+    // ГРАФИК 2: Линейный график по месяцам
+    const monthlyCtx = document.getElementById('monthlyChart');
+    if (monthlyCtx && monthLabels.length > 0) {
+        new Chart(monthlyCtx, {
+            type: 'line',
+            data: {
+                labels: monthLabels,
+                datasets: [
+                    {
+                        label: 'Всего тендеров',
+                        data: monthTotals,
+                        borderColor: '#0d6efd',
+                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    },
+                    {
+                        label: 'Выиграно',
+                        data: monthWon,
+                        borderColor: '#198754',
+                        backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'top' } },
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
             }
-        }
+        });
+    }
+    
+    // ГРАФИК 3: Столбчатый график прибыли по клиентам
+    const clientCtx = document.getElementById('clientChart');
+    if (clientCtx && clientLabels.length > 0) {
+        new Chart(clientCtx, {
+            type: 'bar',
+            data: {
+                labels: clientLabels,
+                datasets: [{
+                    label: 'Прибыль, ₽',
+                    data: clientData,
+                    backgroundColor: 'rgba(255, 193, 7, 0.7)',
+                    borderColor: 'rgba(255, 193, 7, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.raw.toLocaleString('ru-RU') + ' ₽';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString('ru-RU') + ' ₽';
+                            }
+                        }
+                    }
+                }
+            }
+        });
     }
 });
 </script>
+
+
 {% endblock %}
