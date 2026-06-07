@@ -307,3 +307,102 @@ class TenderDocument(models.Model):
         elif ext in ['.zip', '.rar']:
             return 'bi-file-earmark-zip text-warning'
         return 'bi-file-earmark text-secondary'
+    
+class AuditLog(models.Model):
+    #Лог действий пользователей"""
+    
+    ACTION_CHOICES = [
+        ('create', 'Создание'),
+        ('update', 'Обновление'),
+        ('delete', 'Удаление'),
+        ('login', 'Вход в систему'),
+        ('logout', 'Выход из системы'),
+        ('import', 'Импорт'),
+        ('export', 'Экспорт'),
+        ('view', 'Просмотр'),
+    ]
+    
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name='Пользователь',
+        related_name='audit_logs'
+    )
+    
+    action = models.CharField(
+        'Действие',
+        max_length=20,
+        choices=ACTION_CHOICES
+    )
+    
+    model_name = models.CharField(
+        'Модель',
+        max_length=100,
+        help_text='Например: Tender, Client'
+    )
+    
+    object_id = models.PositiveIntegerField(
+        'ID объекта',
+        null=True,
+        blank=True,
+        help_text='ID изменённого объекта'
+    )
+    
+    object_repr = models.CharField(
+        'Представление объекта',
+        max_length=200,
+        blank=True,
+        help_text='Например: Название тендера'
+    )
+    
+    changes = models.TextField(
+        'Изменения',
+        blank=True,
+        null=True,
+        help_text='JSON с описанием изменений'
+    )
+    
+    ip_address = models.GenericIPAddressField(
+        'IP-адрес',
+        null=True,
+        blank=True
+    )
+    
+    user_agent = models.TextField(
+        'User Agent',
+        blank=True,
+        null=True
+    )
+    
+    timestamp = models.DateTimeField(
+        'Время',
+        auto_now_add=True
+    )
+    
+    class Meta:
+        verbose_name = 'Запись аудита'
+        verbose_name_plural = 'Записи аудита'
+        ordering = ['-timestamp']
+        indexes = [
+            models.Index(fields=['user', 'timestamp']),
+            models.Index(fields=['model_name', 'object_id']),
+        ]
+    
+    def __str__(self):
+        return f"{self.get_action_display()}: {self.model_name} #{self.object_id} ({self.timestamp})"
+    
+    def get_changes_dict(self):
+        """Возвращает изменения как словарь"""
+        import json
+        if self.changes:
+            try:
+                return json.loads(self.changes)
+            except:
+                return {}
+        return {}
+    
+   
+    def __str__(self):
+        return f"{self.get_action_display()}: {self.model_name} #{self.object_id} ({self.timestamp})"

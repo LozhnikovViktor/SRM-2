@@ -40,4 +40,6 @@ urlpatterns = [
         # 🔹 Документы тендеров
     path('tenders/<int:pk>/upload/', views.TenderDocumentUploadView.as_view(), name='document_upload'),
     path('documents/<int:pk>/delete/', views.TenderDocumentDeleteView.as_view(), name='document_delete'),
+        # 🔹 Аудит-лог
+    path('audit/', views.AuditLogView.as_view(), name='audit_log'),
 ]

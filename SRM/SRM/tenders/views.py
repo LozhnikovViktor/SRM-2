@@ -16,6 +16,7 @@ from datetime import timedelta
 from collections import defaultdict
 from .forms import CustomUserCreationForm, SearchTenderForm, ClientForm, TenderForm, TenderDocumentForm
 from .forms import TenderForm
+from .models import AuditLog
 
 
 # Импорты из приложения
@@ -74,45 +75,68 @@ class TenderCreateView(LoginRequiredMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.author = self.request.user
-        
-        # 🔹 АВТОЗАПОЛНЕНИЕ: если выбран клиент — подставляем его название
-        if form.instance.client and not form.cleaned_data.get('customer_name'):
-            form.instance.customer_name = form.instance.client.name
-        
         response = super().form_valid(form)
+        
+        # Логируем создание
+        self.object._audit_user = self.request.user
+        self.object._audit_request = self.request
+        from .audit import log_action
+        log_action(
+            user=self.request.user,
+            action='create',
+            model_name='Tender',
+            object_id=self.object.pk,
+            object_repr=str(self.object),
+            request=self.request
+        )
+        
         messages.success(self.request, f'✅ Тендер "{self.object.customer_name}" создан!')
         return response
 
 
 class TenderUpdateView(LoginRequiredMixin, UpdateView):
     model = Tender
-    form_class = TenderForm  # ← было fields = [...]
+    form_class = TenderForm
     template_name = 'tenders/tender_form.html'
     success_url = reverse_lazy('tenders:list')
-
+    
     def delete(self, request, *args, **kwargs):
         tender = self.get_object()
         messages.success(request, f'🗑️ Тендер "{tender.customer_name}" удалён')
         return super().delete(request, *args, **kwargs)
-    
+
     def form_valid(self, form):
         if form.instance.client:
             form.instance.customer_name = form.instance.client.name
+        
         response = super().form_valid(form)
+        
+        # Логируем обновление
+        from .audit import log_action
+        log_action(
+            user=self.request.user,
+            action='update',
+            model_name='Tender',
+            object_id=self.object.pk,
+            object_repr=str(self.object),
+            request=self.request
+        )
+        
         messages.success(self.request, f'✅ Тендер "{self.object.customer_name}" обновлён!')
         return response
     
 class TenderDeleteView(LoginRequiredMixin, DeleteView):
-    """Удаление тендера"""
     model = Tender
     template_name = 'tenders/tender_confirm_delete.html'
     success_url = reverse_lazy('tenders:list')
     
     def delete(self, request, *args, **kwargs):
         tender = self.get_object()
+        tender._audit_user = request.user
+        tender._audit_request = request
+        response = super().delete(request, *args, **kwargs)
         messages.success(request, f'🗑️ Тендер "{tender.customer_name}" удалён')
-        return super().delete(request, *args, **kwargs)
-
+        return response
 
 # ============================================
 # 🔹 ДАШБОРД
@@ -500,3 +524,50 @@ class TenderDocumentDeleteView(LoginRequiredMixin, View):
         messages.success(request, f'🗑️ Документ "{document_name}" удалён')
         
         return redirect('tenders:update', pk=document.tender.pk)
+    
+   
+
+
+class AuditLogView(LoginRequiredMixin, ListView):
+    """Просмотр лога аудита"""
+    model = AuditLog
+    template_name = 'tenders/audit_log.html'
+    context_object_name = 'logs'
+    paginate_by = 50
+    
+    def get_queryset(self):
+        queryset = AuditLog.objects.select_related('user')
+        
+        # Фильтрация по пользователю
+        user = self.request.GET.get('user')
+        if user:
+            queryset = queryset.filter(user_id=user)
+        
+        # Фильтрация по действию
+        action = self.request.GET.get('action')
+        if action:
+            queryset = queryset.filter(action=action)
+        
+        # Фильтрация по модели
+        model_name = self.request.GET.get('model')
+        if model_name:
+            queryset = queryset.filter(model_name=model_name)
+        
+        # Фильтрация по дате
+        date_from = self.request.GET.get('date_from')
+        if date_from:
+            from datetime import datetime
+            try:
+                date_from = datetime.strptime(date_from, '%Y-%m-%d')
+                queryset = queryset.filter(timestamp__gte=date_from)
+            except:
+                pass
+        
+        return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['users'] = User.objects.filter(is_active=True)
+        context['actions'] = AuditLog.ACTION_CHOICES
+        context['models'] = ['Tender', 'Client', 'AuditLog']
+        return context

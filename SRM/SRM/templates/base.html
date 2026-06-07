@@ -21,6 +21,7 @@
             <a href="{% url 'tenders:dashboard' %}" class="btn btn-sm btn-outline-info me-2">📊 Дашборд</a>
             <a href="{% url 'tenders:client_list' %}" class="btn btn-sm btn-outline-warning me-2">👥 Клиенты</a>
             <a href="{% url 'tenders:external_search' %}" class="btn btn-sm btn-outline-light me-2">🔍 Поиск тендеров</a>
+            <a href="{% url 'tenders:audit_log' %}" class="btn btn-sm btn-outline-secondary me-2">📝 Аудит-лог</a>
             
             <div class="d-flex">
                 {% if user.is_authenticated %}
