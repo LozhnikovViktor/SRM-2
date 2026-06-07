@@ -13,13 +13,14 @@ from django.utils import timezone
 from django.http import HttpResponse
 from datetime import timedelta
 from collections import defaultdict
-from .forms import CustomUserCreationForm, SearchTenderForm, ClientForm, TenderForm
+from .forms import CustomUserCreationForm, SearchTenderForm, ClientForm, TenderForm, TenderDocumentForm
 from .forms import TenderForm
 
+
 # Импорты из приложения
-from .forms import CustomUserCreationForm, SearchTenderForm, ClientForm, TenderForm
+
 from .utils import export_tenders_to_excel, export_dashboard_stats_to_excel, search_tenders_on_zakupki
-from .models import Tender, Client
+from .models import Tender, Client, TenderDocument
 
 
 # ============================================
@@ -237,7 +238,7 @@ class ExternalSearchView(LoginRequiredMixin, View):
 
 
 class ImportTenderView(LoginRequiredMixin, View):
-    """Импорт тендера с zakupki.gov.ru в нашу систему"""
+    #Импорт тендера с zakupki.gov.ru в нашу систему"""
     
     def post(self, request):
         try:
@@ -288,7 +289,7 @@ class ImportTenderView(LoginRequiredMixin, View):
 # 🔹 CRM: КЛИЕНТЫ
 # ============================================
 class ClientListView(LoginRequiredMixin, ListView):
-    """Список клиентов"""
+    #Список клиентов"""
     model = Client
     template_name = 'tenders/client_list.html'
     context_object_name = 'clients'
@@ -327,7 +328,7 @@ class ClientListView(LoginRequiredMixin, ListView):
         return context
 
 class ClientCreateView(LoginRequiredMixin, CreateView):
-    """Создание клиента"""
+    #Создание клиента"""
     model = Client
     form_class = ClientForm
     template_name = 'tenders/client_form.html'
@@ -341,7 +342,7 @@ class ClientCreateView(LoginRequiredMixin, CreateView):
 
 
 class ClientUpdateView(LoginRequiredMixin, UpdateView):
-    """Редактирование клиента"""
+    #Редактирование клиента"""
     model = Client
     form_class = ClientForm
     template_name = 'tenders/client_form.html'
@@ -354,7 +355,7 @@ class ClientUpdateView(LoginRequiredMixin, UpdateView):
 
 
 class ClientDetailView(LoginRequiredMixin, DetailView):
-    """Детальная информация о клиенте"""
+    #Детальная информация о клиенте"""
     model = Client
     template_name = 'tenders/client_detail.html'
     context_object_name = 'client'
@@ -392,3 +393,49 @@ class ClientDeleteView(LoginRequiredMixin, DeleteView):
         client = self.get_object()
         messages.success(request, f'🗑️ Клиент "{client.name}" удалён')
         return super().delete(request, *args, **kwargs)
+    
+
+
+
+class TenderDocumentUploadView(LoginRequiredMixin, View):
+    """Загрузка документа к тендеру"""
+    
+    def post(self, request, pk):
+        tender = Tender.objects.get(pk=pk)
+        
+        # Проверка прав доступа
+        if tender.author != request.user:
+            messages.error(request, '❌ У вас нет прав для добавления документов')
+            return redirect('tenders:list')
+        
+        form = TenderDocumentForm(request.POST, request.FILES)
+        if form.is_valid():
+            document = form.save(commit=False)
+            document.tender = tender
+            document.uploaded_by = request.user
+            document.save()
+            messages.success(request, f'📎 Документ "{document.name}" загружен!')
+        else:
+            for error in form.errors.values():
+                messages.error(request, error)
+        
+        return redirect('tenders:update', pk=pk)
+
+
+class TenderDocumentDeleteView(LoginRequiredMixin, View):
+    """Удаление документа"""
+    
+    def post(self, request, pk):
+        document = TenderDocument.objects.get(pk=pk)
+        
+        # Проверка прав доступа
+        if document.tender.author != request.user:
+            messages.error(request, '❌ У вас нет прав для удаления')
+            return redirect('tenders:list')
+        
+        document_name = document.name
+        document.file.delete()  # Удаляем файл с диска
+        document.delete()
+        messages.success(request, f'🗑️ Документ "{document_name}" удалён')
+        
+        return redirect('tenders:update', pk=document.tender.pk)

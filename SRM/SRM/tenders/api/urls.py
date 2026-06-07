@@ -12,4 +12,7 @@ urlpatterns = [
     
     # Login/logout для browsable API (удобно для тестов в браузере)
     path('auth/', include('rest_framework.urls')),
+
+        # 🔹 Документы тендеров
+
 ]

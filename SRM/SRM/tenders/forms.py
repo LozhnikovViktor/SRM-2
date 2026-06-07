@@ -3,6 +3,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from .models import Client
 from .models import Tender, Client
+from .models import TenderDocument
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -146,3 +147,52 @@ class TenderForm(forms.ModelForm):
             'cost': 'Себестоимость',
             'comment': 'Комментарий',
         }
+
+
+class TenderDocumentForm(forms.ModelForm):
+    """Форма для загрузки документа к тендеру"""
+    
+    class Meta:
+        model = TenderDocument
+        fields = ['name', 'file', 'description']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Например: Коммерческое предложение'
+            }),
+            'file': forms.ClearableFileInput(attrs={
+                'class': 'form-control',
+                'accept': '.pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.zip,.rar'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': '2',
+                'placeholder': 'Краткое описание (необязательно)'
+            }),
+        }
+        labels = {
+            'name': 'Название документа',
+            'file': 'Файл',
+            'description': 'Описание',
+        }
+    
+    def clean_file(self):
+        file = self.cleaned_data.get('file')
+        if file:
+            # Проверка размера
+            if file.size > TenderDocument.MAX_FILE_SIZE:
+                raise forms.ValidationError(
+                    f'Размер файла не должен превышать 10 МБ. '
+                    f'Ваш файл: {round(file.size / (1024*1024), 2)} МБ'
+                )
+            
+            # Проверка расширения
+            import os
+            ext = os.path.splitext(file.name)[1].lower()
+            if ext not in TenderDocument.ALLOWED_EXTENSIONS:
+                raise forms.ValidationError(
+                    f'Недопустимый формат файла: {ext}. '
+                    f'Разрешены: {", ".join(TenderDocument.ALLOWED_EXTENSIONS)}'
+                )
+        
+        return file

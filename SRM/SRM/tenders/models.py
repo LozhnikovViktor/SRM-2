@@ -225,3 +225,85 @@ class Client(models.Model):
     
         def __str__(self):
             return f"{self.name} (ИНН: {self.inn})"
+        
+class TenderDocument(models.Model):
+    #Документ, прикреплённый к тендеру"""
+    
+    tender = models.ForeignKey(
+        Tender,
+        on_delete=models.CASCADE,
+        related_name='documents',
+        verbose_name='Тендер'
+    )
+    
+    file = models.FileField(
+        'Файл',
+        upload_to='tender_documents/%Y/%m/%d/',
+        help_text='PDF, DOCX, JPG, PNG (макс. 10 МБ)'
+    )
+    
+    name = models.CharField(
+        'Название документа',
+        max_length=200,
+        help_text='Например: "Коммерческое предложение"'
+    )
+    
+    description = models.TextField(
+        'Описание',
+        blank=True,
+        null=True,
+        help_text='Краткое описание документа'
+    )
+    
+    uploaded_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name='Загрузил',
+        related_name='uploaded_documents'
+    )
+    
+    uploaded_at = models.DateTimeField('Загружен', auto_now_add=True)
+    
+    # Допустимые форматы файлов
+    ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.jpg', '.jpeg', '.png', '.gif', '.zip', '.rar']
+    MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 МБ
+    
+    class Meta:
+        verbose_name = 'Документ'
+        verbose_name_plural = 'Документы'
+        ordering = ['-uploaded_at']
+    
+    def __str__(self):
+        return f"{self.name} ({self.tender.customer_name})"
+    
+    def file_extension(self):
+        """Расширение файла"""
+        import os
+        return os.path.splitext(self.file.name)[1].lower()
+    
+    def file_size_mb(self):
+        """Размер файла в МБ"""
+        if self.file:
+            return round(self.file.size / (1024 * 1024), 2)
+        return 0
+    
+    def is_image(self):
+        """Является ли файл изображением"""
+        return self.file_extension() in ['.jpg', '.jpeg', '.png', '.gif']
+    
+    def icon_class(self):
+        """Иконка в зависимости от типа файла"""
+        ext = self.file_extension()
+        if ext == '.pdf':
+            return 'bi-file-earmark-pdf text-danger'
+        elif ext in ['.doc', '.docx']:
+            return 'bi-file-earmark-word text-primary'
+        elif ext in ['.xls', '.xlsx']:
+            return 'bi-file-earmark-excel text-success'
+        elif ext in ['.jpg', '.jpeg', '.png', '.gif']:
+            return 'bi-file-earmark-image text-info'
+        elif ext in ['.zip', '.rar']:
+            return 'bi-file-earmark-zip text-warning'
+        return 'bi-file-earmark text-secondary'

@@ -36,4 +36,8 @@ urlpatterns = [
     path('clients/<int:pk>/', views.ClientDetailView.as_view(), name='client_detail'),
     path('clients/<int:pk>/edit/', views.ClientUpdateView.as_view(), name='client_edit'),
     path('clients/<int:pk>/delete/', views.ClientDeleteView.as_view(), name='client_delete'),
+
+        # 🔹 Документы тендеров
+    path('tenders/<int:pk>/upload/', views.TenderDocumentUploadView.as_view(), name='document_upload'),
+    path('documents/<int:pk>/delete/', views.TenderDocumentDeleteView.as_view(), name='document_delete'),
 ]

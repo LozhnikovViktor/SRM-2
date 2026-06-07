@@ -202,3 +202,6 @@ EMAIL_HOST_USER = 'vicktorlozhnikov@yandex.ru'  # Замените на ваш e
 EMAIL_HOST_PASSWORD = 'gkucvjszmwpikpno'  # Не обычный пароль, а пароль приложения из настроек Яндекса!
 DEFAULT_FROM_EMAIL = 'vicktorlozhnikov@yandex.ru'
 DEADLINE_REMINDER_DAYS = 1
+
+
+MEDIA_ROOT = BASE_DIR / 'media'
