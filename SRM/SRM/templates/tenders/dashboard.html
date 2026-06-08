@@ -367,4 +367,36 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+{% block extra_js %}
+<script>
+// 🔹 Функция для обновления графиков при смене темы
+window.updateChartsTheme = function(theme) {
+    const isDark = theme === 'dark';
+    const textColor = isDark ? '#e9ecef' : '#212529';
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+    
+    // Обновляем все графики Chart.js на странице
+    Chart.helpers.each(Chart.instances, function(instance) {
+        // Обновляем цвет текста
+        if (instance.options.plugins && instance.options.plugins.legend) {
+            instance.options.plugins.legend.labels.color = textColor;
+        }
+        
+        // Обновляем цвет сетки
+        if (instance.options.scales) {
+            Object.keys(instance.options.scales).forEach(function(key) {
+                const scale = instance.options.scales[key];
+                if (scale.ticks) scale.ticks.color = textColor;
+                if (scale.grid) scale.grid.color = gridColor;
+            });
+        }
+        
+        instance.update();
+    });
+};
+</script>
+{% endblock %}
+
+
 {% endblock %}

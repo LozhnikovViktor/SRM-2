@@ -175,4 +175,40 @@ document.addEventListener('DOMContentLoaded', function() {
         </div>
     </div>
 </div>
+
+
+{% block extra_css %}
+<style>
+    [data-bs-theme="dark"] .fc {
+        --fc-border-color: #495057;
+        --fc-page-bg-color: #1a1d21;
+        --fc-neutral-bg-color: #242830;
+        --fc-today-bg-color: rgba(13, 110, 253, 0.15);
+        --fc-event-border-color: #0d6efd;
+    }
+    
+    [data-bs-theme="dark"] .fc .fc-button {
+        background: #2c3138;
+        border-color: #495057;
+        color: #e9ecef;
+    }
+    
+    [data-bs-theme="dark"] .fc .fc-button:hover {
+        background: #343a40;
+    }
+    
+    [data-bs-theme="dark"] .fc .fc-col-header-cell {
+        background: #2c3138;
+        color: #e9ecef;
+    }
+    
+    [data-bs-theme="dark"] .fc .fc-daygrid-day-number {
+        color: #adb5bd;
+    }
+    
+    [data-bs-theme="dark"] .fc-theme-standard td,
+    [data-bs-theme="dark"] .fc-theme-standard th {
+        border-color: #495057;
+    }
+</style>
 {% endblock %}
