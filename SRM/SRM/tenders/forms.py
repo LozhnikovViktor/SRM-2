@@ -2,8 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from .models import Client
-from .models import Tender, Client
-from .models import TenderDocument
+from .models import Tender, Client, TenderDocument, AuditLog, Comment
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -328,3 +327,18 @@ class TenderFilterForm(forms.Form):
             'class': 'form-check-input'
         })
     )
+
+class CommentForm(forms.ModelForm):
+    """Форма добавления комментария"""
+    
+    class Meta:
+        model = Comment
+        fields = ['text']
+        widgets = {
+            'text': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Напишите комментарий...',
+                'maxlength': '1000'
+            })
+        }

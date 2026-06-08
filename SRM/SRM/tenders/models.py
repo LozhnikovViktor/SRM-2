@@ -336,3 +336,38 @@ class AuditLog(models.Model):
             except:
                 return {}
         return {}
+
+class Comment(models.Model):
+    """Комментарий к тендеру"""
+    
+    tender = models.ForeignKey(
+        Tender,
+        on_delete=models.CASCADE,
+        related_name='comments',
+        verbose_name='Тендер'
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Автор'
+    )
+    text = models.TextField(
+        'Текст комментария',
+        help_text='Максимум 1000 символов'
+    )
+    created_at = models.DateTimeField(
+        'Создан',
+        auto_now_add=True
+    )
+    updated_at = models.DateTimeField(
+        'Обновлён',
+        auto_now=True
+    )
+    
+    class Meta:
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"Комментарий от {self.author.username} к {self.tender.customer_name}"

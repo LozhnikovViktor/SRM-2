@@ -48,5 +48,8 @@ urlpatterns = [
         # 🔹 Календарь дедлайнов
     path('calendar/', views.TenderCalendarView.as_view(), name='calendar'),
     path('api/calendar/data/', views.TenderCalendarDataView.as_view(), name='api_calendar_data'),
+    path('tenders/<int:pk>/comments/add/', views.add_comment, name='add_comment'),
+    path('comments/<int:pk>/edit/', views.edit_comment, name='edit_comment'),
+    path('comments/<int:pk>/delete/', views.delete_comment, name='delete_comment'),
     
 ]

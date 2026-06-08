@@ -18,6 +18,9 @@ from .forms import CustomUserCreationForm, SearchTenderForm, ClientForm, TenderF
 from .models import AuditLog
 from django.http import JsonResponse
 from .forms import CustomUserCreationForm, SearchTenderForm, ClientForm, TenderForm, TenderDocumentForm, TenderFilterForm
+from django.views.decorators.http import require_POST
+from .forms import CommentForm
+from django.contrib.auth.decorators import login_required
 
 
 # Импорты из приложения
@@ -914,3 +917,94 @@ class TenderCalendarDataView(LoginRequiredMixin, View):
             })
         
         return JsonResponse(events, safe=False)
+
+
+@login_required
+def add_comment(request, pk):
+    """Добавление комментария к тендеру (AJAX)"""
+    tender = get_object_or_404(Tender, pk=pk)
+    
+    if request.method == 'POST':
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.tender = tender
+            comment.author = request.user
+            comment.save()
+            
+            # Создаём запись в audit log
+            AuditLog.objects.create(
+                user=request.user,
+                action='create',
+                model_name='Comment',
+                object_id=comment.id,
+                object_repr=f'Комментарий к {tender.customer_name}',
+                ip_address=get_client_ip(request),
+                user_agent=request.META.get('HTTP_USER_AGENT', '')
+            )
+            
+            # Возвращаем HTML для нового комментария
+            return JsonResponse({
+                'success': True,
+                'html': render_to_string('tenders/comment_item.html', {
+                    'comment': comment,
+                    'user': request.user
+                }, request=request)
+            })
+        else:
+            return JsonResponse({'success': False, 'errors': form.errors})
+    
+    return JsonResponse({'success': False, 'error': 'Метод не разрешён'})
+
+
+@login_required
+def edit_comment(request, pk):
+    """Редактирование комментария"""
+    comment = get_object_or_404(Comment, pk=pk)
+    
+    # Проверяем, что пользователь является автором
+    if comment.author != request.user:
+        return JsonResponse({'success': False, 'error': 'Нет прав'})
+    
+    if request.method == 'POST':
+        form = CommentForm(request.POST, instance=comment)
+        if form.is_valid():
+            form.save()
+            return JsonResponse({
+                'success': True,
+                'html': render_to_string('tenders/comment_item.html', {
+                    'comment': comment,
+                    'user': request.user
+                }, request=request)
+            })
+        else:
+            return JsonResponse({'success': False, 'errors': form.errors})
+    
+    return JsonResponse({'success': False, 'error': 'Метод не разрешён'})
+
+
+@login_required
+def delete_comment(request, pk):
+    """Удаление комментария"""
+    comment = get_object_or_404(Comment, pk=pk)
+    
+    # Проверяем, что пользователь является автором
+    if comment.author != request.user:
+        return JsonResponse({'success': False, 'error': 'Нет прав'})
+    
+    if request.method == 'POST':
+        tender = comment.tender
+        comment.delete()
+        
+        AuditLog.objects.create(
+            user=request.user,
+            action='delete',
+            model_name='Comment',
+            object_repr=f'Удалён комментарий к {tender.customer_name}',
+            ip_address=get_client_ip(request),
+            user_agent=request.META.get('HTTP_USER_AGENT', '')
+        )
+        
+        return JsonResponse({'success': True})
+    
+    return JsonResponse({'success': False, 'error': 'Метод не разрешён'})
