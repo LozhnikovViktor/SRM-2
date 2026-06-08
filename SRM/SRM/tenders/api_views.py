@@ -18,7 +18,7 @@ class TenderViewSet(viewsets.ModelViewSet):
     DELETE /api/tenders/{id}/ - удалить тендер
     """
     serializer_class = TenderSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = []
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['status', 'client', 'author']
     search_fields = ['customer_name', 'executor_name', 'comment']
@@ -72,7 +72,7 @@ class ClientViewSet(viewsets.ModelViewSet):
     DELETE /api/clients/{id}/ - удалить клиента
     """
     serializer_class = ClientSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = []
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['status', 'manager']
     search_fields = ['name', 'inn', 'email', 'contact_person']

@@ -1,9 +1,8 @@
-from django.urls import path
-from django.http import JsonResponse
+from rest_framework.routers import DefaultRouter
+from .api_views import TenderViewSet, ClientViewSet
 
-def api_root(request):
-    return JsonResponse({'message': 'API работает!'})
+router = DefaultRouter()
+router.register(r'tenders', TenderViewSet, basename='tender')
+router.register(r'clients', ClientViewSet, basename='client')
 
-urlpatterns = [
-    path('', api_root),
-]
+urlpatterns = router.urls
