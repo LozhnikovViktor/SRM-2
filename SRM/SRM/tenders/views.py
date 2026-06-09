@@ -1,6 +1,7 @@
 # tenders/views.py
 import json
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from django.template.loader import render_to_string
 from django.db.models import F, Sum, Count, Avg, Q, ExpressionWrapper, DecimalField
 from django.db import models as db_models  # ← Добавлено для models.Q
 from django.views.generic import ListView, CreateView, DeleteView, UpdateView, DetailView, View
@@ -21,6 +22,10 @@ from .forms import CustomUserCreationForm, SearchTenderForm, ClientForm, TenderF
 from django.views.decorators.http import require_POST
 from .forms import CommentForm
 from django.contrib.auth.decorators import login_required
+from django.db.models import Sum, F, Count, Q
+from .models import Tender, Client, TenderDocument, AuditLog, Comment, TenderStatus
+from .tenderplan_api import api_client
+from .forms import TenderplanSearchForm
 
 
 # Импорты из приложения
@@ -28,7 +33,14 @@ from django.contrib.auth.decorators import login_required
 from .utils import export_tenders_to_excel, export_dashboard_stats_to_excel, search_tenders_on_zakupki
 from .models import Tender, Client, TenderDocument
 
-
+def get_client_ip(request):
+    """Получает IP-адрес клиента"""
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
 # ============================================
 # 🔹 АВТОРИЗАЦИЯ
 # ============================================
@@ -428,35 +440,6 @@ def dashboard(request):
 
 
     
-        # 🔹 ДАННЫЕ ДЛЯ ВОРОНКИ ПРОДАЖ
-    funnel_data = {
-        'draft': Tender.objects.filter(status='draft').count(),
-        'submitted': Tender.objects.filter(status__in=['submitted', 'published']).count(),
-        'won': Tender.objects.filter(status='won').count(),
-    }
-
-    # Рассчитываем конверсию между этапами
-    funnel_conversion = {}
-    if funnel_data['draft'] > 0:
-        funnel_conversion['draft_to_submitted'] = round(
-            (funnel_data['submitted'] / funnel_data['draft']) * 100, 1
-        )
-    else:
-        funnel_conversion['draft_to_submitted'] = 0
-    
-    if funnel_data['submitted'] > 0:
-        funnel_conversion['submitted_to_won'] = round(
-            (funnel_data['won'] / funnel_data['submitted']) * 100, 1
-        )
-    else:
-        funnel_conversion['submitted_to_won'] = 0
-    
-    # Добавляем в контекст
-    context['funnel_data'] = funnel_data
-    context['funnel_conversion'] = funnel_conversion
-    context['funnel_data_json'] = json.dumps(funnel_data)  # ← ДОБАВЬТЕ ЭТУ СТРОКУ!
-
-    return render(request, 'tenders/dashboard.html', context)
 
 # ============================================
 # 🔹 ЭКСПОРТ В EXCEL
@@ -1008,3 +991,241 @@ def delete_comment(request, pk):
         return JsonResponse({'success': True})
     
     return JsonResponse({'success': False, 'error': 'Метод не разрешён'})
+
+@login_required
+def export_tenders_pdf(request):
+    """Экспорт списка тендеров в PDF"""
+    from .pdf_utils import render_tenders_list_pdf
+    from django.utils import timezone
+    from django.db.models import Sum
+    
+    tenders = Tender.objects.filter(author=request.user).select_related('author', 'client')
+    
+    status = request.GET.get('status')
+    if status:
+        tenders = tenders.filter(status=status)
+    
+    total_count = tenders.count()
+    total_initial = tenders.aggregate(total=Sum('initial_amount'))['total'] or 0
+    won_count = tenders.filter(status='won').count()
+    
+    context = {
+        'current_date': timezone.now().strftime('%d.%m.%Y %H:%M'),
+        'total_count': total_count,
+        'total_initial': total_initial,
+        'won_count': won_count,
+    }
+    
+    return render_tenders_list_pdf(tenders, context)
+
+
+@login_required
+def export_dashboard_pdf(request):
+    """Экспорт дашборда в PDF"""
+    from .pdf_utils import render_dashboard_pdf
+    from django.utils import timezone
+    from django.db.models import Sum, F, Count, Q
+    
+    user = request.user
+    tenders = Tender.objects.filter(author=user)
+    
+    # Общая статистика
+    total_tenders = tenders.count()
+    active_tenders = tenders.filter(status__in=['draft', 'submitted']).count()
+    won_tenders = tenders.filter(status='won').count()
+    lost_tenders = tenders.filter(status='lost').count()
+    win_rate = round(won_tenders / total_tenders * 100, 1) if total_tenders > 0 else 0
+    
+    # Финансовые показатели
+    totals = tenders.aggregate(
+        total_initial=Sum('initial_amount'),
+        total_won=Sum('final_amount', filter=Q(status='won')),
+        total_cost=Sum('cost', filter=Q(status='won'))
+    )
+    
+    total_initial_amount = totals['total_initial'] or 0
+    total_won_amount = totals['total_won'] or 0
+    total_cost = totals['total_cost'] or 0
+    total_profit = total_won_amount - total_cost
+    average_markup = (total_profit / total_cost * 100) if total_cost else 0
+    
+    # Статистика по статусам
+    status_stats = []
+    for code, name in Tender._meta.get_field('status').choices:
+        count = tenders.filter(status=code).count()
+        percent = round(count / total_tenders * 100, 1) if total_tenders > 0 else 0
+        status_stats.append({
+            'code': code,
+            'name': name,
+            'count': count,
+            'percent': percent
+        })
+    
+    context = {
+        'current_date': timezone.now().strftime('%d.%m.%Y %H:%M'),
+        'total_tenders': total_tenders,
+        'active_tenders': active_tenders,
+        'won_tenders': won_tenders,
+        'lost_tenders': lost_tenders,
+        'win_rate': win_rate,
+        'total_initial_amount': total_initial_amount,
+        'total_won_amount': total_won_amount,
+        'total_cost': total_cost,
+        'total_profit': total_profit,
+        'average_markup': average_markup,
+        'status_stats': status_stats,
+    }
+    
+    return render_dashboard_pdf(context)
+
+@login_required
+def export_tender_detail_pdf(request, pk):
+    """Экспорт карточки тендера в PDF"""
+    from .pdf_utils import render_tender_detail_pdf
+    from django.utils import timezone
+    
+    tender = get_object_or_404(Tender, pk=pk, author=request.user)
+    
+    context = {
+        'current_date': timezone.now().strftime('%d.%m.%Y %H:%M'),
+    }
+    
+    return render_tender_detail_pdf(tender, context)
+
+class TenderplanSearchView(LoginRequiredMixin, View):
+    """Поиск тендеров на tenderplan.ru"""
+    template_name = 'tenders/tenderplan_search.html'
+    
+    def get(self, request):
+        form = TenderplanSearchForm()
+        return render(request, self.template_name, {
+            'form': form,
+            'search_performed': False,
+        })
+    
+    def post(self, request):
+        form = TenderplanSearchForm(request.POST)
+        tenders = []
+        error = None
+        
+        if form.is_valid():
+            keyword = form.cleaned_data['keyword']
+            region = form.cleaned_data.get('region')
+            max_results = form.cleaned_data['max_results']
+            
+            try:
+                tenders = api_client.search_tenders(keyword, region, max_results)
+            except Exception as e:
+                error = str(e)
+        
+        return render(request, self.template_name, {
+            'form': form,
+            'tenders': tenders,
+            'search_performed': True,
+            'error': error,
+            'keyword': form.cleaned_data.get('keyword', '') if form.is_valid() else '',
+        })
+
+
+class ImportFromTenderplanView(LoginRequiredMixin, View):
+    """Импорт тендера с tenderplan.ru"""
+    
+    def post(self, request):
+        try:
+            external_id = request.POST.get('external_id', '')
+            customer_name = request.POST.get('customer_name', 'Не указан')[:200]
+
+            # Конвертируем сумму: заменяем запятую на точку
+            amount_str = request.POST.get('initial_amount', '0') or '0'
+            try:
+                # Заменяем запятую на точку и удаляем пробелы
+                amount_str = amount_str.replace(',', '.').replace(' ', '').strip()
+                initial_amount = float(amount_str)
+            except (ValueError, TypeError):
+                initial_amount = 0.0
+        
+            deadline = request.POST.get('deadline') or None
+            procedure_url = request.POST.get('procedure_url', '')
+            title = request.POST.get('title', '')[:200]
+            
+            # Автопоиск клиента
+            client = None
+            if customer_name and customer_name != 'Не указан':
+                client = Client.objects.filter(
+                    Q(name__iexact=customer_name) |
+                    Q(name__icontains=customer_name)
+                ).first()
+            
+            # Парсим дату
+            deadline_dt = None
+            if deadline:
+                from datetime import datetime
+                for fmt in ['%Y-%m-%d %H:%M:%S', '%Y-%m-%d', '%d.%m.%Y']:
+                    try:
+                        deadline_dt = datetime.strptime(deadline, fmt)
+                        break
+                    except:
+                        continue
+            
+            tender = Tender(
+                customer_name=customer_name,
+                client=client,
+                initial_amount=initial_amount,
+                deadline=deadline_dt,
+                status='draft',
+                executor_name='',
+                procedure_url=procedure_url,
+                author=request.user,
+                source_url=procedure_url,
+                external_id=external_id,
+                comment=f"Импортирован с tenderplan.ru: {title}"[:1000],
+            )
+            tender.save()
+            
+            if client:
+                message = f'✅ Тендер "{customer_name}" импортирован и привязан к клиенту "{client.name}"!'
+                status_type = 'success'
+            else:
+                message = f'⚠️ Тендер "{customer_name}" импортирован. Клиент не найден.'
+                status_type = 'warning'
+            
+            return JsonResponse({
+                'success': True,
+                'message': message,
+                'status': status_type,
+                'tender_id': tender.pk,
+            })
+        
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': f'❌ Ошибка импорта: {e}',
+                'status': 'error',
+            }, status=500)
+
+def post(self, request):
+    form = TenderplanSearchForm(request.POST)
+    tenders = []
+    error = None
+    
+    if form.is_valid():
+        keyword = form.cleaned_data['keyword']
+        region = form.cleaned_data.get('region')
+        max_results = form.cleaned_data['max_results']
+        
+        print(f"🔍 Поиск: keyword={keyword}, region={region}, max={max_results}")
+        
+        try:
+            tenders = api_client.search_tenders(keyword, region, max_results)
+            print(f"✅ Найдено: {len(tenders)}")
+        except Exception as e:
+            error = str(e)
+            print(f"❌ Ошибка: {error}")
+    
+    return render(request, self.template_name, {
+        'form': form,
+        'tenders': tenders,
+        'search_performed': True,
+        'error': error,
+        'keyword': form.cleaned_data.get('keyword', '') if form.is_valid() else '',
+    })

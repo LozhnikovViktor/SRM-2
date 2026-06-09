@@ -51,5 +51,7 @@ urlpatterns = [
     path('tenders/<int:pk>/comments/add/', views.add_comment, name='add_comment'),
     path('comments/<int:pk>/edit/', views.edit_comment, name='edit_comment'),
     path('comments/<int:pk>/delete/', views.delete_comment, name='delete_comment'),
-    
+        # 🔹 Поиск на Tenderplan.ru
+    path('tenderplan-search/', views.TenderplanSearchView.as_view(), name='tenderplan_search'),
+    path('import-tenderplan/', views.ImportFromTenderplanView.as_view(), name='import_tenderplan'),
 ]

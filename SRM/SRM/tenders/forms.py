@@ -176,24 +176,29 @@ class TenderDocumentForm(forms.ModelForm):
         }
     
     def clean_file(self):
+        """Проверка загружаемого файла"""
         file = self.cleaned_data.get('file')
+    
         if file:
-            # Проверка размера
-            if file.size > TenderDocument.MAX_FILE_SIZE:
+            # 🔹 Максимальный размер файла: 10 МБ
+            MAX_FILE_SIZE = 10 * 1024 * 1024
+        
+            if file.size > MAX_FILE_SIZE:
                 raise forms.ValidationError(
                     f'Размер файла не должен превышать 10 МБ. '
-                    f'Ваш файл: {round(file.size / (1024*1024), 2)} МБ'
-                )
-            
-            # Проверка расширения
-            import os
-            ext = os.path.splitext(file.name)[1].lower()
-            if ext not in TenderDocument.ALLOWED_EXTENSIONS:
-                raise forms.ValidationError(
-                    f'Недопустимый формат файла: {ext}. '
-                    f'Разрешены: {", ".join(TenderDocument.ALLOWED_EXTENSIONS)}'
+                    f'Ваш файл: {file.size / (1024*1024):.2f} МБ'
                 )
         
+            # 🔹 Проверка расширения файла
+            ALLOWED_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'png', 'jpg', 'jpeg', 'zip', 'rar', 'txt']
+        
+            ext = file.name.split('.')[-1].lower()
+            if ext not in ALLOWED_EXTENSIONS:
+                raise forms.ValidationError(
+                    f'Недопустимый формат файла: .{ext}. '
+                    f'Разрешённые форматы: {", ".join(ALLOWED_EXTENSIONS)}'
+                )
+    
         return file
 
 class TenderFilterForm(forms.Form):
@@ -342,3 +347,32 @@ class CommentForm(forms.ModelForm):
                 'maxlength': '1000'
             })
         }
+
+class TenderplanSearchForm(forms.Form):
+    """Форма поиска тендеров на Tenderplan.ru"""
+    keyword = forms.CharField(
+        label='Ключевое слово',
+        max_length=200,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Например: строительство, поставки, услуги',
+        })
+    )
+    region = forms.CharField(
+        label='Регион (код)',
+        max_length=10,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Например: 77 (Москва)',
+        })
+    )
+    max_results = forms.IntegerField(
+        label='Максимум результатов',
+        min_value=1,
+        max_value=50,
+        initial=20,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+        })
+    )
