@@ -91,6 +91,11 @@ LOGIN_URL = 'tenders:login'
 LOGIN_REDIRECT_URL = 'tenders:list'
 LOGOUT_REDIRECT_URL = 'tenders:list'
 
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Static files
 STATIC_URL = '/static/'

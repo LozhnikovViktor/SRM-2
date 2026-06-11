@@ -1,6 +1,8 @@
 from django.urls import path
 from django.contrib.auth.views import LoginView, LogoutView
 from . import views
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
+
 
 
 app_name = 'tenders'
@@ -54,4 +56,8 @@ urlpatterns = [
         # 🔹 Поиск на Tenderplan.ru
     path('tenderplan-search/', views.TenderplanSearchView.as_view(), name='tenderplan_search'),
     path('import-tenderplan/', views.ImportFromTenderplanView.as_view(), name='import_tenderplan'),
+        # 🔹 Swagger/Redoc API документация
+    path('api/v1/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/v1/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    path('api/v1/schema/', SpectacularAPIView.as_view(), name='schema'),
 ]
