@@ -13,7 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-me-in-production')
 DEBUG = config('DEBUG', default=True, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost,*', cast=Csv())
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -91,6 +91,11 @@ LOGIN_URL = 'tenders:login'
 LOGIN_REDIRECT_URL = 'tenders:list'
 LOGOUT_REDIRECT_URL = 'tenders:list'
 
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Static files
 STATIC_URL = '/static/'
