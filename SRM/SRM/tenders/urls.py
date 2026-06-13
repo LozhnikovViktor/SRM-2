@@ -60,4 +60,6 @@ urlpatterns = [
     path('api/v1/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('api/v1/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
     path('api/v1/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('export/word/', views.export_kanban_to_word, name='export_kanban_word'),
+    path('dashboard/export/word/', views.export_dashboard_to_word, name='export_dashboard_word'),
 ]

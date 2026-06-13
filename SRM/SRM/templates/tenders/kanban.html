@@ -9,6 +9,18 @@
     </div>
     
     <div class="row kanban-board">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>📋 Канбан-доска</h2>
+    <div>
+        <a href="{% url 'tenders:export_kanban_word' %}" class="btn btn-success me-2">
+            📄 Экспорт в Word
+        </a>
+        <a href="{% url 'tenders:list' %}" class="btn btn-outline-secondary">
+            ← К списку
+        </a>
+    </div>
+</div>
         
         <!-- Черновики -->
         <div class="col-md-3 col-sm-6 mb-3">

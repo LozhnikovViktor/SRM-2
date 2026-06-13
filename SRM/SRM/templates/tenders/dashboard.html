@@ -4,6 +4,17 @@
 {% block content %}
 <div class="container-fluid">
     <h2 class="mb-4">📊 Дашборд</h2>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a href="{% url 'tenders:export_dashboard_word' %}" class="btn btn-success me-2">
+            📄 Экспорт в Word
+        </a>
+        <a href="{% url 'tenders:export_dashboard_excel' %}" class="btn btn-info me-2">
+            📊 Экспорт в Excel
+        </a>
+    </div>
+</div>
     
     <!-- КАРТОЧКИ СО СТАТИСТИКОЙ -->
     <div class="row mb-4">

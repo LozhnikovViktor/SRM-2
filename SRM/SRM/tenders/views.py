@@ -26,6 +26,15 @@ from django.db.models import Sum, F, Count, Q
 from .models import Tender, Client, TenderDocument, AuditLog, Comment, TenderStatus
 from .tenderplan_api import api_client
 from .forms import TenderplanSearchForm
+from docx import Document
+from docx.shared import Inches, Pt, RGBColor
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.section import WD_ORIENT
+from datetime import datetime, timedelta
+from django.db.models import Sum, Count, F, Q
+
+
+
 
 
 # Импорты из приложения
@@ -1224,3 +1233,404 @@ def post(self, request):
         'error': error,
         'keyword': form.cleaned_data.get('keyword', '') if form.is_valid() else '',
     })
+
+
+
+
+
+def export_kanban_to_word(request):
+    """Экспорт канбан-доски в Word"""
+    # Создаём документ
+    doc = Document()
+    
+    # Заголовок
+    title = doc.add_heading('📋 Канбан-доска SRM Тендеры', 0)
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    # Дата формирования
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    run = p.add_run(f'Дата формирования: {datetime.now().strftime("%d.%m.%Y %H:%M")}')
+    run.italic = True
+    
+    # Получаем все тендеры по статусам
+    draft = Tender.objects.filter(status='draft')
+    process = Tender.objects.filter(status__in=['submitted', 'published'])
+    won = Tender.objects.filter(status='won')
+    lost = Tender.objects.filter(status__in=['lost', 'cancelled'])
+    
+    # Функция добавления колонки
+    def add_column(title, tenders, color):
+        doc.add_heading(title, level=1)
+        
+        if not tenders:
+            p = doc.add_paragraph('Нет тендеров')
+            p.runs[0].italic = True
+            return
+        
+        for tender in tenders:
+            # Создаём таблицу для каждой карточки
+            table = doc.add_table(rows=1, cols=2)
+            table.style = 'Light Grid Accent 1'
+            
+            # Заголовок карточки
+            hdr_cells = table.rows[0].cells
+            hdr_cells[0].text = f'#{tender.id} - {tender.customer_name[:50]}'
+            hdr_cells[0].paragraphs[0].runs[0].bold = True
+            
+            # Объединяем ячейки для заголовка
+            if len(table.columns) > 1:
+                table.rows[0].cells[1].merge(table.rows[0].cells[1])
+            
+            # Данные
+            data = [
+                ('Заказчик', tender.customer_name),
+                ('Сумма', f'{tender.initial_amount:,.0f} ₽'),
+                ('Дедлайн', tender.deadline.strftime('%d.%m.%Y %H:%M') if tender.deadline else 'Не указан'),
+                ('Исполнитель', tender.executor_name or 'Не назначен'),
+                ('Статус', tender.get_status_display()),
+            ]
+            
+            if tender.client:
+                data.append(('Клиент', tender.client.name))
+            
+            for label, value in data:
+                row_cells = table.add_row().cells
+                row_cells[0].text = label
+                row_cells[1].text = value
+                row_cells[0].paragraphs[0].runs[0].bold = True
+                row_cells[0].width = Inches(1.5)
+            
+            # Пустая строка между карточками
+            doc.add_paragraph()
+    
+    # Добавляем колонки
+    add_column('📝 Черновики', draft, 'gray')
+    add_column('📤 В работе', process, 'blue')
+    add_column('🏆 Выигранные', won, 'green')
+    add_column('❌ Закрыты', lost, 'red')
+    
+    # Итоговая статистика
+    doc.add_page_break()
+    doc.add_heading('📊 Итоговая статистика', level=1)
+    
+    stats_table = doc.add_table(rows=1, cols=3)
+    stats_table.style = 'Medium Grid 1 Accent 1'
+    hdr_cells = stats_table.rows[0].cells
+    hdr_cells[0].text = 'Категория'
+    hdr_cells[1].text = 'Количество'
+    hdr_cells[2].text = 'Общая сумма'
+    
+    categories = [
+        ('Черновики', draft),
+        ('В работе', process),
+        ('Выигранные', won),
+        ('Закрыты', lost),
+    ]
+    
+    total_sum = 0
+    for name, qs in categories:
+        count = qs.count()
+        amount = sum(t.initial_amount or 0 for t in qs)
+        total_sum += amount
+        
+        row_cells = stats_table.add_row().cells
+        row_cells[0].text = name
+        row_cells[1].text = str(count)
+        row_cells[2].text = f'{amount:,.0f} ₽'
+    
+    # Итого
+    total_row = stats_table.add_row().cells
+    total_row[0].text = 'ВСЕГО'
+    total_row[0].paragraphs[0].runs[0].bold = True
+    total_row[1].text = str(Tender.objects.count())
+    total_row[1].paragraphs[0].runs[0].bold = True
+    total_row[2].text = f'{total_sum:,.0f} ₽'
+    total_row[2].paragraphs[0].runs[0].bold = True
+    
+    # Сохраняем в response
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    )
+    response['Content-Disposition'] = f'attachment; filename=kanban_{datetime.now().strftime("%Y%m%d_%H%M%S")}.docx'
+    
+    doc.save(response)
+    return response
+
+
+
+
+def export_dashboard_to_word(request):
+    """Экспорт дашборда в Word"""
+    doc = Document()
+    
+    # Ориентация ландшафтная для таблиц
+    section = doc.sections[0]
+    section.orientation = WD_ORIENT.LANDSCAPE
+    section.page_width = Inches(11.69)
+    section.page_height = Inches(8.27)
+    
+    # Заголовок
+    title = doc.add_heading('📊 Дашборд SRM Тендеры', 0)
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    
+    # Дата и пользователь
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    run = p.add_run(f'Дата: {datetime.now().strftime("%d.%m.%Y %H:%M")}\n')
+    run.italic = True
+    if request.user.is_authenticated:
+        run = p.add_run(f'Пользователь: {request.user.username}')
+        run.italic = True
+    
+    # ============================================
+    # 🔹 ОСНОВНАЯ СТАТИСТИКА
+    # ============================================
+    doc.add_heading('📈 Основная статистика', level=1)
+    
+    now = timezone.now()
+    total_tenders = Tender.objects.count()
+    won_tenders = Tender.objects.filter(status='won').count()
+    active_tenders = Tender.objects.filter(status__in=['submitted', 'published']).count()
+    lost_tenders = Tender.objects.filter(status='lost').count()
+    draft_tenders = Tender.objects.filter(status='draft').count()
+    
+    # Конверсия
+    conversion = round((won_tenders / total_tenders * 100), 1) if total_tenders > 0 else 0
+    
+    # Таблица основной статистики
+    table = doc.add_table(rows=1, cols=2)
+    table.style = 'Medium Grid 1 Accent 1'
+    
+    hdr_cells = table.rows[0].cells
+    hdr_cells[0].text = 'Показатель'
+    hdr_cells[1].text = 'Значение'
+    
+    stats = [
+        ('Всего тендеров', total_tenders),
+        ('Активных', active_tenders),
+        ('Выигранных', won_tenders),
+        ('Проигранных', lost_tenders),
+        ('Черновики', draft_tenders),
+        ('Конверсия, %', f'{conversion}%'),
+    ]
+    
+    for name, value in stats:
+        row_cells = table.add_row().cells
+        row_cells[0].text = name
+        row_cells[1].text = str(value)
+    
+    doc.add_paragraph()
+    
+    # ============================================
+    # 🔹 ФИНАНСОВЫЕ ПОКАЗАТЕЛИ
+    # ============================================
+    doc.add_heading('💰 Финансовые показатели', level=1)
+    
+    won_qs = Tender.objects.filter(status='won')
+    totals = won_qs.aggregate(
+        total_final=Sum('final_amount'),
+        total_cost=Sum('cost')
+    )
+    total_final = totals['total_final'] or 0
+    total_cost = totals['total_cost'] or 0
+    profit = total_final - total_cost
+    
+    if total_cost > 0:
+        markup_percent = round((profit / total_cost) * 100, 1)
+    else:
+        markup_percent = 0
+    
+    # Таблица финансов
+    finance_table = doc.add_table(rows=1, cols=2)
+    finance_table.style = 'Medium Grid 1 Accent 1'
+    
+    hdr_cells = finance_table.rows[0].cells
+    hdr_cells[0].text = 'Показатель'
+    hdr_cells[1].text = 'Сумма'
+    
+    finances = [
+        ('Общая сумма выигранных тендеров', f'{total_final:,.0f} ₽'),
+        ('Общая стоимость', f'{total_cost:,.0f} ₽'),
+        ('Прибыль', f'{profit:,.0f} ₽'),
+        ('Наценка, %', f'{markup_percent}%'),
+    ]
+    
+    for name, value in finances:
+        row_cells = finance_table.add_row().cells
+        row_cells[0].text = name
+        row_cells[1].text = value
+        if 'Прибыль' in name and profit > 0:
+            row_cells[1].paragraphs[0].runs[0].font.color.rgb = RGBColor(0, 128, 0)
+    
+    doc.add_paragraph()
+    
+    # ============================================
+    # 🔹 СТАТИСТИКА ПО СТАТУСАМ
+    # ============================================
+    doc.add_heading('📊 Распределение по статусам', level=1)
+    
+    status_table = doc.add_table(rows=1, cols=3)
+    status_table.style = 'Light Grid Accent 1'
+    
+    hdr_cells = status_table.rows[0].cells
+    hdr_cells[0].text = 'Статус'
+    hdr_cells[1].text = 'Количество'
+    hdr_cells[2].text = 'Процент'
+    
+    status_stats = Tender.objects.values('status').annotate(
+        count=Count('id')
+    ).order_by('status')
+    
+    status_display = {
+        'draft': 'Черновик',
+        'submitted': 'Подан',
+        'published': 'Опубликован',
+        'won': 'Выигран',
+        'lost': 'Проигран',
+        'cancelled': 'Отменён',
+    }
+    
+    for item in status_stats:
+        status = item['status']
+        count = item['count']
+        percent = round((count / total_tenders * 100), 1) if total_tenders > 0 else 0
+        
+        row_cells = status_table.add_row().cells
+        row_cells[0].text = status_display.get(status, status)
+        row_cells[1].text = str(count)
+        row_cells[2].text = f'{percent}%'
+    
+    doc.add_paragraph()
+    
+    # ============================================
+    # 🔹 ТОП КЛИЕНТОВ ПО ПРИБЫЛИ
+    # ============================================
+    doc.add_heading('🏆 Топ клиентов по прибыли', level=1)
+    
+    client_profit = Tender.objects.filter(
+        status='won',
+        client__isnull=False
+    ).values('client__name').annotate(
+        profit_sum=Sum(F('final_amount') - F('cost')),
+        tender_count=Count('id')
+    ).order_by('-profit_sum')[:10]
+    
+    if client_profit:
+        client_table = doc.add_table(rows=1, cols=3)
+        client_table.style = 'Light Grid Accent 1'
+        
+        hdr_cells = client_table.rows[0].cells
+        hdr_cells[0].text = 'Клиент'
+        hdr_cells[1].text = 'Тендеров'
+        hdr_cells[2].text = 'Прибыль'
+        
+        for client_data in client_profit:
+            row_cells = client_table.add_row().cells
+            row_cells[0].text = client_data['client__name'] or 'Не указан'
+            row_cells[1].text = str(client_data['tender_count'])
+            row_cells[2].text = f"{client_data['profit_sum']:,.0f} ₽" if client_data['profit_sum'] else "0 ₽"
+    else:
+        p = doc.add_paragraph('Нет данных по клиентам')
+        p.runs[0].italic = True
+    
+    doc.add_paragraph()
+    
+    # ============================================
+    # 🔹 БЛИЖАЙШИЕ ДЕДЛАЙНЫ
+    # ============================================
+    doc.add_heading('⏰ Ближайшие дедлайны (7 дней)', level=1)
+    
+    seven_days_later = now + timedelta(days=7)
+    upcoming = Tender.objects.filter(
+        deadline__gte=now,
+        deadline__lte=seven_days_later,
+        status__in=['draft', 'submitted', 'published']
+    ).order_by('deadline')[:15]
+    
+    if upcoming:
+        deadline_table = doc.add_table(rows=1, cols=4)
+        deadline_table.style = 'Light Grid Accent 1'
+        
+        hdr_cells = deadline_table.rows[0].cells
+        hdr_cells[0].text = 'ID'
+        hdr_cells[1].text = 'Заказчик'
+        hdr_cells[2].text = 'Дедлайн'
+        hdr_cells[3].text = 'Сумма'
+        
+        for tender in upcoming:
+            row_cells = deadline_table.add_row().cells
+            row_cells[0].text = f'#{tender.id}'
+            row_cells[1].text = tender.customer_name[:40] if tender.customer_name else ''
+            row_cells[2].text = tender.deadline.strftime('%d.%m.%Y %H:%M') if tender.deadline else ''
+            row_cells[3].text = f'{tender.initial_amount:,.0f} ₽' if tender.initial_amount else ''
+            
+            # Подсветка срочных
+            if tender.deadline and (tender.deadline - now).days <= 1:
+                for cell in row_cells:
+                    cell.paragraphs[0].runs[0].font.color.rgb = RGBColor(255, 0, 0)
+                    cell.paragraphs[0].runs[0].bold = True
+    else:
+        p = doc.add_paragraph('Нет предстоящих дедлайнов')
+        p.runs[0].italic = True
+    
+    doc.add_paragraph()
+    # ============================================
+    # 🔹 ПОСЛЕДНИЕ 10 ТЕНДЕРОВ
+    # ============================================
+    doc.add_heading('📋 Последние тендеры', level=1)
+    
+    recent_tenders = Tender.objects.all().order_by('-id')[:10]
+    
+    if recent_tenders:
+        recent_table = doc.add_table(rows=1, cols=5)
+        recent_table.style = 'Light Grid Accent 1'
+        
+        hdr_cells = recent_table.rows[0].cells
+        hdr_cells[0].text = 'ID'
+        hdr_cells[1].text = 'Заказчик'
+        hdr_cells[2].text = 'Статус'
+        hdr_cells[3].text = 'Сумма'
+        hdr_cells[4].text = 'Дедлайн'
+        
+        for tender in recent_tenders:
+            row_cells = recent_table.add_row().cells
+            row_cells[0].text = f'#{tender.id}'
+            row_cells[1].text = tender.customer_name[:30] if tender.customer_name else ''
+            row_cells[2].text = tender.get_status_display()
+            row_cells[3].text = f'{tender.initial_amount:,.0f} ₽' if tender.initial_amount else ''
+            row_cells[4].text = tender.deadline.strftime('%d.%m.%Y') if tender.deadline else 'Не указан'
+    
+    # ============================================
+    # 🔹 СВОДКА
+    # ============================================
+    doc.add_page_break()
+    doc.add_heading('📌 Итоговая сводка', level=1)
+    
+    summary = f"""
+Общее количество тендеров: {total_tenders}
+Активных тендеров: {active_tenders}
+Выиграно: {won_tenders} ({conversion}%)
+Проиграно: {lost_tenders}
+
+Финансовые результаты:
+- Общая сумма выигранных тендеров: {total_final:,.0f} ₽
+- Общая стоимость: {total_cost:,.0f} ₽
+- Прибыль: {profit:,.0f} ₽
+- Наценка: {markup_percent}%
+
+Просроченных тендеров: {Tender.objects.filter(deadline__lt=now, status__in=['draft', 'submitted', 'published']).count()}
+Срочных (24 часа): {Tender.objects.filter(deadline__gte=now, deadline__lte=now + timedelta(hours=24), status__in=['draft', 'submitted', 'published']).count()}
+"""
+    
+    p = doc.add_paragraph(summary)
+    p.runs[0].font.size = Pt(11)
+    
+    # Сохранение
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    )
+    response['Content-Disposition'] = f'attachment; filename=dashboard_{datetime.now().strftime("%Y%m%d_%H%M%S")}.docx'
+    
+    doc.save(response)
+    return response
