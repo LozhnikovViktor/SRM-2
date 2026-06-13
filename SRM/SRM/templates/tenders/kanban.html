@@ -8,60 +8,95 @@
         <a href="{% url 'tenders:list' %}" class="btn btn-outline-secondary">← К списку</a>
     </div>
     
-    <!-- Канбан колонки -->
     <div class="row kanban-board">
         
-        <!-- Колонка: Черновики -->
+        <!-- Черновики -->
         <div class="col-md-3 col-sm-6 mb-3">
-            <div class="kanban-column" id="col-draft" data-status="draft">
+            <div class="kanban-column" data-status="draft">
                 <div class="kanban-header bg-secondary text-white">
-                    📝 Черновики <span class="badge bg-light text-dark float-end">{{ draft.count }}</span>
+                    📝 Черновики <span class="badge bg-light text-dark">{{ draft.count }}</span>
                 </div>
-                <div class="kanban-body" id="list-draft">
+                <div class="kanban-body" id="kanban-draft">
                     {% for tender in draft %}
-                        {% include "tenders/includes/kanban_card.html" %}
+                    <div class="kanban-card" data-tender-id="{{ tender.id }}">
+                        <div class="card-header d-flex justify-content-between">
+                            <span>#{{ tender.id }}</span>
+                            <span>{{ tender.deadline|date:"d.m" }}</span>
+                        </div>
+                        <div class="card-body">
+                            <h6>{{ tender.customer_name|truncatechars:30 }}</h6>
+                            <p class="amount mb-0">{{ tender.initial_amount|floatformat:0 }} ₽</p>
+                        </div>
+                    </div>
                     {% endfor %}
                 </div>
             </div>
         </div>
         
-        <!-- Колонка: В работе (Поданные + Опубликованные) -->
+        <!-- В работе -->
         <div class="col-md-3 col-sm-6 mb-3">
-            <div class="kanban-column" id="col-process" data-status="process">
+            <div class="kanban-column" data-status="submitted">
                 <div class="kanban-header bg-primary text-white">
-                    📤 В работе <span class="badge bg-light text-dark float-end">{{ process.count }}</span>
+                    📤 В работе <span class="badge bg-light text-dark">{{ process.count }}</span>
                 </div>
-                <div class="kanban-body" id="list-process">
+                <div class="kanban-body" id="kanban-submitted">
                     {% for tender in process %}
-                        {% include "tenders/includes/kanban_card.html" %}
+                    <div class="kanban-card" data-tender-id="{{ tender.id }}">
+                        <div class="card-header d-flex justify-content-between">
+                            <span>#{{ tender.id }}</span>
+                            <span>{{ tender.deadline|date:"d.m" }}</span>
+                        </div>
+                        <div class="card-body">
+                            <h6>{{ tender.customer_name|truncatechars:30 }}</h6>
+                            <p class="amount mb-0">{{ tender.initial_amount|floatformat:0 }} ₽</p>
+                        </div>
+                    </div>
                     {% endfor %}
                 </div>
             </div>
         </div>
         
-        <!-- Колонка: Выигранные -->
+        <!-- Выигранные -->
         <div class="col-md-3 col-sm-6 mb-3">
-            <div class="kanban-column" id="col-won" data-status="won">
+            <div class="kanban-column" data-status="won">
                 <div class="kanban-header bg-success text-white">
-                    🏆 Выигранные <span class="badge bg-light text-dark float-end">{{ won.count }}</span>
+                    🏆 Выигранные <span class="badge bg-light text-dark">{{ won.count }}</span>
                 </div>
-                <div class="kanban-body" id="list-won">
+                <div class="kanban-body" id="kanban-won">
                     {% for tender in won %}
-                        {% include "tenders/includes/kanban_card.html" %}
+                    <div class="kanban-card" data-tender-id="{{ tender.id }}">
+                        <div class="card-header d-flex justify-content-between">
+                            <span>#{{ tender.id }}</span>
+                            <span>{{ tender.deadline|date:"d.m" }}</span>
+                        </div>
+                        <div class="card-body">
+                            <h6>{{ tender.customer_name|truncatechars:30 }}</h6>
+                            <p class="amount mb-0">{{ tender.initial_amount|floatformat:0 }} ₽</p>
+                        </div>
+                    </div>
                     {% endfor %}
                 </div>
             </div>
         </div>
         
-        <!-- Колонка: Проигранные -->
+        <!-- Закрыты -->
         <div class="col-md-3 col-sm-6 mb-3">
-            <div class="kanban-column" id="col-lost" data-status="lost">
+            <div class="kanban-column" data-status="lost">
                 <div class="kanban-header bg-danger text-white">
-                    ❌ Закрыты <span class="badge bg-light text-dark float-end">{{ lost.count }}</span>
+                    ❌ Закрыты <span class="badge bg-light text-dark">{{ lost.count }}</span>
                 </div>
-                <div class="kanban-body" id="list-lost">
+                <div class="kanban-body" id="kanban-lost">
                     {% for tender in lost %}
-                        {% include "tenders/includes/kanban_card.html" %}
+                    <div class="kanban-card" data-tender-id="{{ tender.id }}">
+                        <div class="card-header d-flex justify-content-between">
+                            <span>#{{ tender.id }}</span>
+                            <span>{{ tender.deadline|date:"d.m" }}</span>
+                        </div>
+                        <div class="card-body">
+                            <h6>{{ tender.customer_name|truncatechars:30 }}</h6>
+                            <p class="amount mb-0">{{ tender.initial_amount|floatformat:0 }} ₽</p>
+                        </div>
+                    </div>
                     {% endfor %}
                 </div>
             </div>
@@ -70,37 +105,108 @@
     </div>
 </div>
 
-<!-- Подключение SortableJS -->
+<!-- Стили -->
+<style>
+.kanban-column {
+    background: #f4f6f9;
+    border-radius: 8px;
+    height: 100%;
+    min-height: 500px;
+}
+.kanban-header {
+    padding: 15px;
+    border-radius: 8px 8px 0 0;
+    font-weight: bold;
+}
+.kanban-body {
+    padding: 10px;
+    min-height: 400px;
+}
+.kanban-card {
+    background: white;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    cursor: grab;
+    transition: all 0.2s;
+}
+.kanban-card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+}
+.sortable-ghost {
+    opacity: 0.4;
+    background: #e9ecef;
+    border: 2px dashed #0d6efd;
+}
+.sortable-drag {
+    opacity: 0.8;
+}
+</style>
+
+<!-- SortableJS -->
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
 <script>
+// Функция получения CSRF токена
+function getCSRFToken() {
+    const cookie = document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='));
+    return cookie ? cookie.split('=')[1] : '';
+}
+
+// Инициализация после загрузки DOM
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Инициализация Kanban...');
     
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    const columns = document.querySelectorAll('.kanban-body');
+    const csrfToken = getCSRFToken();
+    console.log('CSRF Token:', csrfToken ? 'найден' : 'НЕ НАЙДЕН');
     
-    columns.forEach(column => {
-        new Sortable(column, {
-            group: 'kanban', // Разрешаем перетаскивание между колонками
+    // Находим все колонки
+    const bodies = document.querySelectorAll('.kanban-body');
+    console.log('Найдено колонок:', bodies.length);
+    
+    bodies.forEach((body, index) => {
+        const status = body.parentElement.getAttribute('data-status');
+        console.log(`Колонка ${index}: ${status}`);
+        
+        new Sortable(body, {
+            group: 'kanban',
             animation: 150,
             ghostClass: 'sortable-ghost',
+            delay: 0,
+            delayOnTouchOnly: false,
             
-            // При окончании перетаскивания
             onEnd: function(evt) {
+                console.log(' onEnd вызван', evt);
+                
                 const itemEl = evt.item;
                 const newColumn = evt.to;
                 const oldColumn = evt.from;
                 
-                if (newColumn === oldColumn) return; // Если перенесли в ту же колонку
+                if (newColumn === oldColumn) {
+                    console.log('Та же колонка, выходим');
+                    return;
+                }
                 
-                // Получаем ID тендера и новый статус
                 const tenderId = itemEl.getAttribute('data-tender-id');
-                const newStatus = newColumn.getAttribute('data-status');
+                const newStatus = newColumn.parentElement.getAttribute('data-status');
                 
-                // Визуальная обратная связь (затемняем)
+                console.log('Перемещение:', {
+                    tenderId: tenderId,
+                    from: oldColumn.parentElement.getAttribute('data-status'),
+                    to: newStatus
+                });
+                
+                if (!tenderId || !newStatus) {
+                    alert('Ошибка: не найдены данные');
+                    location.reload();
+                    return;
+                }
+                
+                // Отправляем на сервер
                 itemEl.style.opacity = '0.5';
                 
-                // Отправляем запрос на сервер
                 fetch('{% url "tenders:api_tender_status" %}', {
                     method: 'POST',
                     headers: {
@@ -108,88 +214,35 @@ document.addEventListener('DOMContentLoaded', function() {
                         'X-CSRFToken': csrfToken
                     },
                     body: JSON.stringify({
-                        tender_id: tenderId,
+                        tender_id: parseInt(tenderId),
                         status: newStatus
                     })
                 })
-                .then(response => response.json())
+                .then(response => {
+                    console.log('Response:', response.status);
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('Data:', data);
                     if (data.status === 'success') {
-                        // Обновляем цвет карточки в зависимости от новой колонки
-                        updateCardStyle(itemEl, newStatus);
-                        // Пересчитываем счетчики (упрощенно: просто обновляем страницу через 1 сек)
-                        setTimeout(() => { location.reload(); }, 800);
+                        setTimeout(() => location.reload(), 500);
                     } else {
                         alert('Ошибка: ' + data.message);
-                        location.reload(); // Возвращаем на место при ошибке
+                        location.reload();
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
+                    alert('Ошибка сети');
                     location.reload();
                 });
             }
         });
+        
+        console.log(`✅ Sortable инициализирован для колонки ${index}`);
     });
     
-    function updateCardStyle(el, status) {
-        // Можно добавить логику изменения цвета бейджа статуса внутри карточки
-        console.log('Status updated to:', status);
-    }
+    console.log('✅ Инициализация завершена');
 });
 </script>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-/* Стили для Канбана */
-.kanban-column {
-    background: #f4f6f9;
-    border-radius: 8px;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-.kanban-header {
-    padding: 10px 15px;
-    border-radius: 8px 8px 0 0;
-    font-weight: bold;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.kanban-body {
-    padding: 10px;
-    min-height: 200px;
-    flex-grow: 1;
-}
-.kanban-card {
-    background: white;
-    border-radius: 6px;
-    padding: 12px;
-    margin-bottom: 10px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    cursor: grab;
-    transition: box-shadow 0.2s;
-    border-left: 4px solid #6c757d;
-}
-.kanban-card:hover {
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-}
-.kanban-card:active {
-    cursor: grabbing;
-}
-/* Цвета карточек по статусу */
-.card-draft { border-left-color: #6c757d; }
-.card-submitted { border-left-color: #0d6efd; }
-.card-published { border-left-color: #0d6efd; }
-.card-won { border-left-color: #198754; }
-.card-lost { border-left-color: #dc3545; }
-.card-cancelled { border-left-color: #dc3545; }
-
-.sortable-ghost {
-    opacity: 0.4;
-    background: #e9ecef;
-}
-</style>
 {% endblock %}
