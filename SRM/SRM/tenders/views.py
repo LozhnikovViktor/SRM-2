@@ -32,6 +32,11 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.section import WD_ORIENT
 from datetime import datetime, timedelta
 from django.db.models import Sum, Count, F, Q
+from django.contrib.auth.decorators import user_passes_test
+from rest_framework import viewsets
+from .serializers import TenderSerializer, ClientSerializer
+
+
 
 
 
@@ -1634,3 +1639,133 @@ def export_dashboard_to_word(request):
     
     doc.save(response)
     return response
+
+
+
+def is_admin(user):
+    return user.is_superuser
+
+@user_passes_test(is_admin)
+def user_management(request):
+    """Управление пользователями (только для суперпользователя)"""
+    users = User.objects.all().order_by('-date_joined')
+    
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        user_id = request.POST.get('user_id')
+        
+        if user_id:
+            user = User.objects.get(id=user_id)
+            
+            if action == 'reset_password':
+                # Сброс пароля на случайный
+                new_password = User.objects.make_random_password(length=12)
+                user.set_password(new_password)
+                user.save()
+                messages.success(request, f'Пароль пользователя {user.username} сброшен. Новый пароль: {new_password}')
+            
+            elif action == 'activate':
+                user.is_active = True
+                user.save()
+                messages.success(request, f'Пользователь {user.username} активирован')
+            
+            elif action == 'deactivate':
+                user.is_active = False
+                user.save()
+                messages.success(request, f'Пользователь {user.username} деактивирован')
+    
+    return render(request, 'tenders/user_management.html', {'users': users})
+
+
+    # ============================================
+# 🔹 API ДЛЯ PUSH-УВЕДОМЛЕНИЙ
+# ============================================
+class OverdueTendersView(View):
+    """API: Просроченные тендеры"""
+    
+    def get(self, request):
+        overdue_count = Tender.objects.filter(
+            deadline__lt=timezone.now(),
+            status__in=['draft', 'submitted', 'published']
+        ).count()
+        
+        return JsonResponse({
+            'count': overdue_count,
+            'timestamp': timezone.now().isoformat()
+        })
+
+
+class UpcomingDeadlinesView(View):
+    """API: Приближающиеся дедлайны"""
+    
+    def get(self, request):
+        three_days_later = timezone.now() + timedelta(days=3)
+        upcoming_count = Tender.objects.filter(
+            deadline__gte=timezone.now(),
+            deadline__lte=three_days_later,
+            status__in=['draft', 'submitted', 'published']
+        ).count()
+        
+        return JsonResponse({
+            'count': upcoming_count,
+            'timestamp': timezone.now().isoformat()
+        })
+
+
+# ============================================
+# 🔹 DRF VIEWSETS ДЛЯ SWAGGER
+# ============================================
+class TenderViewSet(viewsets.ModelViewSet):
+    """API для управления тендерами"""
+    queryset = Tender.objects.all()
+    serializer_class = TenderSerializer
+    
+    def get_queryset(self):
+        return Tender.objects.filter(author=self.request.user)
+
+
+class ClientViewSet(viewsets.ModelViewSet):
+    """API для управления клиентами"""
+    queryset = Client.objects.all()
+    serializer_class = ClientSerializer
+
+
+# ============================================
+# 🔹 КАСТОМНАЯ АДМИНКА (УПРАВЛЕНИЕ ПОЛЬЗОВАТЕЛЯМИ)
+# ============================================
+from django.contrib.auth.models import User
+from django.contrib.auth.decorators import user_passes_test
+
+def is_admin(user):
+    return user.is_superuser
+
+@user_passes_test(is_admin)
+def user_management(request):
+    """Управление пользователями (только для суперпользователя)"""
+    users = User.objects.all().order_by('-date_joined')
+    
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        user_id = request.POST.get('user_id')
+        
+        if user_id:
+            user = User.objects.get(id=user_id)
+            
+            if action == 'reset_password':
+                from django.utils.crypto import get_random_string
+                new_password = get_random_string(length=12)
+                user.set_password(new_password)
+                user.save()
+                messages.success(request, f'Пароль пользователя {user.username} сброшен. Новый пароль: {new_password}')
+            
+            elif action == 'activate':
+                user.is_active = True
+                user.save()
+                messages.success(request, f'Пользователь {user.username} активирован')
+            
+            elif action == 'deactivate':
+                user.is_active = False
+                user.save()
+                messages.success(request, f'Пользователь {user.username} деактивирован')
+    
+    return render(request, 'tenders/user_management.html', {'users': users})
