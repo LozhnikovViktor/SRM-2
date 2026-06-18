@@ -3,6 +3,7 @@ from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth import views as auth_views
 from . import views
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
+from rest_framework.routers import DefaultRouter
 
 
 app_name = 'tenders'
@@ -122,5 +123,14 @@ urlpatterns = [
     # ============================================
     # 🔹 АДМИНКА (КАСТОМНАЯ)
     # ============================================
-    path('admin/users/', views.user_management, name='user_management'),
+     path('admin/users/', views.user_management, name='user_management'),
 ]
+
+# ============================================
+# 🔹 DRF ROUTER
+# ============================================
+router = DefaultRouter()
+router.register(r'api/tenders', views.TenderViewSet, basename='tender')
+router.register(r'api/clients', views.ClientViewSet, basename='client')
+
+urlpatterns += router.urls
