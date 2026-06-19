@@ -124,6 +124,12 @@ urlpatterns = [
     # 🔹 АДМИНКА (КАСТОМНАЯ)
     # ============================================
      path('admin/users/', views.user_management, name='user_management'),
+         # 🔹 ЧАТ
+    path('chat/', views.chat_room_list, name='chat_list'),
+    path('chat/<int:room_id>/', views.chat_room, name='chat_room'),
+    path('chat/<int:room_id>/send/', views.chat_send_message, name='chat_send_message'),
+    path('chat/<int:room_id>/messages/', views.chat_get_messages, name='chat_get_messages'),
+    path('chat/start/<str:content_type>/<int:object_id>/', views.start_chat, name='start_chat'),
 ]
 
 # ============================================

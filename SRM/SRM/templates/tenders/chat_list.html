@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Мои чаты{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2> Мои чаты</h2>
+        <a href="{% url 'tenders:list' %}" class="btn btn-outline-secondary">← К тендерам</a>
+    </div>
+    
+    <div class="row">
+        <!-- Чаты по тендерам -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    📋 Чаты по тендерам
+                </div>
+                <div class="card-body">
+                    {% if tender_rooms %}
+                        <div class="list-group">
+                            {% for room in tender_rooms %}
+                                {% with last_msg=room.get_last_message %}
+                                <a href="{% url 'tenders:chat_room' room.id %}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex justify-content-between">
+                                        <h6 class="mb-1">📄 {{ room.tender.customer_name|truncatechars:40 }}</h6>
+                                        <small class="text-muted">{{ room.updated_at|date:"d.m.Y H:i" }}</small>
+                                    </div>
+                                    {% if last_msg %}
+                                        <p class="mb-1 small text-muted">
+                                            <strong>{{ last_msg.author.username }}:</strong> 
+                                            {{ last_msg.content|truncatechars:50 }}
+                                        </p>
+                                    {% endif %}
+                                </a>
+                                {% endwith %}
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">Нет чатов по тендерам</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Чаты по клиентам -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    👥 Чаты по клиентам
+                </div>
+                <div class="card-body">
+                    {% if client_rooms %}
+                        <div class="list-group">
+                            {% for room in client_rooms %}
+                                {% with last_msg=room.get_last_message %}
+                                <a href="{% url 'tenders:chat_room' room.id %}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex justify-content-between">
+                                        <h6 class="mb-1">🏢 {{ room.client.name|truncatechars:40 }}</h6>
+                                        <small class="text-muted">{{ room.updated_at|date:"d.m.Y H:i" }}</small>
+                                    </div>
+                                    {% if last_msg %}
+                                        <p class="mb-1 small text-muted">
+                                            <strong>{{ last_msg.author.username }}:</strong> 
+                                            {{ last_msg.content|truncatechars:50 }}
+                                        </p>
+                                    {% endif %}
+                                </a>
+                                {% endwith %}
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">Нет чатов по клиентам</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

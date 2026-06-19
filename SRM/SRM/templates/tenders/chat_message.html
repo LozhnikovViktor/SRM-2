@@ -1,0 +1,11 @@
+<div class="message mb-3 {% if is_own %}text-end{% endif %}" data-message-id="{{ message.id }}">
+    <div class="d-inline-block {% if is_own %}bg-primary text-white{% else %}bg-white{% endif %} rounded p-2 shadow-sm" style="max-width: 70%;">
+        <div class="small {% if is_own %}text-light{% else %}text-muted{% endif %} mb-1">
+            <strong>{{ message.author.username }}</strong>
+            <span class="ms-2">{{ message.created_at|date:"H:i" }}</span>
+        </div>
+        <div>
+            {{ message.content|linebreaksbr }}
+        </div>
+    </div>
+</div>

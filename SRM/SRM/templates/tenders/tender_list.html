@@ -8,6 +8,7 @@
         <div>
             <a href="{% url 'tenders:create' %}" class="btn btn-success">➕ Новый тендер</a>
             <a href="{% url 'tenders:export_excel' %}" class="btn btn-outline-success">📊 Excel</a>
+            <a href="{% url 'tenders:chat_list' %}" class="btn btn-outline-info">💬 Все чаты</a>
         </div>
     </div>
     
@@ -77,7 +78,7 @@
                         
                         <!-- Дедлайн -->
                         <div class="mb-3">
-                            <label class="form-label small fw-bold"> Дедлайн</label>
+                            <label class="form-label small fw-bold">📅 Дедлайн</label>
                             <div class="row g-2">
                                 <div class="col-6">
                                     <label class="small text-muted">От</label>
@@ -127,12 +128,12 @@
                         
                         <!-- Сортировка -->
                         <div class="mb-3">
-                            <label class="form-label small fw-bold"> Сортировка</label>
+                            <label class="form-label small fw-bold">🔀 Сортировка</label>
                             {{ filter_form.sort }}
                         </div>
                         
                         <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary"> Применить</button>
+                            <button type="submit" class="btn btn-primary">✅ Применить</button>
                             <a href="{% url 'tenders:list' %}" class="btn btn-outline-secondary">✖ Сбросить всё</a>
                         </div>
                     </form>
@@ -200,14 +201,15 @@
                                 </td>
                                 <td>{{ tender.executor_name|default:"—" }}</td>
                                 <td>
-                                    <a href="{% url 'tenders:update' tender.pk %}" class="btn btn-sm btn-outline-primary">✏️</a>
-                                    <a href="{% url 'tenders:delete' tender.pk %}" class="btn btn-sm btn-outline-danger">🗑️</a>
+                                    <a href="{% url 'tenders:update' tender.pk %}" class="btn btn-sm btn-outline-primary" title="Редактировать">✏️</a>
+                                    <a href="{% url 'tenders:delete' tender.pk %}" class="btn btn-sm btn-outline-danger" title="Удалить">🗑️</a>
+                                    <a href="{% url 'tenders:start_chat' 'tender' tender.id %}" class="btn btn-sm btn-info" title="Чат по тендеру">💬</a>
                                 </td>
                             </tr>
                             {% empty %}
                             <tr>
                                 <td colspan="6" class="text-center text-muted py-5">
-                                    <h4> Тендеры не найдены</h4>
+                                    <h4>🔍 Тендеры не найдены</h4>
                                     <p>Попробуйте изменить параметры фильтрации</p>
                                     <a href="{% url 'tenders:list' %}" class="btn btn-primary">🔄 Сбросить фильтры</a>
                                 </td>

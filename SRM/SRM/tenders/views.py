@@ -35,6 +35,7 @@ from django.db.models import Sum, Count, F, Q
 from django.contrib.auth.decorators import user_passes_test
 from rest_framework import viewsets
 from .serializers import TenderSerializer, ClientSerializer
+from .models import ChatRoom, ChatMessage, Tender, Client
 
 
 
@@ -1769,3 +1770,135 @@ def user_management(request):
                 messages.success(request, f'Пользователь {user.username} деактивирован')
     
     return render(request, 'tenders/user_management.html', {'users': users})
+
+
+
+
+
+
+@login_required
+def chat_room_list(request):
+    """Список всех чатов пользователя"""
+    # Чаты по тендерам
+    tender_rooms = ChatRoom.objects.filter(
+        room_type='tender',
+        participants=request.user
+    ).select_related('tender')
+    
+    # Чаты по клиентам
+    client_rooms = ChatRoom.objects.filter(
+        room_type='client',
+        participants=request.user
+    ).select_related('client')
+    
+    return render(request, 'tenders/chat_list.html', {
+        'tender_rooms': tender_rooms,
+        'client_rooms': client_rooms,
+    })
+
+
+@login_required
+def chat_room(request, room_id):
+    """Комната чата"""
+    room = get_object_or_404(ChatRoom, id=room_id, participants=request.user)
+    
+    # Отметить сообщения как прочитанные
+    room.messages.exclude(author=request.user).exclude(read_by=request.user).update()
+    for msg in room.messages.exclude(author=request.user).exclude(read_by=request.user):
+        msg.read_by.add(request.user)
+    
+    # Получить сообщения
+    messages = room.messages.select_related('author').all()[:100]
+    
+    # Определить контекст
+    context = {
+        'room': room,
+        'messages': messages,
+        'tender': room.tender if room.room_type == 'tender' else None,
+        'client': room.client if room.room_type == 'client' else None,
+    }
+    
+    return render(request, 'tenders/chat_room.html', context)
+
+
+@login_required
+@require_POST
+def chat_send_message(request, room_id):
+    """Отправка сообщения"""
+    room = get_object_or_404(ChatRoom, id=room_id, participants=request.user)
+    
+    content = request.POST.get('content', '').strip()
+    
+    if content:
+        message = ChatMessage.objects.create(
+            room=room,
+            author=request.user,
+            content=content
+        )
+        
+        # Вернуть HTML нового сообщения для AJAX
+        message_html = render(request, 'tenders/chat_message.html', {
+            'message': message,
+            'is_own': True
+        }).content.decode('utf-8')
+        
+        return JsonResponse({
+            'success': True,
+            'message_html': message_html,
+            'message_id': message.id,
+        })
+    
+    return JsonResponse({'success': False, 'error': 'Пустое сообщение'})
+
+
+@login_required
+def chat_get_messages(request, room_id):
+    """Получение новых сообщений (для polling)"""
+    room = get_object_or_404(ChatRoom, id=room_id, participants=request.user)
+    
+    last_message_id = request.GET.get('last_id', 0)
+    
+    messages = room.messages.filter(
+        id__gt=last_message_id
+    ).select_related('author').order_by('created_at')
+    
+    messages_html = ''
+    for msg in messages:
+        is_own = msg.author == request.user
+        html = render(request, 'tenders/chat_message.html', {
+            'message': msg,
+            'is_own': is_own
+        }).content.decode('utf-8')
+        messages_html += html
+    
+    return JsonResponse({
+        'messages_html': messages_html,
+        'last_id': messages.last().id if messages.exists() else last_message_id,
+        'unread_count': room.unread_count(request.user),
+    })
+
+
+@login_required
+def start_chat(request, content_type, object_id):
+    """Создание или открытие чата"""
+    if content_type == 'tender':
+        tender = get_object_or_404(Tender, id=object_id)
+        room, created = ChatRoom.objects.get_or_create(
+            room_type='tender',
+            tender=tender,
+            defaults={}
+        )
+    elif content_type == 'client':
+        client = get_object_or_404(Client, id=object_id)
+        room, created = ChatRoom.objects.get_or_create(
+            room_type='client',
+            client=client,
+            defaults={}
+        )
+    else:
+        return redirect('tenders:list')
+    
+    # Добавить пользователя в участники
+    room.participants.add(request.user)
+    
+    return redirect('tenders:chat_room', room_id=room.id)

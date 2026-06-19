@@ -4,9 +4,12 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>👥 Клиенты</h2>
-    <a href="{% url 'tenders:client_add' %}" class="btn btn-primary">
-        ➕ Добавить клиента
-    </a>
+    <div>
+        <a href="{% url 'tenders:client_add' %}" class="btn btn-primary">
+            ➕ Добавить клиента
+        </a>
+        <a href="{% url 'tenders:chat_list' %}" class="btn btn-outline-info">💬 Все чаты</a>
+    </div>
 </div>
 
 <!-- Фильтры -->
@@ -104,9 +107,10 @@
                     <td><small>{{ client.updated_at|date:"d.m.Y" }}</small></td>
                     <td>
                         <div class="btn-group">
-                            <a href="{% url 'tenders:client_detail' client.pk %}" class="btn btn-sm btn-outline-info">👁️</a>
-                            <a href="{% url 'tenders:client_edit' client.pk %}" class="btn btn-sm btn-outline-primary">✏️</a>
-                            <a href="{% url 'tenders:client_delete' client.pk %}" class="btn btn-sm btn-outline-danger">🗑️</a>
+                            <a href="{% url 'tenders:client_detail' client.pk %}" class="btn btn-sm btn-outline-info" title="Подробнее">👁️</a>
+                            <a href="{% url 'tenders:client_edit' client.pk %}" class="btn btn-sm btn-outline-primary" title="Редактировать">✏️</a>
+                            <a href="{% url 'tenders:client_delete' client.pk %}" class="btn btn-sm btn-outline-danger" title="Удалить">🗑️</a>
+                            <a href="{% url 'tenders:start_chat' 'client' client.id %}" class="btn btn-sm btn-info" title="Чат">💬</a>
                         </div>
                     </td>
                 </tr>

@@ -2,6 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 
 
 class TenderStatus(models.TextChoices):
@@ -371,3 +372,56 @@ class Comment(models.Model):
     
     def __str__(self):
         return f"Комментарий от {self.author.username} к {self.tender.customer_name}"
+    
+
+
+
+
+class ChatRoom(models.Model):
+    """Комната чата (для тендера или клиента)"""
+    ROOM_TYPE_CHOICES = [
+        ('tender', 'Тендер'),
+        ('client', 'Клиент'),
+    ]
+    
+    room_type = models.CharField(max_length=10, choices=ROOM_TYPE_CHOICES)
+    tender = models.ForeignKey('Tender', on_delete=models.CASCADE, null=True, blank=True, related_name='chat_rooms')
+    client = models.ForeignKey('Client', on_delete=models.CASCADE, null=True, blank=True, related_name='chat_rooms')
+    participants = models.ManyToManyField(User, related_name='chat_rooms', blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-updated_at']
+    
+    def __str__(self):
+        if self.room_type == 'tender' and self.tender:
+            return f"Чат тендера: {self.tender.customer_name}"
+        elif self.room_type == 'client' and self.client:
+            return f"Чат клиента: {self.client.name}"
+        return f"ChatRoom {self.id}"
+    
+    def get_last_message(self):
+        return self.messages.order_by('-created_at').first()
+    
+    def unread_count(self, user):
+        if not user.is_authenticated:
+            return 0
+        return self.messages.exclude(author=user).filter(
+            read_by__isnull=True
+        ).count()
+
+
+class ChatMessage(models.Model):
+    """Сообщение в чате"""
+    room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name='messages')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chat_messages')
+    content = models.TextField(max_length=2000)
+    created_at = models.DateTimeField(auto_now_add=True)
+    read_by = models.ManyToManyField(User, related_name='read_messages', blank=True)
+    
+    class Meta:
+        ordering = ['created_at']
+    
+    def __str__(self):
+        return f"{self.author.username}: {self.content[:50]}"
