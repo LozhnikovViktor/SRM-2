@@ -145,6 +145,14 @@ urlpatterns = [
     path('products/', views.product_list, name='product_list'),
     path('products/add/', views.product_create, name='product_create'),
     path('api/products/prices/', views.api_products_prices, name='api_products_prices'),
+        # ============================================
+    # 🔹 КОММЕРЧЕСКИЕ ПРЕДЛОЖЕНИЯ
+    # ============================================
+    path('cp/create/', views.create_commercial_proposal, name='cp_create'),
+    path('cp/<int:pk>/preview/', views.cp_preview, name='cp_preview'),
+    path('cp/<int:pk>/edit/', views.cp_edit, name='cp_edit'),
+    path('cp/', views.cp_list, name='cp_list'),
+    path('cp/<int:pk>/', views.cp_detail, name='cp_detail'),
 ]
 
 # ============================================

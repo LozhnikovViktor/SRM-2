@@ -533,3 +533,131 @@ class ShipmentRequestItem(models.Model):
         else:
             self.final_price = self.unit_price
         super().save(*args, **kwargs)
+
+        # ============================================
+# 🔹 КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ
+# ============================================
+class CommercialProposal(models.Model):
+    """Коммерческое предложение от поставщика"""
+    STATUS_CHOICES = [
+        ('draft', 'Черновик'),
+        ('sent', 'Отправлено'),
+        ('accepted', 'Принято покупателем'),
+        ('rejected', 'Отклонено'),
+        ('expired', 'Истёк срок действия'),
+    ]
+    
+    # Связь с заявкой (опционально)
+    shipment_request = models.ForeignKey(
+        ShipmentRequest, on_delete=models.SET_NULL, 
+        null=True, blank=True, 
+        related_name='proposals',
+        verbose_name='Заявка на отгрузку'
+    )
+    
+    client = models.ForeignKey(
+        Client, on_delete=models.CASCADE,
+        related_name='commercial_proposals',
+        verbose_name='Покупатель'
+    )
+    
+    manager = models.ForeignKey(
+        User, on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='created_proposals',
+        verbose_name='Менеджер'
+    )
+    
+    # Параметры предложения
+    valid_until = models.DateField('Срок действия КП', help_text='До какой даты действует предложение')
+    payment_terms = models.CharField('Условия оплаты', max_length=200, 
+                                      help_text='Например: 100% предоплата, 30 дней отсрочка')
+    
+    # Доставка
+    delivery_cost = models.DecimalField('Стоимость доставки', max_digits=12, decimal_places=2, 
+                                        default=0, help_text='Вводится вручную или через API ТК')
+    delivery_address = models.TextField('Адрес доставки', blank=True)
+    
+    # Итоговые расчёты
+    total_volume = models.DecimalField('Общий объём (м³)', max_digits=10, decimal_places=3, default=0)
+    total_weight = models.DecimalField('Общий вес (кг)', max_digits=10, decimal_places=2, default=0)
+    subtotal = models.DecimalField('Сумма без доставки', max_digits=14, decimal_places=2, default=0)
+    grand_total = models.DecimalField('Итого с доставкой', max_digits=14, decimal_places=2, default=0)
+    
+    status = models.CharField('Статус', max_length=20, choices=STATUS_CHOICES, default='draft')
+    comment = models.TextField('Комментарий менеджера', blank=True)
+    
+    created_at = models.DateTimeField('Создано', auto_now_add=True)
+    updated_at = models.DateTimeField('Обновлено', auto_now=True)
+    sent_at = models.DateTimeField('Отправлено', null=True, blank=True)
+    
+    class Meta:
+        verbose_name = 'Коммерческое предложение'
+        verbose_name_plural = 'Коммерческие предложения'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"КП #{self.id} для {self.client.name}"
+    
+    def recalculate_totals(self):
+        """Пересчёт итогов по позициям"""
+        self.subtotal = sum(item.total for item in self.items.all())
+        self.total_volume = sum(item.volume for item in self.items.all())
+        self.total_weight = sum(item.weight for item in self.items.all())
+        self.grand_total = self.subtotal + self.delivery_cost
+        self.save()
+
+
+class CommercialProposalItem(models.Model):
+    """Позиция коммерческого предложения"""
+    proposal = models.ForeignKey(
+        CommercialProposal, on_delete=models.CASCADE,
+        related_name='items', verbose_name='КП'
+    )
+    product = models.ForeignKey(
+        Product, on_delete=models.PROTECT,
+        related_name='proposal_items',
+        verbose_name='Продукция'
+    )
+    quantity = models.DecimalField('Количество', max_digits=12, decimal_places=3)
+    
+    # Цены
+    unit_price = models.DecimalField('Цена за ед.', max_digits=12, decimal_places=2)
+    discount_percent = models.DecimalField('Скидка, %', max_digits=5, decimal_places=2, default=0)
+    final_price = models.DecimalField('Цена с скидкой', max_digits=12, decimal_places=2)
+    
+    # Габариты (из номенклатуры или вручную)
+    volume_per_unit = models.DecimalField('Объём 1 шт (м³)', max_digits=8, decimal_places=4, default=0)
+    weight_per_unit = models.DecimalField('Вес 1 шт (кг)', max_digits=8, decimal_places=3, default=0)
+    
+    # Авторасчёт
+    volume = models.DecimalField('Общий объём (м³)', max_digits=10, decimal_places=3, default=0)
+    weight = models.DecimalField('Общий вес (кг)', max_digits=10, decimal_places=2, default=0)
+    
+    class Meta:
+        verbose_name = 'Позиция КП'
+        verbose_name_plural = 'Позиции КП'
+    
+    def __str__(self):
+        return f"{self.product.name} x {self.quantity}"
+    
+    @property
+    def total(self):
+        return self.final_price * self.quantity
+    
+    def save(self, *args, **kwargs):
+        # Расчёт цены со скидкой
+        if self.discount_percent:
+            self.final_price = self.unit_price * (1 - self.discount_percent / 100)
+        else:
+            self.final_price = self.unit_price
+        
+        # Расчёт габаритов
+        self.volume = self.quantity * self.volume_per_unit
+        self.weight = self.quantity * self.weight_per_unit
+        
+        super().save(*args, **kwargs)
+        
+        # Пересчитываем итоги КП
+        if self.proposal_id:
+            self.proposal.recalculate_totals()

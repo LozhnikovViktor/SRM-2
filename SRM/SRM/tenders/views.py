@@ -40,7 +40,10 @@ from .models import Product, ShipmentRequest, ShipmentRequestItem
 from .forms import ShipmentRequestForm, ShipmentItemFormSet
 from django.core.mail import send_mail
 from django.conf import settings
-from django.http import JsonResponse
+from .models import CommercialProposal, CommercialProposalItem
+from .forms import CommercialProposalForm, CPItemFormSet
+from django.core.mail import EmailMessage
+
 
 
 
@@ -2225,13 +2228,153 @@ def product_create(request):
 
 
 
-
-
-
-
 @login_required
 def api_products_prices(request):
     """API: получение цен продукции для автозаполнения"""
     products = Product.objects.filter(is_active=True).values('id', 'name', 'price', 'article', 'unit')
     data = {str(p['id']): p for p in products}
     return JsonResponse(data)
+
+
+
+
+
+@login_required
+def create_commercial_proposal(request):
+    """Форма создания КП"""
+    if request.method == 'POST':
+        form = CommercialProposalForm(request.POST)
+        formset = CPItemFormSet(request.POST)
+        
+        if form.is_valid() and formset.is_valid():
+            cp = form.save(commit=False)
+            cp.manager = request.user
+            cp.status = 'draft'
+            cp.save()
+            
+            formset.instance = cp
+            items = formset.save(commit=False)
+            for item in items:
+                if item.product:
+                    item.proposal = cp
+                    item.save()
+            
+            # Пересчёт итогов
+            cp.recalculate_totals()
+            
+            messages.success(request, f'✅ КП #{cp.id} создано!')
+            return redirect('tenders:cp_preview', pk=cp.pk)
+    else:
+        form = CommercialProposalForm()
+        formset = CPItemFormSet()
+    
+    products_json = json.dumps({
+        str(p.id): {'price': float(p.price), 'name': p.name, 
+                     'article': p.article or '', 'unit': p.unit}
+        for p in Product.objects.filter(is_active=True)
+    })
+    
+    return render(request, 'tenders/cp_form.html', {
+        'form': form, 'formset': formset, 'products_json': products_json,
+    })
+
+
+@login_required
+def cp_preview(request, pk):
+    """Предпросмотр КП перед отправкой"""
+    cp = get_object_or_404(
+        CommercialProposal.objects.select_related('client', 'manager', 'shipment_request'),
+        pk=pk
+    )
+    items = cp.items.select_related('product').all()
+    
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'send':
+            _send_cp_email(cp)
+            cp.status = 'sent'
+            cp.sent_at = timezone.now()
+            cp.save()
+            messages.success(request, f'📧 КП #{cp.id} отправлено на {cp.client.email}')
+            return redirect('tenders:cp_list')
+        
+        elif action == 'edit':
+            return redirect('tenders:cp_edit', pk=cp.pk)
+    
+    return render(request, 'tenders/cp_preview.html', {'cp': cp, 'items': items})
+
+
+@login_required
+def cp_edit(request, pk):
+    """Редактирование КП"""
+    cp = get_object_or_404(CommercialProposal, pk=pk, manager=request.user)
+    
+    if request.method == 'POST':
+        form = CommercialProposalForm(request.POST, instance=cp)
+        formset = CPItemFormSet(request.POST, instance=cp)
+        
+        if form.is_valid() and formset.is_valid():
+            form.save()
+            formset.save()
+            cp.recalculate_totals()
+            messages.success(request, '✅ КП обновлено')
+            return redirect('tenders:cp_preview', pk=cp.pk)
+    else:
+        form = CommercialProposalForm(instance=cp)
+        formset = CPItemFormSet(instance=cp)
+    
+    products_json = json.dumps({
+        str(p.id): {'price': float(p.price), 'name': p.name}
+        for p in Product.objects.filter(is_active=True)
+    })
+    
+    return render(request, 'tenders/cp_form.html', {
+        'form': form, 'formset': formset, 'products_json': products_json, 'cp': cp,
+    })
+
+
+@login_required
+def cp_list(request):
+    """Журнал исходящих КП"""
+    proposals = CommercialProposal.objects.select_related('client', 'manager').all()
+    
+    status = request.GET.get('status')
+    if status:
+        proposals = proposals.filter(status=status)
+    
+    return render(request, 'tenders/cp_list.html', {
+        'proposals': proposals,
+        'status_choices': CommercialProposal.STATUS_CHOICES,
+    })
+
+
+@login_required
+def cp_detail(request, pk):
+    """Детали КП"""
+    cp = get_object_or_404(
+        CommercialProposal.objects.select_related('client', 'manager', 'shipment_request'),
+        pk=pk
+    )
+    return render(request, 'tenders/cp_detail.html', {
+        'cp': cp,
+        'items': cp.items.select_related('product').all(),
+    })
+
+
+def _send_cp_email(cp):
+    """Отправка КП на email покупателя"""
+    subject = f"Коммерческое предложение #{cp.id} от SRM Тендеры"
+    
+    html_content = render_to_string('tenders/cp_email.html', {'cp': cp})
+    
+    msg = EmailMessage(
+        subject=subject,
+        body=html_content,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[cp.client.email] if cp.client.email else [settings.DEFAULT_FROM_EMAIL],
+    )
+    msg.content_subtype = "html"
+    msg.send(fail_silently=False)
+
+

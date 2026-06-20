@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family:Arial,sans-serif;max-width:700px;margin:auto;padding:20px;">
+    <h2 style="color:#0d6efd;">Коммерческое предложение №{{ cp.id }}</h2>
+    <p>Уважаемые коллеги!</p>
+    <p>Направляем вам коммерческое предложение от компании SRM Тендеры.</p>
+    
+    <table style="width:100%;border-collapse:collapse;margin:20px 0;">
+        <tr style="background:#f8f9fa;"><td style="padding:8px;border:1px solid #dee2e6;"><strong>Покупатель</strong></td><td style="padding:8px;border:1px solid #dee2e6;">{{ cp.client.name }}</td></tr>
+        <tr><td style="padding:8px;border:1px solid #dee2e6;"><strong>Срок действия</strong></td><td style="padding:8px;border:1px solid #dee2e6;">до {{ cp.valid_until|date:"d.m.Y" }}</td></tr>
+        <tr style="background:#f8f9fa;"><td style="padding:8px;border:1px solid #dee2e6;"><strong>Условия оплаты</strong></td><td style="padding:8px;border:1px solid #dee2e6;">{{ cp.payment_terms }}</td></tr>
+    </table>
+    
+    <table style="width:100%;border-collapse:collapse;">
+        <tr style="background:#0d6efd;color:white;"><th style="padding:8px;border:1px solid #dee2e6;">Продукция</th><th style="padding:8px;border:1px solid #dee2e6;">Кол-во</th><th style="padding:8px;border:1px solid #dee2e6;">Цена</th><th style="padding:8px;border:1px solid #dee2e6;">Сумма</th></tr>
+        {% for item in cp.items.all %}
+        <tr><td style="padding:8px;border:1px solid #dee2e6;">{{ item.product.name }}</td><td style="padding:8px;border:1px solid #dee2e6;text-align:center;">{{ item.quantity }} {{ item.product.unit }}</td><td style="padding:8px;border:1px solid #dee2e6;text-align:right;">{{ item.final_price }} ₽</td><td style="padding:8px;border:1px solid #dee2e6;text-align:right;">{{ item.total|floatformat:2 }} ₽</td></tr>
+        {% endfor %}
+        <tr style="background:#d4edda;font-weight:bold;"><td colspan="3" style="padding:8px;border:1px solid #dee2e6;text-align:right;">ИТОГО с доставкой:</td><td style="padding:8px;border:1px solid #dee2e6;text-align:right;">{{ cp.grand_total|floatformat:2 }} ₽</td></tr>
+    </table>
+    
+    <p style="margin-top:20px;">С уважением,<br>{{ cp.manager.get_full_name|default:cp.manager.username }}<br>SRM Тендеры</p>
+</body>
+</html>

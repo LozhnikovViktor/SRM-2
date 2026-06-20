@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Предпросмотр КП #{{ cp.id }}{% endblock %}
+{% block content %}
+<div class="container" style="max-width:900px;">
+    <h2 class="mb-4">👁️ Предпросмотр КП #{{ cp.id }}</h2>
+    
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-body p-5">
+            <div class="text-center mb-4">
+                <h3>КОММЕРЧЕСКОЕ ПРЕДЛОЖЕНИЕ №{{ cp.id }}</h3>
+                <p class="text-muted">от {{ cp.created_at|date:"d.m.Y" }}</p>
+            </div>
+            
+            <table class="table table-borderless mb-4">
+                <tr><td width="50%"><strong>Покупатель:</strong> {{ cp.client.name }}</td>
+                    <td><strong>Срок действия:</strong> до {{ cp.valid_until|date:"d.m.Y" }}</td></tr>
+                <tr><td><strong>ИНН:</strong> {{ cp.client.inn|default:"—" }}</td>
+                    <td><strong>Условия оплаты:</strong> {{ cp.payment_terms }}</td></tr>
+            </table>
+            
+            <table class="table table-bordered">
+                <thead class="table-light">
+                    <tr><th>№</th><th>Продукция</th><th>Кол-во</th><th>Цена</th><th>Скидка</th><th>Итого цена</th><th>Сумма</th></tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ item.product.name }}{% if item.product.article %} ({{ item.product.article }}){% endif %}</td>
+                        <td>{{ item.quantity }} {{ item.product.unit }}</td>
+                        <td>{{ item.unit_price }} ₽</td>
+                        <td>{% if item.discount_percent %}{{ item.discount_percent }}%{% else %}—{% endif %}</td>
+                        <td>{{ item.final_price }} ₽</td>
+                        <td class="fw-bold">{{ item.total|floatformat:2 }} ₽</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-light">
+                    <tr><td colspan="5" class="text-end">Объём:</td><td colspan="2">{{ cp.total_volume|floatformat:3 }} м³</td></tr>
+                    <tr><td colspan="5" class="text-end">Вес:</td><td colspan="2">{{ cp.total_weight|floatformat:2 }} кг</td></tr>
+                    <tr><td colspan="5" class="text-end">Сумма товаров:</td><td colspan="2">{{ cp.subtotal|floatformat:2 }} ₽</td></tr>
+                    <tr><td colspan="5" class="text-end">Доставка:</td><td colspan="2">{{ cp.delivery_cost|floatformat:2 }} ₽</td></tr>
+                    <tr class="table-success"><td colspan="5" class="text-end fw-bold fs-5">ИТОГО:</td><td colspan="2" class="fw-bold fs-4">{{ cp.grand_total|floatformat:2 }} ₽</td></tr>
+                </tfoot>
+            </table>
+            
+            {% if cp.delivery_address %}<p><strong>Адрес доставки:</strong> {{ cp.delivery_address }}</p>{% endif %}
+            {% if cp.comment %}<p><strong>Комментарий:</strong> {{ cp.comment }}</p>{% endif %}
+        </div>
+    </div>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div class="d-flex gap-2 justify-content-center">
+            <button type="submit" name="action" value="edit" class="btn btn-outline-primary btn-lg">✏️ Редактировать</button>
+            <button type="submit" name="action" value="send" class="btn btn-success btn-lg" onclick="return confirm('Отправить КП на email {{ cp.client.email }}?')">📧 Отправить покупателю</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

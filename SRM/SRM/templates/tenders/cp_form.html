@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+{% block title %}{% if cp %}Редактирование КП #{{ cp.id }}{% else %}Новое коммерческое предложение{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📄 {% if cp %}Редактирование КП #{{ cp.id }}{% else %}Новое коммерческое предложение{% endif %}</h2>
+        <a href="{% url 'tenders:cp_list' %}" class="btn btn-outline-secondary">← Журнал КП</a>
+    </div>
+    
+    <form method="post" id="cp-form">
+        {% csrf_token %}
+        
+        <!-- Основная информация -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white"><h5 class="mb-0">👤 Информация о покупателе</h5></div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Покупатель *</label>
+                        {{ form.client }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Связанная заявка</label>
+                        {{ form.shipment_request }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Срок действия КП *</label>
+                        {{ form.valid_until }}
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label">Условия оплаты *</label>
+                        {{ form.payment_terms }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">💰 Стоимость доставки (₽)</label>
+                        {{ form.delivery_cost }}
+                        <small class="text-muted">API ТК будет подключено позже</small>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label">Адрес доставки</label>
+                        {{ form.delivery_address }}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Комментарий</label>
+                        {{ form.comment }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Позиции -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white"><h5 class="mb-0">📦 Позиции КП</h5></div>
+            <div class="card-body">
+                {{ formset.management_form }}
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width:20%">Продукция</th>
+                                <th style="width:10%">Кол-во</th>
+                                <th style="width:10%">Цена прайс</th>
+                                <th style="width:10%">Скидка %</th>
+                                <th style="width:10%">Цена итог</th>
+                                <th style="width:8%">Объём/шт м³</th>
+                                <th style="width:8%">Вес/шт кг</th>
+                                <th style="width:8%">Итого объём</th>
+                                <th style="width:8%">Итого вес</th>
+                                <th style="width:8%">Сумма</th>
+                                <th style="width:5%">✕</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cp-items-tbody">
+                            {% for item_form in formset %}
+                            <tr class="item-row">
+                                <td>{{ item_form.product }}</td>
+                                <td>{{ item_form.quantity }}</td>
+                                <td>{{ item_form.unit_price }}</td>
+                                <td>{{ item_form.discount_percent }}</td>
+                                <td class="final-price-cell">0.00</td>
+                                <td>{{ item_form.volume_per_unit }}</td>
+                                <td>{{ item_form.weight_per_unit }}</td>
+                                <td class="vol-cell">0.000</td>
+                                <td class="wt-cell">0.00</td>
+                                <td class="total-cell">0.00</td>
+                                <td>
+                                    {% if item_form.instance.pk %}{{ item_form.DELETE }}{% endif %}
+                                    {{ item_form.id }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <button type="button" class="btn btn-outline-success" id="add-cp-item">➕ Добавить позицию</button>
+            </div>
+        </div>
+        
+        <!-- Итоги онлайн -->
+        <div class="card shadow-sm mb-4 bg-light border-success">
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <small class="text-muted">Общий объём</small>
+                        <h4 id="grand-volume" class="text-info">0.000 м³</h4>
+                    </div>
+                    <div class="col-md-3">
+                        <small class="text-muted">Общий вес</small>
+                        <h4 id="grand-weight" class="text-warning">0.00 кг</h4>
+                    </div>
+                    <div class="col-md-3">
+                        <small class="text-muted">Сумма товаров</small>
+                        <h4 id="grand-subtotal" class="text-primary">0.00 ₽</h4>
+                    </div>
+                    <div class="col-md-3">
+                        <small class="text-muted">ИТОГО с доставкой</small>
+                        <h4 id="grand-total" class="text-success fs-3">0.00 ₽</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-end">
+            <a href="{% url 'tenders:cp_list' %}" class="btn btn-secondary me-2">Отмена</a>
+            <button type="submit" class="btn btn-primary btn-lg">💾 Сохранить и просмотреть</button>
+        </div>
+    </form>
+</div>
+
+<script>
+const PRODUCTS_DATA = {{ products_json|safe }};
+
+// Автозаполнение при выборе продукта
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('product-select')) {
+        const row = e.target.closest('.item-row');
+        const pid = e.target.value;
+        if (PRODUCTS_DATA[pid]) {
+            row.querySelector('.price-input').value = PRODUCTS_DATA[pid].price;
+            recalcRow(row);
+        }
+    }
+});
+
+// Пересчёт при любом изменении
+document.addEventListener('input', function(e) {
+    const row = e.target.closest('.item-row');
+    if (row && (e.target.classList.contains('qty-input') || 
+                e.target.classList.contains('price-input') ||
+                e.target.classList.contains('disc-input') ||
+                e.target.classList.contains('vol-input') ||
+                e.target.classList.contains('wt-input'))) {
+        recalcRow(row);
+        recalcGrand();
+    }
+    // Пересчёт при изменении стоимости доставки
+    if (e.target.name === 'delivery_cost') {
+        recalcGrand();
+    }
+});
+
+function recalcRow(row) {
+    const price = parseFloat(row.querySelector('.price-input')?.value) || 0;
+    const disc = parseFloat(row.querySelector('.disc-input')?.value) || 0;
+    const qty = parseFloat(row.querySelector('.qty-input')?.value) || 0;
+    const volUnit = parseFloat(row.querySelector('.vol-input')?.value) || 0;
+    const wtUnit = parseFloat(row.querySelector('.wt-input')?.value) || 0;
+    
+    const finalPrice = price * (1 - disc / 100);
+    const total = finalPrice * qty;
+    const vol = qty * volUnit;
+    const wt = qty * wtUnit;
+    
+    row.querySelector('.final-price-cell').textContent = finalPrice.toFixed(2);
+    row.querySelector('.total-cell').textContent = total.toFixed(2);
+    row.querySelector('.vol-cell').textContent = vol.toFixed(3);
+    row.querySelector('.wt-cell').textContent = wt.toFixed(2);
+}
+
+function recalcGrand() {
+    let sub = 0, vol = 0, wt = 0;
+    document.querySelectorAll('.item-row').forEach(r => {
+        sub += parseFloat(r.querySelector('.total-cell')?.textContent) || 0;
+        vol += parseFloat(r.querySelector('.vol-cell')?.textContent) || 0;
+        wt += parseFloat(r.querySelector('.wt-cell')?.textContent) || 0;
+    });
+    const delivery = parseFloat(document.querySelector('[name=delivery_cost]')?.value) || 0;
+    const grand = sub + delivery;
+    
+    document.getElementById('grand-volume').textContent = vol.toFixed(3) + ' м³';
+    document.getElementById('grand-weight').textContent = wt.toFixed(2) + ' кг';
+    document.getElementById('grand-subtotal').textContent = sub.toFixed(2) + ' ₽';
+    document.getElementById('grand-total').textContent = grand.toFixed(2) + ' ₽';
+}
+
+// Добавление строки
+document.getElementById('add-cp-item').addEventListener('click', function() {
+    const totalForms = parseInt(document.querySelector('#id_items-TOTAL_FORMS').value);
+    const tbody = document.getElementById('cp-items-tbody');
+    const last = tbody.querySelector('tr:last-child');
+    const newRow = last.cloneNode(true);
+    newRow.querySelectorAll('input, select').forEach(el => {
+        const n = el.getAttribute('name');
+        if (n) { el.setAttribute('name', n.replace(/-\d+-/, `-${totalForms}-`)); el.setAttribute('id', el.id.replace(/-\d+-/, `-${totalForms}-`)); }
+        if (el.tagName === 'INPUT' && el.type !== 'hidden') el.value = '';
+        if (el.tagName === 'SELECT') el.selectedIndex = 0;
+    });
+    ['final-price-cell','total-cell','vol-cell','wt-cell'].forEach(c => newRow.querySelector('.'+c).textContent = '0');
+    tbody.appendChild(newRow);
+    document.querySelector('#id_items-TOTAL_FORMS').value = totalForms + 1;
+});
+
+recalcGrand();
+</script>
+{% endblock %}

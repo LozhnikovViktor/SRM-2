@@ -418,3 +418,46 @@ ShipmentItemFormSet = inlineformset_factory(
     extra=3,  # 3 пустые строки по умолчанию
     can_delete=True,
 )
+
+from .models import CommercialProposal, CommercialProposalItem
+from django.forms import inlineformset_factory
+
+
+class CommercialProposalForm(forms.ModelForm):
+    class Meta:
+        model = CommercialProposal
+        fields = [
+            'client', 'shipment_request', 'valid_until', 'payment_terms',
+            'delivery_cost', 'delivery_address', 'comment'
+        ]
+        widgets = {
+            'client': forms.Select(attrs={'class': 'form-select'}),
+            'shipment_request': forms.Select(attrs={'class': 'form-select'}),
+            'valid_until': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'payment_terms': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '100% предоплата / 30 дней'}),
+            'delivery_cost': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
+            'delivery_address': forms.Textarea(attrs={'rows': 2, 'class': 'form-control'}),
+            'comment': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+        }
+
+
+class CommercialProposalItemForm(forms.ModelForm):
+    class Meta:
+        model = CommercialProposalItem
+        fields = ['product', 'quantity', 'unit_price', 'discount_percent', 
+                  'volume_per_unit', 'weight_per_unit']
+        widgets = {
+            'product': forms.Select(attrs={'class': 'form-select product-select'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control qty-input', 'step': '0.001', 'min': '0'}),
+            'unit_price': forms.NumberInput(attrs={'class': 'form-control price-input', 'step': '0.01', 'min': '0'}),
+            'discount_percent': forms.NumberInput(attrs={'class': 'form-control disc-input', 'step': '0.1', 'min': '0', 'max': '100', 'value': '0'}),
+            'volume_per_unit': forms.NumberInput(attrs={'class': 'form-control vol-input', 'step': '0.0001', 'min': '0'}),
+            'weight_per_unit': forms.NumberInput(attrs={'class': 'form-control wt-input', 'step': '0.001', 'min': '0'}),
+        }
+
+
+CPItemFormSet = inlineformset_factory(
+    CommercialProposal, CommercialProposalItem,
+    form=CommercialProposalItemForm,
+    extra=3, can_delete=True,
+)
