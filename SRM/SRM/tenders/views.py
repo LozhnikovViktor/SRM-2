@@ -36,6 +36,12 @@ from django.contrib.auth.decorators import user_passes_test
 from rest_framework import viewsets
 from .serializers import TenderSerializer, ClientSerializer
 from .models import ChatRoom, ChatMessage, Tender, Client
+from .models import Product, ShipmentRequest, ShipmentRequestItem
+from .forms import ShipmentRequestForm, ShipmentItemFormSet
+from django.core.mail import send_mail
+from django.conf import settings
+from django.http import JsonResponse
+
 
 
 
@@ -1902,3 +1908,330 @@ def start_chat(request, content_type, object_id):
     room.participants.add(request.user)
     
     return redirect('tenders:chat_room', room_id=room.id)
+
+
+
+    
+
+
+# ============================================
+# 🔹 ФОРМА ЗАЯВКИ НА ОТГРУЗКУ
+# ============================================
+@login_required
+def create_shipment_request(request):
+    """Создание заявки на отгрузку"""
+    if request.method == 'POST':
+        form = ShipmentRequestForm(request.POST)
+        formset = ShipmentItemFormSet(request.POST)
+        
+        if form.is_valid() and formset.is_valid():
+            shipment = form.save(commit=False)
+            shipment.created_by = request.user
+            shipment.save()
+            
+            # Сохраняем позиции
+            formset.instance = shipment
+            items = formset.save(commit=False)
+            for item in items:
+                if item.product:  # Только заполненные позиции
+                    item.request = shipment
+                    # Автоматический расчёт финальной цены
+                    if item.discount_percent:
+                        item.final_price = item.unit_price * (1 - item.discount_percent / 100)
+                    else:
+                        item.final_price = item.unit_price
+                    item.save()
+            
+            # 🔔 Отправляем email менеджеру
+            try:
+                _send_shipment_notification(shipment)
+                messages.success(request, f'✅ Заявка #{shipment.id} создана и отправлена менеджеру!')
+            except Exception as e:
+                messages.warning(request, f'⚠️ Заявка создана, но email не отправлен: {e}')
+            
+            return redirect('tenders:shipment_request_detail', pk=shipment.pk)
+    else:
+        form = ShipmentRequestForm()
+        formset = ShipmentItemFormSet()
+    
+    return render(request, 'tenders/shipment_request_form.html', {
+        'form': form,
+        'formset': formset,
+    })
+
+def _send_shipment_notification(shipment):
+    """Отправка email-уведомления о новой заявке"""
+    # Получаем email менеджера (или администратора)
+    recipient_email = settings.DEFAULT_FROM_EMAIL
+    
+    # Формируем список позиций
+    items_list = []
+    for item in shipment.items.all():
+        items_list.append(
+            f"  • {item.product.name} — {item.quantity} {item.product.unit} "
+            f"× {item.final_price} ₽ = {item.total} ₽"
+        )
+    
+    subject = f"🆕 Новая заявка на отгрузку #{shipment.id} от {shipment.client.name}"
+    
+    message = f"""Здравствуйте!
+
+Поступила новая заявка на отгрузку.
+
+📋 ДЕТАЛИ ЗАЯВКИ:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Номер заявки: #{shipment.id}
+Покупатель: {shipment.client.name}
+ИНН: {shipment.client.inn or '—'}
+Контактное лицо: {shipment.contact_person or '—'}
+Телефон: {shipment.contact_phone or '—'}
+Email: {shipment.contact_email or '—'}
+Дата: {shipment.created_at.strftime('%d.%m.%Y %H:%M')}
+
+📦 ПОЗИЦИИ ЗАЯВКИ:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{chr(10).join(items_list)}
+
+💰 ОБЩАЯ СУММА: {shipment.total_amount:,.2f} ₽
+📊 ОБЩЕЕ КОЛИЧЕСТВО: {shipment.total_quantity}
+
+💬 КОММЕНТАРИЙ:
+{shipment.comment or '—'}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Просмотреть заявку: http://{settings.ALLOWED_HOSTS[0] if settings.ALLOWED_HOSTS else '127.0.0.1:8000'}/shipment/{shipment.id}/
+
+---
+Система SRM Тендеры
+"""
+    
+    send_mail(
+        subject=subject,
+        message=message,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[recipient_email],
+        fail_silently=False,
+    )
+
+
+# ============================================
+# 🔹 СПИСОК ЗАЯВОК (РЕЕСТР)
+# ============================================
+@login_required
+def shipment_request_list(request):
+    """Реестр заявок на отгрузку"""
+    requests_qs = ShipmentRequest.objects.select_related('client', 'created_by').all()
+    
+    # Фильтрация
+    status = request.GET.get('status')
+    if status:
+        requests_qs = requests_qs.filter(status=status)
+    
+    client_id = request.GET.get('client')
+    if client_id:
+        requests_qs = requests_qs.filter(client_id=client_id)
+    
+    search = request.GET.get('search')
+    if search:
+        requests_qs = requests_qs.filter(
+            Q(client__name__icontains=search) |
+            Q(contact_person__icontains=search) |
+            Q(id__icontains=search)
+        )
+    
+    return render(request, 'tenders/shipment_request_list.html', {
+        'requests': requests_qs,
+        'status_choices': ShipmentRequest.STATUS_CHOICES,
+        'clients': Client.objects.all(),
+    })
+
+
+# ============================================
+# 🔹 ДЕТАЛИ ЗАЯВКИ
+# ============================================
+@login_required
+def shipment_request_detail(request, pk):
+    """Детали заявки"""
+    shipment = get_object_or_404(
+        ShipmentRequest.objects.select_related('client', 'created_by'),
+        pk=pk
+    )
+    items = shipment.items.select_related('product').all()
+    
+    return render(request, 'tenders/shipment_request_detail.html', {
+        'shipment': shipment,
+        'items': items,
+    })
+
+
+# ============================================
+# 🔹 ИЗМЕНЕНИЕ СТАТУСА ЗАЯВКИ
+# ============================================
+@login_required
+def shipment_request_update_status(request, pk):
+    """Изменение статуса заявки"""
+    shipment = get_object_or_404(ShipmentRequest, pk=pk)
+    
+    if request.method == 'POST':
+        new_status = request.POST.get('status')
+        if new_status in dict(ShipmentRequest.STATUS_CHOICES):
+            shipment.status = new_status
+            shipment.save()
+            messages.success(request, f'Статус заявки #{shipment.id} изменён')
+    
+    return redirect('tenders:shipment_request_detail', pk=pk)
+
+
+# ============================================
+# 🔹 ЭКСПОРТ РЕЕСТРА В 1С
+# ============================================
+@login_required
+def export_shipment_to_1c(request):
+    """Экспорт реестра заявок в Excel для 1С"""
+    from django.utils import timezone
+    from datetime import datetime
+    
+    # Получаем ID заявок для экспорта (или все новые)
+    request_ids = request.GET.getlist('ids')
+    
+    if request_ids:
+        shipments = ShipmentRequest.objects.filter(id__in=request_ids)
+    else:
+        # По умолчанию выгружаем все необработанные
+        shipments = ShipmentRequest.objects.filter(
+            status__in=['new', 'processing', 'approved'],
+            exported_to_1c=False
+        )
+    
+    if not shipments.exists():
+        messages.warning(request, 'Нет заявок для выгрузки')
+        return redirect('tenders:shipment_request_list')
+    
+    # Создаём Excel файл
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+    
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Реестр заявок'
+    
+    # Заголовок
+    ws.merge_cells('A1:L1')
+    ws['A1'] = f'РЕЕСТР ЗАЯВОК НА ОТГРУЗКУ от {datetime.now().strftime("%d.%m.%Y %H:%M")}'
+    ws['A1'].font = Font(bold=True, size=14)
+    ws['A1'].alignment = Alignment(horizontal='center')
+    
+    # Заголовки таблицы
+    headers = [
+        '№ заявки', 'Дата', 'Покупатель', 'ИНН', 'Контактное лицо',
+        'Телефон', 'Email', 'Артикул', 'Наименование продукции',
+        'Количество', 'Ед.изм', 'Цена', 'Скидка %', 'Цена с скидкой', 'Сумма', 'Статус'
+    ]
+    
+    header_fill = PatternFill(start_color='0d6efd', end_color='0d6efd', fill_type='solid')
+    header_font = Font(bold=True, color='FFFFFF')
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=3, column=col, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+        cell.border = thin_border
+    
+    # Данные
+    row = 4
+    for shipment in shipments:
+        for item in shipment.items.select_related('product'):
+            ws.cell(row=row, column=1, value=shipment.id).border = thin_border
+            ws.cell(row=row, column=2, value=shipment.created_at.strftime('%d.%m.%Y')).border = thin_border
+            ws.cell(row=row, column=3, value=shipment.client.name).border = thin_border
+            ws.cell(row=row, column=4, value=shipment.client.inn or '').border = thin_border
+            ws.cell(row=row, column=5, value=shipment.contact_person or '').border = thin_border
+            ws.cell(row=row, column=6, value=shipment.contact_phone or '').border = thin_border
+            ws.cell(row=row, column=7, value=shipment.contact_email or '').border = thin_border
+            ws.cell(row=row, column=8, value=item.product.article or '').border = thin_border
+            ws.cell(row=row, column=9, value=item.product.name).border = thin_border
+            ws.cell(row=row, column=10, value=float(item.quantity)).border = thin_border
+            ws.cell(row=row, column=11, value=item.product.unit).border = thin_border
+            ws.cell(row=row, column=12, value=float(item.unit_price)).border = thin_border
+            ws.cell(row=row, column=13, value=float(item.discount_percent)).border = thin_border
+            ws.cell(row=row, column=14, value=float(item.final_price)).border = thin_border
+            ws.cell(row=row, column=15, value=float(item.total)).border = thin_border
+            ws.cell(row=row, column=16, value=shipment.get_status_display()).border = thin_border
+            row += 1
+    
+    # Автоширина колонок
+    for col in ws.columns:
+        max_length = 0
+        column = col[0].column_letter
+        for cell in col:
+            try:
+                if cell.value:
+                    max_length = max(max_length, len(str(cell.value)))
+            except:
+                pass
+        ws.column_dimensions[column].width = min(max_length + 2, 30)
+    
+    # Сохраняем
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    filename = f'registry_1c_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+    response['Content-Disposition'] = f'attachment; filename={filename}'
+    wb.save(response)
+    
+    # Помечаем заявки как выгруженные
+    shipments.update(exported_to_1c=True, exported_at=timezone.now())
+    
+    return response
+
+
+# ============================================
+# 🔹 УПРАВЛЕНИЕ НОМЕНКЛАТУРОЙ
+# ============================================
+@login_required
+def product_list(request):
+    """Список продукции"""
+    products = Product.objects.filter(is_active=True)
+    return render(request, 'tenders/product_list.html', {'products': products})
+
+
+@login_required
+def product_create(request):
+    """Добавление продукции"""
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        article = request.POST.get('article', '')
+        price = request.POST.get('price', 0)
+        unit = request.POST.get('unit', 'шт')
+        
+        if name:
+            Product.objects.create(
+                name=name,
+                article=article,
+                price=price,
+                unit=unit
+            )
+            messages.success(request, f'✅ Продукция "{name}" добавлена')
+            return redirect('tenders:product_list')
+    
+    return render(request, 'tenders/product_form.html')
+
+
+
+
+
+
+
+@login_required
+def api_products_prices(request):
+    """API: получение цен продукции для автозаполнения"""
+    products = Product.objects.filter(is_active=True).values('id', 'name', 'price', 'article', 'unit')
+    data = {str(p['id']): p for p in products}
+    return JsonResponse(data)

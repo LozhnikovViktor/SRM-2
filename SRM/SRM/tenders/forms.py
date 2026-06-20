@@ -3,6 +3,8 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from .models import Client
 from .models import Tender, Client, TenderDocument, AuditLog, Comment
+from .models import Product, ShipmentRequest, ShipmentRequestItem
+from django.forms import inlineformset_factory
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -376,3 +378,43 @@ class TenderplanSearchForm(forms.Form):
             'class': 'form-control',
         })
     )
+
+
+    
+
+
+class ShipmentRequestForm(forms.ModelForm):
+    """Форма заявки на отгрузку"""
+    class Meta:
+        model = ShipmentRequest
+        fields = ['client', 'contact_person', 'contact_phone', 'contact_email', 'comment']
+        widgets = {
+            'comment': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+            'contact_person': forms.TextInput(attrs={'class': 'form-control'}),
+            'contact_phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'contact_email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'client': forms.Select(attrs={'class': 'form-select'}),
+        }
+
+
+class ShipmentRequestItemForm(forms.ModelForm):
+    """Форма позиции заявки"""
+    class Meta:
+        model = ShipmentRequestItem
+        fields = ['product', 'quantity', 'unit_price', 'discount_percent']
+        widgets = {
+            'product': forms.Select(attrs={'class': 'form-select product-select'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control quantity-input', 'step': '0.001', 'min': '0'}),
+            'unit_price': forms.NumberInput(attrs={'class': 'form-control price-input', 'step': '0.01', 'min': '0'}),
+            'discount_percent': forms.NumberInput(attrs={'class': 'form-control discount-input', 'step': '0.1', 'min': '0', 'max': '100', 'value': '0'}),
+        }
+
+
+# Formset для позиций заявки
+ShipmentItemFormSet = inlineformset_factory(
+    ShipmentRequest,
+    ShipmentRequestItem,
+    form=ShipmentRequestItemForm,
+    extra=3,  # 3 пустые строки по умолчанию
+    can_delete=True,
+)

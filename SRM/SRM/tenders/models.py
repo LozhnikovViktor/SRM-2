@@ -425,3 +425,111 @@ class ChatMessage(models.Model):
     
     def __str__(self):
         return f"{self.author.username}: {self.content[:50]}"
+    
+
+
+    # ============================================
+# 🔹 НОМЕНКЛАТУРА ПРОДУКЦИИ
+# ============================================
+class Product(models.Model):
+    """Номенклатура продукции"""
+    name = models.CharField('Наименование', max_length=200)
+    article = models.CharField('Артикул', max_length=50, blank=True)
+    price = models.DecimalField('Цена прайс', max_digits=12, decimal_places=2, default=0)
+    unit = models.CharField('Ед. измерения', max_length=20, default='шт')
+    description = models.TextField('Описание', blank=True)
+    is_active = models.BooleanField('Активна', default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Продукция'
+        verbose_name_plural = 'Продукция'
+        ordering = ['name']
+    
+    def __str__(self):
+        return f"{self.article} {self.name}" if self.article else self.name
+
+
+# ============================================
+# 🔹 ЗАЯВКА НА ОТГРУЗКУ
+# ============================================
+class ShipmentRequest(models.Model):
+    """Заявка на отгрузку от покупателя"""
+    STATUS_CHOICES = [
+        ('new', 'Новая'),
+        ('processing', 'В обработке'),
+        ('approved', 'Согласована'),
+        ('shipped', 'Отгружена'),
+        ('cancelled', 'Отменена'),
+    ]
+    
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, 
+                               related_name='shipment_requests', 
+                               verbose_name='Покупатель')
+    contact_person = models.CharField('Контактное лицо', max_length=200, blank=True)
+    contact_phone = models.CharField('Телефон', max_length=50, blank=True)
+    contact_email = models.EmailField('Email', blank=True)
+    status = models.CharField('Статус', max_length=20, choices=STATUS_CHOICES, default='new')
+    comment = models.TextField('Комментарий', blank=True)
+    created_at = models.DateTimeField('Дата создания', auto_now_add=True)
+    updated_at = models.DateTimeField('Обновлена', auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, 
+                                   null=True, blank=True, 
+                                   related_name='created_shipment_requests',
+                                   verbose_name='Кем создана')
+    exported_to_1c = models.BooleanField('Выгружена в 1С', default=False)
+    exported_at = models.DateTimeField('Дата выгрузки', null=True, blank=True)
+    
+    class Meta:
+        verbose_name = 'Заявка на отгрузку'
+        verbose_name_plural = 'Заявки на отгрузку'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"Заявка #{self.id} от {self.client.name}"
+    
+    @property
+    def total_amount(self):
+        """Общая сумма заявки"""
+        return sum(item.total for item in self.items.all())
+    
+    @property
+    def total_quantity(self):
+        """Общее количество"""
+        return sum(item.quantity for item in self.items.all())
+
+
+class ShipmentRequestItem(models.Model):
+    """Позиция заявки на отгрузку"""
+    request = models.ForeignKey(ShipmentRequest, on_delete=models.CASCADE, 
+                                related_name='items', verbose_name='Заявка')
+    product = models.ForeignKey(Product, on_delete=models.PROTECT, 
+                                related_name='shipment_items', 
+                                verbose_name='Продукция')
+    quantity = models.DecimalField('Количество', max_digits=12, decimal_places=3)
+    unit_price = models.DecimalField('Цена за ед.', max_digits=12, decimal_places=2)
+    discount_percent = models.DecimalField('Скидка, %', max_digits=5, decimal_places=2, 
+                                           default=0, help_text='Скидка от прайса в %')
+    final_price = models.DecimalField('Итоговая цена', max_digits=12, decimal_places=2,
+                                      help_text='Цена с учётом скидки')
+    
+    class Meta:
+        verbose_name = 'Позиция заявки'
+        verbose_name_plural = 'Позиции заявки'
+    
+    def __str__(self):
+        return f"{self.product.name} x {self.quantity}"
+    
+    @property
+    def total(self):
+        """Сумма по позиции"""
+        return self.final_price * self.quantity
+    
+    def save(self, *args, **kwargs):
+        # Автоматически рассчитываем финальную цену
+        if self.discount_percent:
+            self.final_price = self.unit_price * (1 - self.discount_percent / 100)
+        else:
+            self.final_price = self.unit_price
+        super().save(*args, **kwargs)

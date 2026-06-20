@@ -123,13 +123,28 @@ urlpatterns = [
     # ============================================
     # 🔹 АДМИНКА (КАСТОМНАЯ)
     # ============================================
-     path('admin/users/', views.user_management, name='user_management'),
-         # 🔹 ЧАТ
+    path('admin/users/', views.user_management, name='user_management'), # 🔹 ЧАТ
     path('chat/', views.chat_room_list, name='chat_list'),
     path('chat/<int:room_id>/', views.chat_room, name='chat_room'),
     path('chat/<int:room_id>/send/', views.chat_send_message, name='chat_send_message'),
     path('chat/<int:room_id>/messages/', views.chat_get_messages, name='chat_get_messages'),
     path('chat/start/<str:content_type>/<int:object_id>/', views.start_chat, name='start_chat'),
+    path('api/products/prices/', views.api_products_prices, name='api_products_prices'),
+        # ============================================
+    # 🔹 ЗАЯВКИ НА ОТГРУЗКУ
+    # ============================================
+    path('shipment/create/', views.create_shipment_request, name='shipment_create'),
+    path('shipment/', views.shipment_request_list, name='shipment_list'),
+    path('shipment/<int:pk>/', views.shipment_request_detail, name='shipment_request_detail'),
+    path('shipment/<int:pk>/status/', views.shipment_request_update_status, name='shipment_update_status'),
+    path('shipment/export/1c/', views.export_shipment_to_1c, name='shipment_export_1c'),
+    
+    # ============================================
+    # 🔹 НОМЕНКЛАТУРА
+    # ============================================
+    path('products/', views.product_list, name='product_list'),
+    path('products/add/', views.product_create, name='product_create'),
+    path('api/products/prices/', views.api_products_prices, name='api_products_prices'),
 ]
 
 # ============================================
