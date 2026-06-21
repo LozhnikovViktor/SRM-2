@@ -52,6 +52,7 @@ from django.core.mail import EmailMessage
 
 
 
+
 # Импорты из приложения
 
 from .utils import export_tenders_to_excel, export_dashboard_stats_to_excel, search_tenders_on_zakupki
@@ -236,9 +237,10 @@ class TenderListView(LoginRequiredMixin, ListView):
         
         return filters
 
+
 class TenderCreateView(LoginRequiredMixin, CreateView):
     model = Tender
-    form_class = TenderForm  # ← было fields = [...]
+    form_class = TenderForm
     template_name = 'tenders/tender_form.html'
     success_url = reverse_lazy('tenders:list')
 
@@ -247,8 +249,6 @@ class TenderCreateView(LoginRequiredMixin, CreateView):
         response = super().form_valid(form)
         
         # Логируем создание
-        self.object._audit_user = self.request.user
-        self.object._audit_request = self.request
         from .audit import log_action
         log_action(
             user=self.request.user,
@@ -256,6 +256,7 @@ class TenderCreateView(LoginRequiredMixin, CreateView):
             model_name='Tender',
             object_id=self.object.pk,
             object_repr=str(self.object),
+            changes={'message': 'Тендер создан'},  # ← Добавляем
             request=self.request
         )
         
@@ -269,18 +270,61 @@ class TenderUpdateView(LoginRequiredMixin, UpdateView):
     template_name = 'tenders/tender_form.html'
     success_url = reverse_lazy('tenders:list')
     
-    def delete(self, request, *args, **kwargs):
-        tender = self.get_object()
-        messages.success(request, f'🗑️ Тендер "{tender.customer_name}" удалён')
-        return super().delete(request, *args, **kwargs)
+    def get_object(self, queryset=None):
+        """Сохраняем старые данные для сравнения"""
+        obj = super().get_object(queryset)
+        # Сохраняем копию старых данных
+        obj._old_data = {
+            'customer_name': obj.customer_name,
+            'initial_amount': obj.initial_amount,
+            'deadline': obj.deadline,
+            'executor_name': obj.executor_name,
+            'procedure_url': obj.procedure_url,
+            'winner': obj.winner,
+            'final_amount': obj.final_amount,
+            'cost': obj.cost,
+            'status': obj.status,
+            'comment': obj.comment,
+            'client_id': obj.client_id,
+        }
+        return obj
 
     def form_valid(self, form):
         if form.instance.client:
             form.instance.customer_name = form.instance.client.name
         
+        # Берём старые данные из form.instance
+        old_data = form.instance._old_data
+        
         response = super().form_valid(form)
         
-        # Логируем обновление
+        # Собираем изменения
+        changes = {}
+        new_data = {
+            'customer_name': form.instance.customer_name,
+            'initial_amount': form.instance.initial_amount,
+            'deadline': form.instance.deadline,
+            'executor_name': form.instance.executor_name,
+            'procedure_url': form.instance.procedure_url,
+            'winner': form.instance.winner,
+            'final_amount': form.instance.final_amount,
+            'cost': form.instance.cost,
+            'status': form.instance.status,
+            'comment': form.instance.comment,
+            'client_id': form.instance.client_id,
+        }
+        
+        for field_name in old_data:
+            old_value = old_data[field_name]
+            new_value = new_data.get(field_name)
+            
+            if str(old_value) != str(new_value):
+                changes[field_name] = {
+                    'old': str(old_value) if old_value else '—',
+                    'new': str(new_value) if new_value else '—'
+                }
+        
+        # Логируем обновление с изменениями
         from .audit import log_action
         log_action(
             user=self.request.user,
@@ -288,12 +332,20 @@ class TenderUpdateView(LoginRequiredMixin, UpdateView):
             model_name='Tender',
             object_id=self.object.pk,
             object_repr=str(self.object),
+            changes=changes,
             request=self.request
         )
         
         messages.success(self.request, f'✅ Тендер "{self.object.customer_name}" обновлён!')
         return response
+
     
+    def delete(self, request, *args, **kwargs):
+        tender = self.get_object()
+        messages.success(request, f'🗑️ Тендер "{tender.customer_name}" удалён')
+        return super().delete(request, *args, **kwargs)
+
+
 class TenderDeleteView(LoginRequiredMixin, DeleteView):
     model = Tender
     template_name = 'tenders/tender_confirm_delete.html'
@@ -921,43 +973,6 @@ class TenderCalendarDataView(LoginRequiredMixin, View):
         return JsonResponse(events, safe=False)
 
 
-@login_required
-def add_comment(request, pk):
-    """Добавление комментария к тендеру (AJAX)"""
-    tender = get_object_or_404(Tender, pk=pk)
-    
-    if request.method == 'POST':
-        form = CommentForm(request.POST)
-        if form.is_valid():
-            comment = form.save(commit=False)
-            comment.tender = tender
-            comment.author = request.user
-            comment.save()
-            
-            # Создаём запись в audit log
-            AuditLog.objects.create(
-                user=request.user,
-                action='create',
-                model_name='Comment',
-                object_id=comment.id,
-                object_repr=f'Комментарий к {tender.customer_name}',
-                ip_address=get_client_ip(request),
-                user_agent=request.META.get('HTTP_USER_AGENT', '')
-            )
-            
-            # Возвращаем HTML для нового комментария
-            return JsonResponse({
-                'success': True,
-                'html': render_to_string('tenders/comment_item.html', {
-                    'comment': comment,
-                    'user': request.user
-                }, request=request)
-            })
-        else:
-            return JsonResponse({'success': False, 'errors': form.errors})
-    
-    return JsonResponse({'success': False, 'error': 'Метод не разрешён'})
-
 
 @login_required
 def edit_comment(request, pk):
@@ -986,6 +1001,45 @@ def edit_comment(request, pk):
 
 
 @login_required
+def add_comment(request, pk):
+    """Добавление комментария к тендеру (AJAX)"""
+    tender = get_object_or_404(Tender, pk=pk)
+    
+    if request.method == 'POST':
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.tender = tender
+            comment.author = request.user
+            comment.save()
+            
+            # Создаём запись в audit log С изменениями
+            from .audit import log_action
+            log_action(
+                user=request.user,
+                action='create',
+                model_name='Comment',
+                object_id=comment.id,
+                object_repr=f'Комментарий к {tender.customer_name}',
+                changes={'text': comment.text[:200]},  # ← Добавляем
+                request=request
+            )
+            
+            # Возвращаем HTML для нового комментария
+            return JsonResponse({
+                'success': True,
+                'html': render_to_string('tenders/comment_item.html', {
+                    'comment': comment,
+                    'user': request.user
+                }, request=request)
+            })
+        else:
+            return JsonResponse({'success': False, 'errors': form.errors})
+    
+    return JsonResponse({'success': False, 'error': 'Метод не разрешён'})
+
+
+@login_required
 def delete_comment(request, pk):
     """Удаление комментария"""
     comment = get_object_or_404(Comment, pk=pk)
@@ -996,20 +1050,24 @@ def delete_comment(request, pk):
     
     if request.method == 'POST':
         tender = comment.tender
+        comment_text = comment.text[:200]  # Сохраняем текст перед удалением
         comment.delete()
         
-        AuditLog.objects.create(
+        # Логируем удаление С изменениями
+        from .audit import log_action
+        log_action(
             user=request.user,
             action='delete',
             model_name='Comment',
             object_repr=f'Удалён комментарий к {tender.customer_name}',
-            ip_address=get_client_ip(request),
-            user_agent=request.META.get('HTTP_USER_AGENT', '')
+            changes={'deleted_text': comment_text},  # ← Добавляем
+            request=request
         )
         
         return JsonResponse({'success': True})
     
     return JsonResponse({'success': False, 'error': 'Метод не разрешён'})
+
 
 @login_required
 def export_tenders_pdf(request):
