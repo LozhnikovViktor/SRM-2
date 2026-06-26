@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% block title %}{{ tender.customer_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">{{ tender.customer_name }}</h2>
+    
+    <!-- Информация о тендере -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <p><strong>Статус:</strong> {{ tender.get_status_display }}</p>
+            <p><strong>Начальная сумма:</strong> {{ tender.initial_amount|floatformat:2 }} ₽</p>
+            <p><strong>Дедлайн:</strong> {{ tender.deadline|date:"d.m.Y H:i" }}</p>
+            <p><strong>Исполнитель:</strong> {{ tender.executor_name }}</p>
+            {% if tender.comment %}
+            <p><strong>Комментарий:</strong> {{ tender.comment }}</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Секция комментариев -->
+    <div class="card">
+        <div class="card-header">
+            <h4 class="mb-0">
+                <i class="bi bi-chat-dots"></i> Комментарии ({{ tender.comments.count }})
+            </h4>
+        </div>
+        <div class="card-body">
+            <!-- Форма добавления комментария -->
+            <form id="commentForm" method="post" action="{% url 'tenders:add_comment' tender.pk %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    {{ form.text }}
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-send"></i> Добавить комментарий
+                </button>
+            </form>
+            
+            <hr>
+            
+            <!-- Список комментариев -->
+            <div id="commentsList">
+                {% for comment in tender.comments.all %}
+                    {% include "tenders/comment_item.html" with comment=comment %}
+                {% empty %}
+                    <p class="text-muted">Пока нет комментариев. Будьте первым!</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно редактирования -->
+<div class="modal fade" id="editCommentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Редактировать комментарий</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editCommentForm">
+                    {% csrf_token %}
+                    <textarea id="editCommentText" class="form-control" rows="3"></textarea>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" onclick="saveEdit()">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentCommentId = null;
+
+// Добавление комментария
+document.getElementById('commentForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch(this.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Добавляем новый комментарий в начало списка
+            const commentsList = document.getElementById('commentsList');
+            commentsList.insertAdjacentHTML('afterbegin', data.html);
+            
+            // Очищаем форму
+            document.getElementById('id_text').value = '';
+            
+            // Показываем уведомление
+            alert('Комментарий добавлен!');
+        } else {
+            alert('Ошибка: ' + JSON.stringify(data.errors));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Произошла ошибка');
+    });
+});
+
+// Редактирование комментария
+function editComment(commentId) {
+    currentCommentId = commentId;
+    const commentText = document.querySelector(`#comment-${commentId} .comment-text`).innerText;
+    document.getElementById('editCommentText').value = commentText;
+    
+    const modal = new bootstrap.Modal(document.getElementById('editCommentModal'));
+    modal.show();
+}
+
+function saveEdit() {
+    const text = document.getElementById('editCommentText').value;
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    fetch(`/comments/${currentCommentId}/edit/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: `text=${encodeURIComponent(text)}&csrfmiddlewaretoken=${csrfToken}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Заменяем старый комментарий новым
+            const oldComment = document.getElementById(`comment-${currentCommentId}`);
+            oldComment.outerHTML = data.html;
+            
+            // Закрываем модальное окно
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editCommentModal'));
+            modal.hide();
+            
+            alert('Комментарий обновлён!');
+        } else {
+            alert('Ошибка: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Произошла ошибка');
+    });
+}
+
+// Удаление комментария
+function deleteComment(commentId) {
+    if (!confirm('Вы уверены, что хотите удалить этот комментарий?')) {
+        return;
+    }
+    
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    fetch(`/comments/${commentId}/delete/`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: `csrfmiddlewaretoken=${csrfToken}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Удаляем комментарий из DOM
+            const comment = document.getElementById(`comment-${commentId}`);
+            comment.remove();
+            
+            alert('Комментарий удалён!');
+        } else {
+            alert('Ошибка: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Произошла ошибка');
+    });
+}
+</script>
+{% endblock %}

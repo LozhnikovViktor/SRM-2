@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}{{ client.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>👤 {{ client.name }}</h2>
+        <div class="btn-group">
+            <a href="{% url 'tenders:client_edit' client.pk %}" class="btn btn-outline-primary">✏️ Редактировать</a>
+            <a href="{% url 'tenders:client_list' %}" class="btn btn-outline-secondary">← К списку</a>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-white"><h5>📋 Основная информация</h5></div>
+                <div class="card-body">
+                    <table class="table table-borderless mb-0">
+                        <tr><th style="width:40%">Наименование:</th><td>{{ client.name }}</td></tr>
+                        <tr><th>ИНН:</th><td><code>{{ client.inn }}</code></td></tr>
+                        <tr><th>Статус:</th><td>
+                            {% if client.status == 'active' %}<span class="badge bg-success">{{ client.get_status_display }}</span>
+                            {% elif client.status == 'prospect' %}<span class="badge bg-info">{{ client.get_status_display }}</span>
+                            {% elif client.status == 'inactive' %}<span class="badge bg-secondary">{{ client.get_status_display }}</span>
+                            {% elif client.status == 'blacklist' %}<span class="badge bg-danger">{{ client.get_status_display }}</span>
+                            {% endif %}
+                        </td></tr>
+                        <tr><th>Менеджер:</th><td>{{ client.manager.get_full_name|default:"Не назначен" }}</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-white"><h5>📞 Контакты</h5></div>
+                <div class="card-body">
+                    <table class="table table-borderless mb-0">
+                        <tr><th style="width:40%">Email:</th><td>{% if client.email %}<a href="mailto:{{ client.email }}">{{ client.email }}</a>{% else %}—{% endif %}</td></tr>
+                        <tr><th>Телефон:</th><td>{% if client.phone %}<a href="tel:{{ client.phone }}">{{ client.phone }}</a>{% else %}—{% endif %}</td></tr>
+                        <tr><th>Контактное лицо:</th><td>{{ client.contact_person|default:"—" }}</td></tr>
+                        <tr><th>Должность:</th><td>{{ client.contact_position|default:"—" }}</td></tr>
+                        <tr><th>Сайт:</th><td>{% if client.website %}<a href="{{ client.website }}" target="_blank">{{ client.website }}</a>{% else %}—{% endif %}</td></tr>
+                        <tr><th>Адрес:</th><td>{{ client.address|default:"—" }}</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if client.notes %}
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-white"><h5>📝 Примечания</h5></div>
+        <div class="card-body"><p class="mb-0">{{ client.notes|linebreaks }}</p></div>
+    </div>
+    {% endif %}
+    
+    <!-- 🔹 БЛОК СТАТИСТИКИ ПО КЛИЕНТУ -->
+    {% if client_stats.total_tenders > 0 %}
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <div class="card shadow-sm border-primary">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-1">Всего тендеров</h6>
+                    <h2 class="text-primary mb-0">{{ client_stats.total_tenders }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-success">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-1">Выиграно</h6>
+                    <h2 class="text-success mb-0">{{ client_stats.won_tenders }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-info">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-1">Конверсия</h6>
+                    <h2 class="text-info mb-0">{{ client_stats.win_rate }}%</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-warning">
+                <div class="card-body text-center">
+                    <h6 class="text-muted mb-1">Прибыль</h6>
+                    <h2 class="text-warning mb-0">{{ client_stats.total_profit|floatformat:0 }} ₽</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if related_tenders %}
+    <div class="card shadow-sm mb-3">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">📋 Связанные тендеры</h5>
+            <a href="{% url 'tenders:create' %}?client={{ client.pk }}" class="btn btn-sm btn-primary">
+                ➕ Новый тендер
+            </a>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Заказчик</th>
+                        <th>Сумма</th>
+                        <th>Дедлайн</th>
+                        <th>Статус</th>
+                        <th>Прибыль</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tender in related_tenders %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'tenders:update' tender.pk %}">{{ tender.customer_name }}</a>
+                        </td>
+                        <td>{{ tender.initial_amount|floatformat:2 }} ₽</td>
+                        <td>{{ tender.deadline|date:"d.m.Y"|default:"—" }}</td>
+                        <td>
+                            <span class="badge bg-{% if tender.status == 'won' %}success{% elif tender.status == 'lost' %}danger{% elif tender.status == 'submitted' %}info{% else %}secondary{% endif %}">
+                                {{ tender.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="{% if tender.profit and tender.profit < 0 %}text-danger{% else %}text-success{% endif %}">
+                            {{ tender.profit|default:"—" }} ₽
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        📭 У этого клиента пока нет тендеров. 
+        <a href="{% url 'tenders:create' %}">Создать первый тендер</a>
+    </div>
+    {% endif %}
+    
+    <small class="text-muted">
+        Создан: {{ client.created_at|date:"d.m.Y H:i" }} | 
+        Обновлён: {{ client.updated_at|date:"d.m.Y H:i" }} | 
+        Создал: {{ client.created_by.username|default:"—" }}
+    </small>
+</div>
+{% endblock %}

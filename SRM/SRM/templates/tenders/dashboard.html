@@ -1,0 +1,402 @@
+{% extends "base.html" %}
+{% block title %}Дашборд{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4">📊 Дашборд</h2>
+    
+    <!-- КАРТОЧКИ СО СТАТИСТИКОЙ -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm border-primary h-100">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Всего тендеров</h6>
+                    <h2 class="text-primary mb-0">{{ total_tenders }}</h2>
+                    <small class="text-muted">Активных: {{ active_tenders }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-success h-100">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Выиграно</h6>
+                    <h2 class="text-success mb-0">{{ won_tenders }}</h2>
+                    <small class="text-muted">Конверсия: {{ win_rate }}%</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-warning h-100">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Общая прибыль</h6>
+                    <h2 class="text-warning mb-0">{{ total_profit|floatformat:0 }} ₽</h2>
+                    <small class="text-muted">Наценка: {{ avg_markup }}%</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-danger h-100">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Проиграно</h6>
+                    <h2 class="text-danger mb-0">{{ lost_tenders }}</h2>
+                    <small class="text-muted">Черновики: {{ draft_tenders }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ГРАФИКИ 1 РЯД -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">🥧 Распределение по статусам</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="statusChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">📈 Динамика тендеров по месяцам</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="monthlyChart" height="120"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ГРАФИКИ 2 РЯД -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">💰 Прибыль по клиентам (ТОП-10)</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="clientChart" height="140"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">⏰ Ближайшие дедлайны</h5>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_deadlines %}
+                    <div class="list-group list-group-flush">
+                        {% for tender in upcoming_deadlines %}
+                        <div class="list-group-item px-0">
+                            <div class="d-flex justify-content-between">
+                                <strong class="text-truncate" style="max-width: 200px;">
+                                    {{ tender.customer_name }}
+                                </strong>
+                                <small class="text-danger">
+                                    {{ tender.deadline|date:"d.m" }}
+                                </small>
+                            </div>
+                            <small class="text-muted">
+                                {{ tender.initial_amount|floatformat:0 }} ₽
+                            </small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center mb-0">Нет активных дедлайнов</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 🔹 ВОРОНКА ПРОДАЖ -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">🎯 Воронка продаж</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="funnelChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">📊 Конверсия по этапам</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Черновики → Поданные</span>
+                            <strong class="text-primary">{{ funnel_conversion.draft_to_submitted }}%</strong>
+                        </div>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-primary" role="progressbar" 
+                                 style="width: {{ funnel_conversion.draft_to_submitted }}%;">
+                                {{ funnel_data.draft }} → {{ funnel_data.submitted }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Поданные → Выигранные</span>
+                            <strong class="text-success">{{ funnel_conversion.submitted_to_won }}%</strong>
+                        </div>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: {{ funnel_conversion.submitted_to_won }}%;">
+                                {{ funnel_data.submitted }} → {{ funnel_data.won }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info mt-3 mb-0">
+                        <h6 class="alert-heading">📈 Общая конверсия</h6>
+                        <p class="mb-0">
+                            Из <strong>{{ funnel_data.draft }}</strong> черновиков 
+                            выиграно <strong>{{ funnel_data.won }}</strong> тендеров
+                            (<strong>{{ win_rate }}%</strong>)
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="d-flex gap-2 mb-4">
+        <a href="{% url 'tenders:export_dashboard_excel' %}" class="btn btn-success">
+            📊 Экспорт статистики в Excel
+        </a>
+        <a href="{% url 'tenders:export_excel' %}" class="btn btn-outline-success">
+            📋 Экспорт всех тендеров
+        </a>
+    </div>
+</div>
+
+<!-- 🔹 ПЕРЕДАЧА ДАННЫХ В JAVASCRIPT -->
+<script id="chart-data" type="application/json">
+{
+    "statusLabels": {{ status_labels_json|safe }},
+    "statusData": {{ status_data_json|safe }},
+    "statusColors": {{ status_colors_json|safe }},
+    "monthLabels": {{ month_labels_json|safe }},
+    "monthTotals": {{ month_totals_json|safe }},
+    "monthWon": {{ month_won_json|safe }},
+    "clientLabels": {{ client_labels_json|safe }},
+    "clientData": {{ client_data_json|safe }},
+    "funnelData": {{ funnel_data_json|safe }}
+}
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // Получаем все данные из одного JSON
+    const chartData = JSON.parse(document.getElementById('chart-data').textContent);
+    
+    console.log('📊 Данные загружены:', chartData);
+    
+    // 🥧 ГРАФИК 1: Круговая диаграмма статусов
+    const statusCtx = document.getElementById('statusChart');
+    if (statusCtx && chartData.statusLabels.length > 0) {
+        new Chart(statusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: chartData.statusLabels,
+                datasets: [{
+                    data: chartData.statusData,
+                    backgroundColor: chartData.statusColors,
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { padding: 15 } },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((context.raw / total) * 100).toFixed(1);
+                                return context.label + ': ' + context.raw + ' (' + percentage + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // 📈 ГРАФИК 2: Линейный график по месяцам
+    const monthlyCtx = document.getElementById('monthlyChart');
+    if (monthlyCtx && chartData.monthLabels.length > 0) {
+        new Chart(monthlyCtx, {
+            type: 'line',
+            data: {
+                labels: chartData.monthLabels,
+                datasets: [
+                    {
+                        label: 'Всего тендеров',
+                        data: chartData.monthTotals,
+                        borderColor: '#0d6efd',
+                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    },
+                    {
+                        label: 'Выиграно',
+                        data: chartData.monthWon,
+                        borderColor: '#198754',
+                        backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'top' } },
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+            }
+        });
+    }
+    
+    // 💰 ГРАФИК 3: Столбчатый график прибыли по клиентам
+    const clientCtx = document.getElementById('clientChart');
+    if (clientCtx && chartData.clientLabels.length > 0) {
+        new Chart(clientCtx, {
+            type: 'bar',
+            data: {
+                labels: chartData.clientLabels,
+                datasets: [{
+                    label: 'Прибыль, ₽',
+                    data: chartData.clientData,
+                    backgroundColor: 'rgba(255, 193, 7, 0.7)',
+                    borderColor: 'rgba(255, 193, 7, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.raw.toLocaleString('ru-RU') + ' ₽';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString('ru-RU') + ' ₽';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // 🎯 ГРАФИК 4: Воронка продаж
+    const funnelCtx = document.getElementById('funnelChart');
+    if (funnelCtx) {
+        const funnelData = chartData.funnelData;
+        
+        new Chart(funnelCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Черновики', 'Поданные', 'Выигранные'],
+                datasets: [{
+                    label: 'Количество тендеров',
+                    data: [funnelData.draft, funnelData.submitted, funnelData.won],
+                    backgroundColor: [
+                        'rgba(108, 117, 125, 0.7)',
+                        'rgba(13, 110, 253, 0.7)',
+                        'rgba(25, 135, 84, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(108, 117, 125, 1)',
+                        'rgba(13, 110, 253, 1)',
+                        'rgba(25, 135, 84, 1)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.raw + ' тендеров';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+
+{% block extra_js %}
+<script>
+// 🔹 Функция для обновления графиков при смене темы
+window.updateChartsTheme = function(theme) {
+    const isDark = theme === 'dark';
+    const textColor = isDark ? '#e9ecef' : '#212529';
+    const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+    
+    // Обновляем все графики Chart.js на странице
+    Chart.helpers.each(Chart.instances, function(instance) {
+        // Обновляем цвет текста
+        if (instance.options.plugins && instance.options.plugins.legend) {
+            instance.options.plugins.legend.labels.color = textColor;
+        }
+        
+        // Обновляем цвет сетки
+        if (instance.options.scales) {
+            Object.keys(instance.options.scales).forEach(function(key) {
+                const scale = instance.options.scales[key];
+                if (scale.ticks) scale.ticks.color = textColor;
+                if (scale.grid) scale.grid.color = gridColor;
+            });
+        }
+        
+        instance.update();
+    });
+};
+</script>
+{% endblock %}
+
+
+{% endblock %}

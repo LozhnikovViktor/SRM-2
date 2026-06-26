@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block title %}Канбан-доска{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>📋 Канбан-доска</h2>
+        <a href="{% url 'tenders:list' %}" class="btn btn-outline-secondary">← К списку</a>
+    </div>
+    
+    <!-- Канбан колонки -->
+    <div class="row kanban-board">
+        
+        <!-- Колонка: Черновики -->
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="kanban-column" id="col-draft" data-status="draft">
+                <div class="kanban-header bg-secondary text-white">
+                    📝 Черновики <span class="badge bg-light text-dark float-end">{{ draft.count }}</span>
+                </div>
+                <div class="kanban-body" id="list-draft">
+                    {% for tender in draft %}
+                        {% include "tenders/includes/kanban_card.html" %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Колонка: В работе (Поданные + Опубликованные) -->
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="kanban-column" id="col-process" data-status="process">
+                <div class="kanban-header bg-primary text-white">
+                    📤 В работе <span class="badge bg-light text-dark float-end">{{ process.count }}</span>
+                </div>
+                <div class="kanban-body" id="list-process">
+                    {% for tender in process %}
+                        {% include "tenders/includes/kanban_card.html" %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Колонка: Выигранные -->
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="kanban-column" id="col-won" data-status="won">
+                <div class="kanban-header bg-success text-white">
+                    🏆 Выигранные <span class="badge bg-light text-dark float-end">{{ won.count }}</span>
+                </div>
+                <div class="kanban-body" id="list-won">
+                    {% for tender in won %}
+                        {% include "tenders/includes/kanban_card.html" %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Колонка: Проигранные -->
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="kanban-column" id="col-lost" data-status="lost">
+                <div class="kanban-header bg-danger text-white">
+                    ❌ Закрыты <span class="badge bg-light text-dark float-end">{{ lost.count }}</span>
+                </div>
+                <div class="kanban-body" id="list-lost">
+                    {% for tender in lost %}
+                        {% include "tenders/includes/kanban_card.html" %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+<!-- Подключение SortableJS -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const columns = document.querySelectorAll('.kanban-body');
+    
+    columns.forEach(column => {
+        new Sortable(column, {
+            group: 'kanban', // Разрешаем перетаскивание между колонками
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            
+            // При окончании перетаскивания
+            onEnd: function(evt) {
+                const itemEl = evt.item;
+                const newColumn = evt.to;
+                const oldColumn = evt.from;
+                
+                if (newColumn === oldColumn) return; // Если перенесли в ту же колонку
+                
+                // Получаем ID тендера и новый статус
+                const tenderId = itemEl.getAttribute('data-tender-id');
+                const newStatus = newColumn.getAttribute('data-status');
+                
+                // Визуальная обратная связь (затемняем)
+                itemEl.style.opacity = '0.5';
+                
+                // Отправляем запрос на сервер
+                fetch('{% url "tenders:api_tender_status" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({
+                        tender_id: tenderId,
+                        status: newStatus
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        // Обновляем цвет карточки в зависимости от новой колонки
+                        updateCardStyle(itemEl, newStatus);
+                        // Пересчитываем счетчики (упрощенно: просто обновляем страницу через 1 сек)
+                        setTimeout(() => { location.reload(); }, 800);
+                    } else {
+                        alert('Ошибка: ' + data.message);
+                        location.reload(); // Возвращаем на место при ошибке
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    location.reload();
+                });
+            }
+        });
+    });
+    
+    function updateCardStyle(el, status) {
+        // Можно добавить логику изменения цвета бейджа статуса внутри карточки
+        console.log('Status updated to:', status);
+    }
+});
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Стили для Канбана */
+.kanban-column {
+    background: #f4f6f9;
+    border-radius: 8px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.kanban-header {
+    padding: 10px 15px;
+    border-radius: 8px 8px 0 0;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.kanban-body {
+    padding: 10px;
+    min-height: 200px;
+    flex-grow: 1;
+}
+.kanban-card {
+    background: white;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    cursor: grab;
+    transition: box-shadow 0.2s;
+    border-left: 4px solid #6c757d;
+}
+.kanban-card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+.kanban-card:active {
+    cursor: grabbing;
+}
+/* Цвета карточек по статусу */
+.card-draft { border-left-color: #6c757d; }
+.card-submitted { border-left-color: #0d6efd; }
+.card-published { border-left-color: #0d6efd; }
+.card-won { border-left-color: #198754; }
+.card-lost { border-left-color: #dc3545; }
+.card-cancelled { border-left-color: #dc3545; }
+
+.sortable-ghost {
+    opacity: 0.4;
+    background: #e9ecef;
+}
+</style>
+{% endblock %}
