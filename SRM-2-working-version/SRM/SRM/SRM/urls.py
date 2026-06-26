@@ -40,6 +40,9 @@ def sw_view(request):
         print(f"❌ Service Worker not found at: {sw_path}")
         return HttpResponse('Service Worker not found', status=404)
 
+def offline_view(request):
+    """Offline страница"""
+    return render(request, 'offline.html')
 
 # ============================================
 # 🔹 Основные URL-маршруты
@@ -51,7 +54,9 @@ urlpatterns = [
     # PWA файлы
     path('manifest.json', manifest_view, name='manifest'),
     path('static/pwa/sw.js', sw_view, name='service_worker'),
-    path('api/', include('tenders.api_urls'))
+    path('api/', include('tenders.api_urls')),
+      # Offline страница
+    path('offline/', offline_view, name='offline')
 ]
 
 if settings.DEBUG:

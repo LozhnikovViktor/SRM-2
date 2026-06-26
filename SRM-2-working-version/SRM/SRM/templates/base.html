@@ -160,6 +160,11 @@
         })();
     </script>
     
+    <!-- iOS PWA Support -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SRM">
+<link rel="apple-touch-icon" href="/static/pwa/icons/icon-192.png">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -275,6 +280,63 @@
             });
         })();
     </script>
+
+    <!-- PWA Install Prompt -->
+<div id="installPrompt" style="display: none; position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
+    <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-width: 300px;">
+        <h4 style="margin: 0 0 10px 0; font-size: 16px;">📱 Установить приложение</h4>
+        <p style="margin: 0 0 15px 0; font-size: 14px; color: #666;">
+            Добавьте SRM на главный экран для быстрого доступа
+        </p>
+        <div style="display: flex; gap: 10px;">
+            <button id="installBtn" style="flex: 1; padding: 10px; background: #0d6efd; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">
+                Установить
+            </button>
+            <button id="dismissBtn" style="padding: 10px 15px; background: #f8f9fa; color: #666; border: none; border-radius: 5px; cursor: pointer;">
+                Позже
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// PWA Install Prompt
+let deferredPrompt;
+const installPromptDiv = document.getElementById('installPrompt');
+const installBtn = document.getElementById('installBtn');
+const dismissBtn = document.getElementById('dismissBtn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  
+  // Показываем промпт, если пользователь ещё не отклонял его
+  if (!localStorage.getItem('installDismissed')) {
+    installPromptDiv.style.display = 'block';
+  }
+});
+
+installBtn.addEventListener('click', async () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`User response to install prompt: ${outcome}`);
+    deferredPrompt = null;
+    installPromptDiv.style.display = 'none';
+  }
+});
+
+dismissBtn.addEventListener('click', () => {
+  installPromptDiv.style.display = 'none';
+  localStorage.setItem('installDismissed', 'true');
+});
+
+// Скрываем промпт, если приложение уже установлено
+window.addEventListener('appinstalled', () => {
+  installPromptDiv.style.display = 'none';
+  deferredPrompt = null;
+});
+</script>
     
     {% block extra_js %}{% endblock %}
 </body>
