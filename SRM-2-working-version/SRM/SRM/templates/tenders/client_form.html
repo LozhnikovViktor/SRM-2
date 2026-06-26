@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% block title %}{% if object %}Редактирование{% else %}Добавление{% endif %} клиента{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h3 class="mb-0">
+                        {% if object %}✏️ Редактирование клиента{% else %}➕ Новый клиент{% endif %}
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="client-form">
+                        {% csrf_token %}
+                        
+                        <h5 class="text-muted mb-3"> Основная информация</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-8">
+                                <label class="form-label">{{ form.name.label }} *</label>
+                                {{ form.name }}
+                                {% if form.name.errors %}<div class="text-danger small">{{ form.name.errors.0 }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">{{ form.inn.label }} *</label>
+                                <div class="input-group">
+                                    {{ form.inn }}
+                                    <button type="button" class="btn btn-outline-primary" id="btn-check-inn" title="Проверить ИНН">
+                                        🔍
+                                    </button>
+                                </div>
+                                {% if form.inn.errors %}<div class="text-danger small">{{ form.inn.errors.0 }}</div>{% endif %}
+                                <div id="inn-status" class="form-text"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.status.label }}</label>
+                                {{ form.status }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.manager.label }}</label>
+                                {{ form.manager }}
+                            </div>
+                        </div>
+                        
+                        <h5 class="text-muted mb-3">📞 Контактная информация</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.email.label }}</label>
+                                {{ form.email }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.phone.label }}</label>
+                                {{ form.phone }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.contact_person.label }}</label>
+                                {{ form.contact_person }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.contact_position.label }}</label>
+                                {{ form.contact_position }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.website.label }}</label>
+                                {{ form.website }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.address.label }}</label>
+                                {{ form.address }}
+                            </div>
+                        </div>
+                        
+                        <h5 class="text-muted mb-3"> Дополнительно</h5>
+                        <div class="mb-4">
+                            <label class="form-label">{{ form.notes.label }}</label>
+                            {{ form.notes }}
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                 Сохранить
+                            </button>
+                            <a href="{% url 'tenders:client_list' %}" class="btn btn-outline-secondary">
+                                 Отмена
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Стили для индикатора загрузки -->
+<style>
+    .inn-loading {
+        position: relative;
+    }
+    .inn-loading::after {
+        content: '';
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 16px;
+        height: 16px;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #0d6efd;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+        0% { transform: translateY(-50%) rotate(0deg); }
+        100% { transform: translateY(-50%) rotate(360deg); }
+    }
+    .status-active { color: #198754; font-weight: 500; }
+    .status-liquidating { color: #ffc107; font-weight: 500; }
+    .status-liquidated { color: #dc3545; font-weight: 500; }
+</style>
+
+<!-- JavaScript для автозаполнения по ИНН -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const innField = document.getElementById('id_inn');
+    const btnCheckInn = document.getElementById('btn-check-inn');
+    const innStatus = document.getElementById('inn-status');
+    
+    if (!innField) return;
+    
+    // Функция проверки ИНН
+    async function checkInn() {
+        const inn = innField.value.trim();
+        
+        // Валидация
+        if (inn.length !== 10 && inn.length !== 12) {
+            innStatus.innerHTML = '<span class="text-warning">️ ИНН должен содержать 10 или 12 цифр</span>';
+            return;
+        }
+        
+        if (!/^\d+$/.test(inn)) {
+            innStatus.innerHTML = '<span class="text-warning">️ ИНН должен содержать только цифры</span>';
+            return;
+        }
+        
+        // Показываем индикатор загрузки
+        innField.classList.add('inn-loading');
+        btnCheckInn.disabled = true;
+        innStatus.innerHTML = '<span class="text-info">⏳ Загрузка данных...</span>';
+        
+        try {
+            const response = await fetch(`/api/clients-suggest/?inn=${inn}`);
+            
+            if (response.status === 400) {
+                const data = await response.json();
+                innStatus.innerHTML = `<span class="text-danger">❌ ${data.error}</span>`;
+                return;
+            }
+            
+            if (response.status === 404) {
+                innStatus.innerHTML = '<span class="text-danger">❌ Компания не найдена в ЕГРЮЛ</span>';
+                return;
+            }
+            
+            if (!response.ok) {
+                innStatus.innerHTML = '<span class="text-danger">❌ Ошибка сервера</span>';
+                return;
+            }
+            
+            const data = await response.json();
+            
+            // Автозаполнение полей
+            const fields = {
+                'id_name': data.name,
+                'id_address': data.address,
+                'id_contact_person': data.management,
+                'id_contact_position': data.management_position,
+                'id_email': data.email,
+                'id_phone': data.phone,
+            };
+            
+            for (const [fieldId, value] of Object.entries(fields)) {
+                const field = document.getElementById(fieldId);
+                if (field && value) {
+                    field.value = value;
+                    // Подсветка изменённых полей
+                    field.classList.add('bg-light');
+                    setTimeout(() => field.classList.remove('bg-light'), 2000);
+                }
+            }
+            
+            // Показываем статус компании
+            const statusClass = {
+                'ACTIVE': 'status-active',
+                'LIQUIDATING': 'status-liquidating',
+                'LIQUIDATED': 'status-liquidated',
+            }[data.status] || '';
+            
+            innStatus.innerHTML = `<span class="${statusClass}">${data.status_text}</span>`;
+            
+        } catch (error) {
+            console.error('Ошибка автозаполнения:', error);
+            innStatus.innerHTML = '<span class="text-danger">❌ Ошибка подключения к API</span>';
+        } finally {
+            innField.classList.remove('inn-loading');
+            btnCheckInn.disabled = false;
+        }
+    }
+    
+    // Автопроверка при потере фокуса
+    innField.addEventListener('blur', checkInn);
+    
+    // Проверка по кнопке
+    btnCheckInn.addEventListener('click', checkInn);
+    
+    // Проверка при нажатии Enter в поле ИНН
+    innField.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            checkInn();
+        }
+    });
+});
+</script>
+{% endblock %}

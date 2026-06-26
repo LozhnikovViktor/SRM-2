@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}Реестр заявок{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📋 Реестр заявок на отгрузку</h2>
+        <div>
+            <a href="{% url 'tenders:shipment_create' %}" class="btn btn-success">➕ Новая заявка</a>
+            <a href="{% url 'tenders:shipment_export_1c' %}" class="btn btn-info">📥 Выгрузить в 1С</a>
+        </div>
+    </div>
+    
+    <!-- Фильтры -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label small">🔍 Поиск</label>
+                    <input type="text" name="search" class="form-control" 
+                           value="{{ request.GET.search }}" placeholder="Покупатель, контакт...">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small">📊 Статус</label>
+                    <select name="status" class="form-select">
+                        <option value="">Все статусы</option>
+                        {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if request.GET.status == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small">👥 Покупатель</label>
+                    <select name="client" class="form-select">
+                        <option value="">Все покупатели</option>
+                        {% for client in clients %}
+                        <option value="{{ client.id }}" {% if request.GET.client == client.id|stringformat:"s" %}selected{% endif %}>
+                            {{ client.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 d-grid align-self-end">
+                    <button type="submit" class="btn btn-primary">🔍 Применить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Таблица -->
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th><input type="checkbox" id="select-all"></th>
+                        <th>№</th>
+                        <th>Дата</th>
+                        <th>Покупатель</th>
+                        <th>Контакт</th>
+                        <th>Позиций</th>
+                        <th>Сумма</th>
+                        <th>Статус</th>
+                        <th>1С</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for shipment in requests %}
+                    <tr>
+                        <td><input type="checkbox" class="row-checkbox" value="{{ shipment.id }}"></td>
+                        <td><strong>#{{ shipment.id }}</strong></td>
+                        <td>{{ shipment.created_at|date:"d.m.Y H:i" }}</td>
+                        <td>
+                            <strong>{{ shipment.client.name }}</strong>
+                            {% if shipment.client.inn %}<br><small class="text-muted">ИНН: {{ shipment.client.inn }}</small>{% endif %}
+                        </td>
+                        <td>
+                            {% if shipment.contact_person %}
+                            <small>{{ shipment.contact_person }}</small>
+                            {% if shipment.contact_phone %}<br><small>📞 {{ shipment.contact_phone }}</small>{% endif %}
+                            {% else %}—{% endif %}
+                        </td>
+                        <td>{{ shipment.items.count }}</td>
+                        <td class="fw-bold">{{ shipment.total_amount|floatformat:2 }} ₽</td>
+                        <td>
+                            <span class="badge bg-{% if shipment.status == 'new' %}warning{% elif shipment.status == 'processing' %}info{% elif shipment.status == 'approved' %}primary{% elif shipment.status == 'shipped' %}success{% elif shipment.status == 'cancelled' %}danger{% endif %}">
+                                {{ shipment.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if shipment.exported_to_1c %}
+                            <span class="badge bg-success">✅ {{ shipment.exported_at|date:"d.m.Y" }}</span>
+                            {% else %}
+                            <span class="badge bg-secondary">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'tenders:shipment_request_detail' shipment.pk %}" class="btn btn-sm btn-outline-primary">👁️</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="10" class="text-center text-muted py-5">
+                            Заявок не найдено
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Массовая выгрузка -->
+    <div class="mt-3">
+        <button type="button" class="btn btn-info" id="export-selected">
+            📥 Выгрузить выбранные в 1С
+        </button>
+    </div>
+</div>
+
+<script>
+document.getElementById('select-all').addEventListener('change', function() {
+    document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = this.checked);
+});
+
+document.getElementById('export-selected').addEventListener('click', function() {
+    const ids = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => 'ids=' + cb.value).join('&');
+    if (ids) {
+        window.location.href = '{% url "tenders:shipment_export_1c" %}?' + ids;
+    } else {
+        alert('Выберите хотя бы одну заявку');
+    }
+});
+</script>
+{% endblock %}

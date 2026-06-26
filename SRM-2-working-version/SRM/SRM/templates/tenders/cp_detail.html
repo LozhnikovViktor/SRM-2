@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}КП #{{ cp.id }}{% endblock %}
+{% block content %}
+<div class="container" style="max-width:900px;">
+    <div class="d-flex justify-content-between mb-4">
+        <h2>📄 КП #{{ cp.id }}</h2>
+        <a href="{% url 'tenders:cp_list' %}" class="btn btn-outline-secondary">← Журнал</a>
+    </div>
+    
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Покупатель:</strong> {{ cp.client.name }}</p>
+                    <p><strong>Менеджер:</strong> {{ cp.manager|default:"—" }}</p>
+                    <p><strong>Статус:</strong> {{ cp.get_status_display }}</p>
+                    <p><strong>Срок действия:</strong> до {{ cp.valid_until|date:"d.m.Y" }}</p>
+                    <p><strong>Условия оплаты:</strong> {{ cp.payment_terms }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Доставка:</strong> {{ cp.delivery_cost|floatformat:2 }} ₽</p>
+                    <p><strong>Объём:</strong> {{ cp.total_volume|floatformat:3 }} м³</p>
+                    <p><strong>Вес:</strong> {{ cp.total_weight|floatformat:2 }} кг</p>
+                    <p><strong>Итого:</strong> {{ cp.grand_total|floatformat:2 }} ₽</p>
+                    <p><strong>Создано:</strong> {{ cp.created_at|date:"d.m.Y H:i" }}</p>
+                    {% if cp.sent_at %}<p><strong>Отправлено:</strong> {{ cp.sent_at|date:"d.m.Y H:i" }}</p>{% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card shadow-sm">
+        <div class="card-header bg-success text-white"><h5 class="mb-0">Позиции</h5></div>
+        <table class="table mb-0">
+            <thead class="table-light"><tr><th>Продукция</th><th>Кол-во</th><th>Цена</th><th>Скидка</th><th>Итого</th><th>Объём</th><th>Вес</th></tr></thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>{{ item.product.name }}</td>
+                    <td>{{ item.quantity }} {{ item.product.unit }}</td>
+                    <td>{{ item.final_price }} ₽</td>
+                    <td>{% if item.discount_percent %}{{ item.discount_percent }}%{% else %}—{% endif %}</td>
+                    <td class="fw-bold">{{ item.total|floatformat:2 }} ₽</td>
+                    <td>{{ item.volume|floatformat:3 }} м³</td>
+                    <td>{{ item.weight|floatformat:2 }} кг</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

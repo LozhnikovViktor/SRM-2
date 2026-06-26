@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>👥 Управление пользователями</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Имя пользователя</th>
+            <th>Email</th>
+            <th>Активен</th>
+            <th>Дата регистрации</th>
+            <th>Действия</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.id }}</td>
+            <td>{{ user.username }}</td>
+            <td>{{ user.email }}</td>
+            <td>
+                {% if user.is_active %}
+                    <span class="badge bg-success">Да</span>
+                {% else %}
+                    <span class="badge bg-danger">Нет</span>
+                {% endif %}
+            </td>
+            <td>{{ user.date_joined|date:"d.m.Y H:i" }}</td>
+            <td>
+                <form method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="user_id" value="{{ user.id }}">
+                    <button type="submit" name="action" value="reset_password" 
+                            class="btn btn-sm btn-warning"
+                            onclick="return confirm('Сбросить пароль?')">
+                        🔑 Сброс пароля
+                    </button>
+                    {% if user.is_active %}
+                        <button type="submit" name="action" value="deactivate" 
+                                class="btn btn-sm btn-danger">
+                            ⛔ Деактивировать
+                        </button>
+                    {% else %}
+                        <button type="submit" name="action" value="activate" 
+                                class="btn btn-sm btn-success">
+                            ✅ Активировать
+                        </button>
+                    {% endif %}
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

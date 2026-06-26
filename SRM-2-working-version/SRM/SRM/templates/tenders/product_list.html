@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Номенклатура{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📦 Номенклатура продукции</h2>
+        <a href="{% url 'tenders:product_create' %}" class="btn btn-success">➕ Добавить продукцию</a>
+    </div>
+    
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Артикул</th>
+                        <th>Наименование</th>
+                        <th>Цена прайс</th>
+                        <th>Ед. изм.</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td><code>{{ product.article|default:"—" }}</code></td>
+                        <td><strong>{{ product.name }}</strong></td>
+                        <td>{{ product.price|floatformat:2 }} ₽</td>
+                        <td>{{ product.unit }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-5">
+                            Продукция не добавлена. <a href="{% url 'tenders:product_create' %}">Добавить первую</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

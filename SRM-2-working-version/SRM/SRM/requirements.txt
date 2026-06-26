@@ -1,0 +1,11 @@
+# requirements.txt
+Django>=6.0.5
+djangorestframework>=3.17.1
+django-filter>=25.2
+Pillow>=12.2.0
+python-decouple>=3.8
+drf-spectacular>=0.29.0
+gunicorn>=23.0.0
+openpyxl==3.1.2
+xlsxwriter==3.1.9
+python-docx

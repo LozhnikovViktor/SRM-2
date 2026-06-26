@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+{% block title %}Поиск тендеров{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4">🔍 Поиск тендеров на zakupki.gov.ru</h2>
+    
+    <!-- Форма поиска -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <label class="form-label">🔑 Ключевое слово</label>
+                        {{ form.keyword }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">📍 Регион</label>
+                        {{ form.region }}
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">📊 Максимум</label>
+                        {{ form.max_results }}
+                    </div>
+                    <div class="col-md-1 d-grid align-self-end">
+                        <button type="submit" class="btn btn-primary">
+                            🔍 Найти
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    {% if search_performed %}
+    <div class="alert alert-info">
+        <h5 class="alert-heading">📊 Результаты поиска</h5>
+        <p class="mb-1">Найдено тендеров: <strong>{{ tenders|length }}</strong></p>
+        <p class="mb-0">По запросу: "<strong>{{ keyword }}</strong>"</p>
+        <hr>
+        <small class="text-muted">
+            💡 <strong>Демо-режим:</strong> показаны актуальные тендеры для демонстрации функционала. 
+            В production-версии данные поступают с портала zakupki.gov.ru через API.
+        </small>
+    </div>
+    
+    <!-- Результаты поиска -->
+    <div class="row">
+        {% for tender in tenders %}
+        <div class="col-md-6 mb-3">
+            <div class="card h-100 shadow-sm border-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge bg-success">✅ Актуально</span>
+                        <small class="text-muted">#{{ tender.external_id }}</small>
+                    </div>
+                    
+                    <h5 class="card-title">{{ tender.title|truncatewords:20 }}</h5>
+                    
+                    <p class="mb-1">
+                        <strong>🏢 Заказчик:</strong> {{ tender.customer_name|default:"Не указан" }}
+                    </p>
+                    <p class="mb-1">
+                        <strong>💰 Сумма:</strong> 
+                        {% if tender.initial_amount %}
+                            <span class="text-success fw-bold">{{ tender.initial_amount|floatformat:2 }} ₽</span>
+                        {% else %}
+                            <span class="text-muted">Не указана</span>
+                        {% endif %}
+                    </p>
+                    <p class="mb-1">
+                        <strong>⏰ Окончание подачи заявок:</strong> 
+                        {% if tender.deadline %}
+                            <span class="text-danger fw-bold">
+                                {{ tender.deadline|date:"d.m.Y H:i" }}
+                            </span>
+                        {% else %}
+                            <span class="text-muted">Не указана</span>
+                        {% endif %}
+                    </p>
+                    <p class="mb-1">
+                        <strong>📅 Дата публикации:</strong> {{ tender.pub_date|default:"—" }}
+                    </p>
+                    
+                    {% if tender.description %}
+                    <details class="mt-2">
+                        <summary class="text-primary" style="cursor:pointer">📄 Описание</summary>
+                        <small class="text-muted">{{ tender.description|truncatewords:50 }}</small>
+                    </details>
+                    {% endif %}
+                    
+                    <div class="d-flex gap-2 mt-3">
+                        <a href="{{ tender.source_url }}" target="_blank" class="btn btn-sm btn-outline-info">
+                            🔗 Открыть на площадке
+                        </a>
+                        
+                        <!-- 🔹 КНОПКА ИМПОРТА (БЕЗ ФОРМЫ!) -->
+                        <button type="button" 
+                                class="btn btn-sm btn-success import-tender-btn"
+                                data-customer="{{ tender.customer_name|escapejs }}"
+                                data-amount="{{ tender.initial_amount }}"
+                                data-deadline="{{ tender.deadline|date:'Y-m-d H:i' }}"
+                                data-url="{{ tender.source_url|default:'' }}"
+                                data-external-id="{{ tender.external_id|default:'' }}"
+                                data-title="{{ tender.title|escapejs }}">
+                            📥 Импортировать
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-warning">
+                ⚠️ Актуальные тендеры не найдены. Попробуйте изменить ключевое слово или регион.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- 🔹 TOAST-УВЕДОМЛЕНИЯ (ВНУТРИ БЛОКА!) -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
+    <div id="importToast" class="toast" role="alert">
+        <div class="toast-header">
+            <strong class="me-auto" id="toastTitle">Импорт тендера</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body" id="toastMessage"></div>
+    </div>
+</div>
+
+<!-- 🔹 СКРИПТ AJAX (ВНУТРИ БЛОКА!) -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ Скрипт импорта загружен');
+    
+    // Получаем CSRF токен
+    const csrfToken = '{{ csrf_token }}';
+    console.log('🔑 CSRF токен:', csrfToken ? 'получен' : 'ОТСУТСТВУЕТ');
+    
+    // Обработчик клика по кнопке "Импортировать"
+    const buttons = document.querySelectorAll('.import-tender-btn');
+    console.log('🔍 Найдено кнопок импорта:', buttons.length);
+    
+    buttons.forEach(button => {
+        button.addEventListener('click', function() {
+            console.log('🖱️ Клик по кнопке импорта');
+            
+            const btn = this;
+            const originalText = btn.innerHTML;
+            
+            // Блокируем кнопку на время запроса
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Импорт...';
+            
+            // Собираем данные тендера
+            const formData = new FormData();
+            formData.append('customer_name', btn.dataset.customer);
+            formData.append('initial_amount', btn.dataset.amount);
+            formData.append('deadline', btn.dataset.deadline);
+            formData.append('source_url', btn.dataset.url);
+            formData.append('external_id', btn.dataset.externalId);
+            formData.append('title', btn.dataset.title);
+            
+            console.log('📤 Отправляем данные:', Object.fromEntries(formData));
+            
+            // Отправляем AJAX-запрос
+            fetch('{% url "tenders:import_tender" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData
+            })
+            .then(response => {
+                console.log('📥 Ответ сервера:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('📊 Данные:', data);
+                
+                // Восстанавливаем кнопку
+                btn.disabled = false;
+                
+                if (data.success) {
+                    // Меняем кнопку на "Импортировано"
+                    btn.innerHTML = '✅ Импортировано';
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-secondary');
+                    btn.disabled = true;
+                    
+                    // Показываем уведомление
+                    showToast(data.message, data.status);
+                } else {
+                    btn.innerHTML = originalText;
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('❌ Ошибка:', error);
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                showToast('❌ Ошибка соединения с сервером', 'error');
+            });
+        });
+    });
+    
+    // Функция показа уведомлений
+    function showToast(message, type) {
+        console.log('🔔 Показ уведомления:', message);
+        
+        const toastEl = document.getElementById('importToast');
+        const toastTitle = document.getElementById('toastTitle');
+        const toastMessage = document.getElementById('toastMessage');
+        
+        // Сбрасываем классы
+        toastEl.className = 'toast';
+        
+        // Устанавливаем цвет в зависимости от типа
+        if (type === 'success') {
+            toastEl.classList.add('bg-success', 'text-white');
+            toastTitle.textContent = '✅ Успешно';
+        } else if (type === 'warning') {
+            toastEl.classList.add('bg-warning', 'text-dark');
+            toastTitle.textContent = '⚠️ Внимание';
+        } else if (type === 'error') {
+            toastEl.classList.add('bg-danger', 'text-white');
+            toastTitle.textContent = '❌ Ошибка';
+        } else {
+            toastEl.classList.add('bg-info', 'text-white');
+            toastTitle.textContent = 'ℹ️ Информация';
+        }
+        
+        toastMessage.textContent = message;
+        
+        const toast = new bootstrap.Toast(toastEl, { delay: 5000 });
+        toast.show();
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Удаление клиента{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-danger">
+                <div class="card-body text-center">
+                    <h3 class="text-danger mb-3">⚠️ Удаление клиента</h3>
+                    <p>Вы уверены, что хотите удалить клиента <strong>"{{ client.name }}"</strong>?</p>
+                    <p class="text-muted small">ИНН: {{ client.inn }}</p>
+                    
+                    <form method="post" class="d-flex justify-content-center gap-2 mt-4">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">🗑️ Да, удалить</button>
+                        <a href="{% url 'tenders:client_detail' client.pk %}" class="btn btn-outline-secondary">❌ Отмена</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

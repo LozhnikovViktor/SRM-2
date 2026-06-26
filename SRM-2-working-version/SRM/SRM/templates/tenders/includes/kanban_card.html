@@ -1,0 +1,23 @@
+<div class="kanban-card card-{{ tender.status }}" data-tender-id="{{ tender.pk }}">
+    <div class="d-flex justify-content-between mb-1">
+        <small class="text-muted fw-bold">#{{ tender.pk }}</small>
+        {% if tender.deadline and tender.deadline < today %}
+            <small class="text-danger fw-bold"> Просрочено</small>
+        {% elif tender.deadline %}
+            <small class="text-muted">{{ tender.deadline|date:"d.m" }}</small>
+        {% endif %}
+    </div>
+    
+    <h6 class="card-title mb-1" style="font-size: 0.95rem;">
+        {{ tender.customer_name|truncatechars:30 }}
+    </h6>
+    
+    <div class="d-flex justify-content-between align-items-center mt-2">
+        <span class="badge bg-light text-dark border">
+            {{ tender.initial_amount|floatformat:0 }} ₽
+        </span>
+        <a href="{% url 'tenders:update' tender.pk %}" class="btn btn-sm btn-link p-0 text-decoration-none">
+            ✏️
+        </a>
+    </div>
+</div>

@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}{% if object %}Редактирование тендера{% else %}Новый тендер{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h3 class="mb-0">
+                        {% if object %}✏️ Редактирование тендера{% else %}➕ Новый тендер{% endif %}
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="alert alert-info small">
+                            💡 <strong>Совет:</strong> Если выбрать клиента из списка, 
+                            название заказчика заполнится автоматически.
+                        </div>
+                        
+                        <h5 class="text-muted mb-3">📋 Основная информация</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.client.label }}</label>
+                                {{ form.client }}
+                                <small class="text-muted">Выберите клиента для автозаполнения</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.customer_name.label }} *</label>
+                                {{ form.customer_name }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.initial_amount.label }}</label>
+                                {{ form.initial_amount }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.deadline.label }}</label>
+                                {{ form.deadline }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.status.label }}</label>
+                                {{ form.status }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.executor_name.label }}</label>
+                                {{ form.executor_name }}
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">{{ form.procedure_url.label }}</label>
+                                {{ form.procedure_url }}
+                            </div>
+                        </div>
+                        
+                        <h5 class="text-muted mb-3">💰 Результаты</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">{{ form.winner.label }}</label>
+                                {{ form.winner }}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">{{ form.final_amount.label }}</label>
+                                {{ form.final_amount }}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">{{ form.cost.label }}</label>
+                                {{ form.cost }}
+                            </div>
+                        </div>
+                        
+                        <h5 class="text-muted mb-3">📝 Дополнительно</h5>
+                        <div class="mb-4">
+                            <label class="form-label">{{ form.comment.label }}</label>
+                            {{ form.comment }}
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">💾 Сохранить</button>
+                            <a href="{% url 'tenders:list' %}" class="btn btn-outline-secondary">❌ Отмена</a>
+                        </div>
+                    </form>
+                    
+                    <!-- 🔹 БЛОК ДОКУМЕНТОВ (только для редактирования) -->
+                    {% if object %}
+                    <hr class="my-4">
+                    <h5 class="text-muted mb-3">📎 Документы тендера</h5>
+                    
+                    <!-- Форма загрузки -->
+                    <div class="card shadow-sm mb-3">
+                        <div class="card-body">
+                            <form method="post" action="{% url 'tenders:document_upload' object.pk %}" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label">Название *</label>
+                                        <input type="text" name="name" class="form-control" 
+                                               placeholder="Коммерческое предложение" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Файл *</label>
+                                        <input type="file" name="file" class="form-control" 
+                                               accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.zip,.rar" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Описание</label>
+                                        <input type="text" name="description" class="form-control" 
+                                               placeholder="Необязательно">
+                                    </div>
+                                    <div class="col-md-1 d-grid align-self-end">
+                                        <button type="submit" class="btn btn-success">📤</button>
+                                    </div>
+                                </div>
+                                <small class="text-muted">
+                                    Допустимые форматы: PDF, DOCX, XLSX, JPG, PNG, ZIP. Макс. 10 МБ.
+                                </small>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Список документов -->
+                    {% if object.documents.all %}
+                    <div class="list-group">
+                        {% for doc in object.documents.all %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-file-earmark fs-3 me-3 {{ doc.icon_class }}"></i>
+                                <div>
+                                    <h6 class="mb-0">
+                                        <a href="{{ doc.file.url }}" target="_blank" class="text-decoration-none">
+                                            {{ doc.name }}
+                                        </a>
+                                    </h6>
+                                    <small class="text-muted">
+                                        {{ doc.file_size_mb }} МБ • 
+                                        Загружен: {{ doc.uploaded_at|date:"d.m.Y H:i" }}
+                                        {% if doc.description %}• {{ doc.description }}{% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a href="{{ doc.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    👁️ Открыть
+                                </a>
+                                <a href="{{ doc.file.url }}" download class="btn btn-sm btn-outline-success">
+                                    ⬇️ Скачать
+                                </a>
+                                <form method="post" action="{% url 'tenders:document_delete' doc.pk %}" 
+                                      onsubmit="return confirm('Удалить документ?')">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">🗑️</button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-light text-center">
+                        📭 К этому тендеру пока не прикреплено ни одного документа
+                    </div>
+                    {% endif %}
+                    
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Автозаполнение названия заказчика при выборе клиента
+document.addEventListener('DOMContentLoaded', function() {
+    const clientSelect = document.querySelector('[name="client"]');
+    const customerInput = document.querySelector('[name="customer_name"]');
+    
+    if (clientSelect && customerInput) {
+        clientSelect.addEventListener('change', function() {
+            const selectedText = this.options[this.selectedIndex].text;
+            const cleanName = selectedText.split(' (ИНН:')[0];
+            if (this.value && cleanName) {
+                customerInput.value = cleanName;
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

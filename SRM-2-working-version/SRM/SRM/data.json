@@ -1,0 +1,3802 @@
+[
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "admin",
+    "model": "logentry"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "auth",
+    "model": "group"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "auth",
+    "model": "permission"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "auth",
+    "model": "user"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "contenttypes",
+    "model": "contenttype"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "sessions",
+    "model": "session"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "tenders",
+    "model": "tender"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "tenders",
+    "model": "client"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "tenders",
+    "model": "tenderdocument"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "tenders",
+    "model": "auditlog"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "tenders",
+    "model": "comment"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "tenders",
+    "model": "chatmessage"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "tenders",
+    "model": "chatroom"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "tenders",
+    "model": "product"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "tenders",
+    "model": "shipmentrequest"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "tenders",
+    "model": "shipmentrequestitem"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "tenders",
+    "model": "commercialproposal"
+  }
+},
+{
+  "model": "contenttypes.contenttype",
+  "fields": {
+    "app_label": "tenders",
+    "model": "commercialproposalitem"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "20q188dq41ls5kdlyzfg1un2bjahxd5n",
+  "fields": {
+    "session_data": ".eJxVjMsOgjAQRf-la9MwMC2tS_d-Q9N5YFEDCYWV8d-VhIVu7znnvkzK21rSVnVJo5izceb0u1Hmh047kHuebrPleVqXkeyu2INWe51Fn5fD_TsouZZvrZ5pyB2h64IQCEQBbB2gjw1FbIBbJ9G7gB0C6xBAc9sTet8zk4J5fwDeGDed:1wQqL0:tgY2XUq4uHyZk3WF9pdWRvVVG_kDl7sES1azuPDqICg",
+    "expire_date": "2026-06-06T17:40:38.581Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "9s4nwtc4v35webycxur2a958uikydady",
+  "fields": {
+    "session_data": ".eJxVjEEOwiAQAP_C2ZAFVko8evcNBHZZqRqalPZk_Lsh6UGvM5N5q5j2rca9lzXOrC4K1emX5UTP0obgR2r3RdPStnXOeiT6sF3fFi6v69H-DWrqdWwLIQtOxpiMvrBPZ2IfLGcvQcBmJw5AAmBwidyEhhiFwYoBRE_q8wXx1zfv:1wXZvs:sMyztEuGOWEoMyUUoHvIYKHve8bzSc2Ry0lJm6xTNfE",
+    "expire_date": "2026-06-25T07:34:32.906Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "f54m1iyl0tc12q9pp4wvmn7pe0rl52oc",
+  "fields": {
+    "session_data": ".eJxVjEEOwiAQRe_C2hAQhoJL9z0DGZhBqoYmpV0Z765NutDtf-_9l4i4rTVunZc4kbgIK06_W8L84LYDumO7zTLPbV2mJHdFHrTLcSZ-Xg_376Bir9-6hKDBWp8UgWdjQ9GBjWMVVALAQRfis82FsgHnB2YgzlophwxovBfvD9mVN-o:1wQpCN:sPKfC3gxCvWnrrt_CvAvWyKLu853hDcYBhE-GIcg_hc",
+    "expire_date": "2026-06-06T16:27:39.547Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "f9w0a7542enivvpz863aflumbx3f1m68",
+  "fields": {
+    "session_data": ".eJxVjEEOwiAQAP_C2ZAFVko8evcNBHZZqRqalPZk_Lsh6UGvM5N5q5j2rca9lzXOrC4K1emX5UTP0obgR2r3RdPStnXOeiT6sF3fFi6v69H-DWrqdWwLIQtOxpiMvrBPZ2IfLGcvQcBmJw5AAmBwidyEhhiFwYoBRE_q8wXx1zfv:1wbEkT:FiB5FTLs2lte1h4lwZET_-1PX9F7DmwPDid1-S3WGNE",
+    "expire_date": "2026-07-05T09:45:53.408Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "foh6g1l5h4pvoj6bv50f0jid2qzwq3se",
+  "fields": {
+    "session_data": ".eJxVjEEOwiAQAP_C2ZAFVko8evcNBHZZqRqalPZk_Lsh6UGvM5N5q5j2rca9lzXOrC4K1emX5UTP0obgR2r3RdPStnXOeiT6sF3fFi6v69H-DWrqdWwLIQtOxpiMvrBPZ2IfLGcvQcBmJw5AAmBwidyEhhiFwYoBRE_q8wXx1zfv:1wYQJx:vkvbE_lEE7qtC82Q2HbDqV6-qw7DNET_o5W_njGSb8E",
+    "expire_date": "2026-06-27T15:30:53.223Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "ge5kf2v59hiary4bo2xi3khfk618hx8f",
+  "fields": {
+    "session_data": ".eJxVjEEOwiAQAP_C2ZAFVko8evcNBHZZqRqalPZk_Lsh6UGvM5N5q5j2rca9lzXOrC4K1emX5UTP0obgR2r3RdPStnXOeiT6sF3fFi6v69H-DWrqdWwLIQtOxpiMvrBPZ2IfLGcvQcBmJw5AAmBwidyEhhiFwYoBRE_q8wXx1zfv:1wYSxe:8Dq9E9GfmsyYPePtWr638ENfF6UC4cVEMzZsBl4KGsI",
+    "expire_date": "2026-06-27T18:20:02.544Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "nbfwf26lren0bs7thfs698dpqwyngtyd",
+  "fields": {
+    "session_data": ".eJxVjEEOwiAQRe_C2hAQhoJL9z0DGZhBqoYmpV0Z765NutDtf-_9l4i4rTVunZc4kbgIK06_W8L84LYDumO7zTLPbV2mJHdFHrTLcSZ-Xg_376Bir9-6hKDBWp8UgWdjQ9GBjWMVVALAQRfis82FsgHnB2YgzlophwxovBfvD9mVN-o:1wOJbL:Y1Gwhtf4k-kSxk1XB_qtUSxSLO8ZlSYt2WpPENXqWUc",
+    "expire_date": "2026-05-30T18:19:03.593Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "nztq4rmbeu0tieef3uxeojiv88dpadmm",
+  "fields": {
+    "session_data": ".eJxVjEEOwiAQAP_C2ZAFVko8evcNBHZZqRqalPZk_Lsh6UGvM5N5q5j2rca9lzXOrC4K1emX5UTP0obgR2r3RdPStnXOeiT6sF3fFi6v69H-DWrqdWwLIQtOxpiMvrBPZ2IfLGcvQcBmJw5AAmBwidyEhhiFwYoBRE_q8wXx1zfv:1wXZru:6CV0ci1bbRFbWanVR-V-WPRj69Ijv1GqAwpixbq1MsE",
+    "expire_date": "2026-06-25T07:30:26.459Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "t6kyg0ypl5mosduknzcql6bhrnj1ohhc",
+  "fields": {
+    "session_data": ".eJxVjEEOwiAQAP_C2ZAFVko8evcNBHZZqRqalPZk_Lsh6UGvM5N5q5j2rca9lzXOrC4K1emX5UTP0obgR2r3RdPStnXOeiT6sF3fFi6v69H-DWrqdWwLIQtOxpiMvrBPZ2IfLGcvQcBmJw5AAmBwidyEhhiFwYoBRE_q8wXx1zfv:1wWwne:xr345LEF4mtD_LveEzHnj0ImYUAg3Vnxfsx15IuEJpU",
+    "expire_date": "2026-06-23T13:47:26.681Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "txz5qbqxnul6md1q6kpq8o2qos389os5",
+  "fields": {
+    "session_data": ".eJxVjDkOwjAUBe_iGlnxGkxJnzNYfzMJIFvKUiHuDpFSQPtm5r1Uhm0d87bInCdWF-XV6XdDoIfUHfAd6q1panWdJ9S7og-66KGxPK-H-3cwwjJ-a-g6w4mMA4ZCEE1fkoWALpKVYM_RdpGxOO7ZUMLSO-8NGRYMxCKo3h_9QTkK:1wcj3X:UzY_4ULU2_0bt_lk7jsEZq7St9xOcl2uY_VpRQvgCH0",
+    "expire_date": "2026-07-09T12:19:43.632Z"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "z0sh2qw4e2brtj902af0mk50qilahsgg",
+  "fields": {
+    "session_data": ".eJxVjDkOwjAUBe_iGlnxGkxJnzNYfzMJIFvKUiHuDpFSQPtm5r1Uhm0d87bInCdWF-XV6XdDoIfUHfAd6q1panWdJ9S7og-66KGxPK-H-3cwwjJ-a-g6w4mMA4ZCEE1fkoWALpKVYM_RdpGxOO7ZUMLSO-8NGRYMxCKo3h_9QTkK:1wczP6:TridELRbYA-bqW7oOL_XAKztkUk75O_bgmE1trbvX8U",
+    "expire_date": "2026-07-10T05:47:04.806Z"
+  }
+},
+{
+  "model": "tenders.product",
+  "pk": 1,
+  "fields": {
+    "name": "GECO Гидрофильный Крем для защиты кожи рук гидрофильного действия (туба 100 мл.) С КРЫШКОЙ ФЛИП-ТОП",
+    "article": "1110F",
+    "price": "69.14",
+    "unit": "шт",
+    "description": "",
+    "is_active": true,
+    "created_at": "2026-06-20T01:20:28.618Z",
+    "updated_at": "2026-06-20T01:20:28.618Z"
+  }
+},
+{
+  "model": "tenders.product",
+  "pk": 2,
+  "fields": {
+    "name": "GECO Гидрофобный Крем для защиты кожи рук гидрофобного действия (туба 100 мл.) С КРЫШКОЙ ФЛИП-ТОП",
+    "article": "1210F",
+    "price": "69.14",
+    "unit": "шт",
+    "description": "",
+    "is_active": true,
+    "created_at": "2026-06-20T01:21:00.980Z",
+    "updated_at": "2026-06-20T01:21:00.980Z"
+  }
+},
+{
+  "model": "tenders.product",
+  "pk": 3,
+  "fields": {
+    "name": "GECO Универсальный Крем для защиты кожи рук комбинированного действия (туба 100 мл.) С КРЫШКОЙ ФЛИП-ТОП",
+    "article": "1310F",
+    "price": "69.14",
+    "unit": "шт",
+    "description": "",
+    "is_active": true,
+    "created_at": "2026-06-20T01:21:20.829Z",
+    "updated_at": "2026-06-20T01:21:20.829Z"
+  }
+},
+{
+  "model": "tenders.product",
+  "pk": 4,
+  "fields": {
+    "name": "GECO Регенерирующий Крем для рук регенерирующий (восстанавливающий) (туба 100 мл.) С КРЫШКОЙ ФЛИП-ТОП",
+    "article": "1410F",
+    "price": "69.14",
+    "unit": "шт",
+    "description": "",
+    "is_active": true,
+    "created_at": "2026-06-20T01:21:50.001Z",
+    "updated_at": "2026-06-20T01:21:50.001Z"
+  }
+},
+{
+  "model": "tenders.product",
+  "pk": 5,
+  "fields": {
+    "name": "GECO Защита от УФ Крем для защиты кожи лица и рук от воздействия УФ излучений диапазонов А, В, С (туба 100 мл.) С КРЫШКОЙ ФЛИП-ТОП",
+    "article": "1510F",
+    "price": "101.66",
+    "unit": "шт",
+    "description": "",
+    "is_active": true,
+    "created_at": "2026-06-20T01:22:11.337Z",
+    "updated_at": "2026-06-20T01:22:11.337Z"
+  }
+},
+{
+  "model": "tenders.product",
+  "pk": 6,
+  "fields": {
+    "name": "GECO Защита от УФ+Мороз Крем для защиты кожи лица и рук от воздействия неблагоприятных погодных условия, пониженных температур, ветра и УФ излучения (туба 100 мл.) С КРЫШКОЙ ФЛИП-ТОП",
+    "article": "4110F",
+    "price": "115.90",
+    "unit": "шт",
+    "description": "",
+    "is_active": true,
+    "created_at": "2026-06-20T01:22:32.332Z",
+    "updated_at": "2026-06-20T01:22:32.332Z"
+  }
+},
+{
+  "model": "tenders.product",
+  "pk": 7,
+  "fields": {
+    "name": "GECO Крем защитный от негативного воздействия окружающей среды Крем для защиты кожи лица и рук от воздействия низких температур и ветра (туба 100 мл.) С КРЫШКОЙ ФЛИП-ТОП",
+    "article": "1610F",
+    "price": "97.60",
+    "unit": "шт",
+    "description": "",
+    "is_active": true,
+    "created_at": "2026-06-20T01:22:52.263Z",
+    "updated_at": "2026-06-20T01:22:52.263Z"
+  }
+},
+{
+  "model": "tenders.product",
+  "pk": 8,
+  "fields": {
+    "name": "GECO Защитный спрей-дезодорант для ног и рук от чрезмерного потоотделения с антибактериальным эффектом  (флакон 100 мл.)",
+    "article": "1610F",
+    "price": "97.60",
+    "unit": "шт",
+    "description": "",
+    "is_active": true,
+    "created_at": "2026-06-20T01:23:09.918Z",
+    "updated_at": "2026-06-20T01:23:09.918Z"
+  }
+},
+{
+  "model": "tenders.product",
+  "pk": 9,
+  "fields": {
+    "name": "GECO Паста специальная для очистки кожи рук от сильных загрязнений (туба 100 мл.) С КРЫШКОЙ ФЛИП-ТОП",
+    "article": "1810R",
+    "price": "124.03",
+    "unit": "шт",
+    "description": "",
+    "is_active": true,
+    "created_at": "2026-06-20T01:23:33.524Z",
+    "updated_at": "2026-06-20T01:23:33.524Z"
+  }
+},
+{
+  "model": "tenders.product",
+  "pk": 10,
+  "fields": {
+    "name": "GECO Паста специальная для очистки кожи рук от сильных загрязнений (туба 200 мл.) Универсальная крышка (винтовой флип-топ)",
+    "article": "1920",
+    "price": "111.84",
+    "unit": "шт",
+    "description": "",
+    "is_active": true,
+    "created_at": "2026-06-20T01:24:09.648Z",
+    "updated_at": "2026-06-20T01:24:09.648Z"
+  }
+},
+{
+  "model": "tenders.product",
+  "pk": 11,
+  "fields": {
+    "name": "GECO Паста специальная для очистки кожи от красителей Паста для очистки кожи от особо устойчивых загрязнений и красителей (туба 200 мл.) С КРЫШКОЙ ФЛИП-ТОП",
+    "article": "2020F",
+    "price": "142.34",
+    "unit": "шт",
+    "description": "",
+    "is_active": true,
+    "created_at": "2026-06-20T01:24:33.180Z",
+    "updated_at": "2026-06-20T01:24:33.180Z"
+  }
+},
+{
+  "model": "tenders.product",
+  "pk": 12,
+  "fields": {
+    "name": "GECO Крем для защиты кожи лица и рук от укусов комаров, клещей, москитов, мошек, слепней и блох (туба 100 мл.) С КРЫШКОЙ ФЛИП-ТОП",
+    "article": "2310F",
+    "price": "152.50",
+    "unit": "шт",
+    "description": "",
+    "is_active": true,
+    "created_at": "2026-06-20T01:25:00.674Z",
+    "updated_at": "2026-06-20T01:25:00.674Z"
+  }
+},
+{
+  "model": "tenders.product",
+  "pk": 13,
+  "fields": {
+    "name": "GECO Спрей защитный 3в1 от мошки, комаров и клещей Защитный спрей-репеллент для защиты от укусов иксодовых клещей (флакон 100 мл.)",
+    "article": "2510R",
+    "price": "177.91",
+    "unit": "шт",
+    "description": "",
+    "is_active": true,
+    "created_at": "2026-06-20T01:25:27.402Z",
+    "updated_at": "2026-06-20T01:25:27.402Z"
+  }
+},
+{
+  "model": "tenders.product",
+  "pk": 14,
+  "fields": {
+    "name": "GECO Крем-гель для кожи рук, лица и тела после укусов насекомых, контакта с крапивой, солнечных ожогов с охлаждающим эффектом (туба 100 мл.) С КРЫШКОЙ ФЛИП-ТОП",
+    "article": "2610F",
+    "price": "106.75",
+    "unit": "шт",
+    "description": "",
+    "is_active": true,
+    "created_at": "2026-06-20T01:25:50.808Z",
+    "updated_at": "2026-06-20T01:25:50.808Z"
+  }
+},
+{
+  "model": "tenders.product",
+  "pk": 15,
+  "fields": {
+    "name": "GECO Гель дезинфицирующий Защитный антибактериальный (дезинфицирующий) гель для рук (туба 100 мл.) С КРЫШКОЙ ФЛИП-ТОП",
+    "article": "2710F",
+    "price": "120.78",
+    "unit": "шт",
+    "description": "",
+    "is_active": true,
+    "created_at": "2026-06-20T01:26:07.822Z",
+    "updated_at": "2026-06-20T01:26:07.822Z"
+  }
+},
+{
+  "model": "tenders.product",
+  "pk": 16,
+  "fields": {
+    "name": "GECO Дезинфицирующее жидкое средство (флакон с распылителем 100 мл.)",
+    "article": "3810R",
+    "price": "95.06",
+    "unit": "шт",
+    "description": "",
+    "is_active": true,
+    "created_at": "2026-06-20T01:26:26.035Z",
+    "updated_at": "2026-06-20T01:26:26.035Z"
+  }
+},
+{
+  "model": "tenders.product",
+  "pk": 17,
+  "fields": {
+    "name": "GECO Мыло жидкое пенное для очистки кожи с увлажняющим эффектом (флакон с крышкой диск-топ 250 мл.)",
+    "article": "2825T",
+    "price": "83.50",
+    "unit": "шт",
+    "description": "",
+    "is_active": true,
+    "created_at": "2026-06-20T01:26:42.556Z",
+    "updated_at": "2026-06-20T01:26:42.556Z"
+  }
+},
+{
+  "model": "tenders.product",
+  "pk": 18,
+  "fields": {
+    "name": "GECO Жидкое мыло для очистки кожи от производственных загрязнений с антибактериальным эффектом увлажняющее (флакон с крышкой диск-топ 250 мл.)",
+    "article": "3025T",
+    "price": "158.89",
+    "unit": "шт",
+    "description": "",
+    "is_active": true,
+    "created_at": "2026-06-20T01:26:59.024Z",
+    "updated_at": "2026-06-20T01:26:59.024Z"
+  }
+},
+{
+  "model": "tenders.shipmentrequestitem",
+  "pk": 1,
+  "fields": {
+    "request": 1,
+    "product": 14,
+    "quantity": "10.000",
+    "unit_price": "106.75",
+    "discount_percent": "10.00",
+    "final_price": "96.08"
+  }
+},
+{
+  "model": "tenders.shipmentrequestitem",
+  "pk": 2,
+  "fields": {
+    "request": 1,
+    "product": 15,
+    "quantity": "100.000",
+    "unit_price": "120.78",
+    "discount_percent": "10.00",
+    "final_price": "108.70"
+  }
+},
+{
+  "model": "tenders.shipmentrequestitem",
+  "pk": 3,
+  "fields": {
+    "request": 1,
+    "product": 8,
+    "quantity": "150.000",
+    "unit_price": "97.60",
+    "discount_percent": "10.00",
+    "final_price": "87.84"
+  }
+},
+{
+  "model": "tenders.shipmentrequestitem",
+  "pk": 4,
+  "fields": {
+    "request": 1,
+    "product": 9,
+    "quantity": "250.000",
+    "unit_price": "124.03",
+    "discount_percent": "10.00",
+    "final_price": "111.63"
+  }
+},
+{
+  "model": "tenders.shipmentrequestitem",
+  "pk": 5,
+  "fields": {
+    "request": 2,
+    "product": 13,
+    "quantity": "20.000",
+    "unit_price": "177.91",
+    "discount_percent": "20.00",
+    "final_price": "142.33"
+  }
+},
+{
+  "model": "tenders.shipmentrequestitem",
+  "pk": 6,
+  "fields": {
+    "request": 2,
+    "product": 4,
+    "quantity": "30.000",
+    "unit_price": "69.14",
+    "discount_percent": "20.00",
+    "final_price": "55.31"
+  }
+},
+{
+  "model": "tenders.shipmentrequestitem",
+  "pk": 7,
+  "fields": {
+    "request": 2,
+    "product": 9,
+    "quantity": "100.000",
+    "unit_price": "124.03",
+    "discount_percent": "20.00",
+    "final_price": "99.22"
+  }
+},
+{
+  "model": "tenders.shipmentrequestitem",
+  "pk": 8,
+  "fields": {
+    "request": 3,
+    "product": 11,
+    "quantity": "500.000",
+    "unit_price": "142.34",
+    "discount_percent": "5.00",
+    "final_price": "135.22"
+  }
+},
+{
+  "model": "tenders.shipmentrequestitem",
+  "pk": 9,
+  "fields": {
+    "request": 3,
+    "product": 6,
+    "quantity": "1000.000",
+    "unit_price": "115.90",
+    "discount_percent": "5.00",
+    "final_price": "110.10"
+  }
+},
+{
+  "model": "tenders.shipmentrequestitem",
+  "pk": 10,
+  "fields": {
+    "request": 3,
+    "product": 17,
+    "quantity": "2000.000",
+    "unit_price": "83.50",
+    "discount_percent": "5.00",
+    "final_price": "79.32"
+  }
+},
+{
+  "model": "tenders.commercialproposalitem",
+  "pk": 1,
+  "fields": {
+    "proposal": 1,
+    "product": 6,
+    "quantity": "111.000",
+    "unit_price": "115.90",
+    "discount_percent": "15.00",
+    "final_price": "98.52",
+    "volume_per_unit": "1.0000",
+    "weight_per_unit": "120.000",
+    "volume": "111.000",
+    "weight": "13320.00"
+  }
+},
+{
+  "model": "tenders.commercialproposalitem",
+  "pk": 2,
+  "fields": {
+    "proposal": 1,
+    "product": 9,
+    "quantity": "2222.000",
+    "unit_price": "124.03",
+    "discount_percent": "15.00",
+    "final_price": "105.43",
+    "volume_per_unit": "2.0000",
+    "weight_per_unit": "80.000",
+    "volume": "4444.000",
+    "weight": "177760.00"
+  }
+},
+{
+  "model": "tenders.commercialproposalitem",
+  "pk": 3,
+  "fields": {
+    "proposal": 1,
+    "product": 9,
+    "quantity": "333.000",
+    "unit_price": "124.03",
+    "discount_percent": "15.00",
+    "final_price": "105.43",
+    "volume_per_unit": "1.0000",
+    "weight_per_unit": "110.000",
+    "volume": "333.000",
+    "weight": "36630.00"
+  }
+},
+{
+  "model": "tenders.commercialproposalitem",
+  "pk": 4,
+  "fields": {
+    "proposal": 2,
+    "product": 17,
+    "quantity": "152.000",
+    "unit_price": "83.50",
+    "discount_percent": "5.00",
+    "final_price": "79.32",
+    "volume_per_unit": "1.0000",
+    "weight_per_unit": "110.000",
+    "volume": "152.000",
+    "weight": "16720.00"
+  }
+},
+{
+  "model": "tenders.commercialproposalitem",
+  "pk": 5,
+  "fields": {
+    "proposal": 2,
+    "product": 4,
+    "quantity": "253.000",
+    "unit_price": "69.14",
+    "discount_percent": "5.00",
+    "final_price": "65.68",
+    "volume_per_unit": "1.0000",
+    "weight_per_unit": "100.000",
+    "volume": "253.000",
+    "weight": "25300.00"
+  }
+},
+{
+  "model": "tenders.commercialproposalitem",
+  "pk": 6,
+  "fields": {
+    "proposal": 2,
+    "product": 5,
+    "quantity": "145.000",
+    "unit_price": "101.66",
+    "discount_percent": "5.00",
+    "final_price": "96.58",
+    "volume_per_unit": "1.0000",
+    "weight_per_unit": "150.000",
+    "volume": "145.000",
+    "weight": "21750.00"
+  }
+},
+{
+  "model": "tenders.commercialproposalitem",
+  "pk": 7,
+  "fields": {
+    "proposal": 3,
+    "product": 10,
+    "quantity": "1000.000",
+    "unit_price": "111.84",
+    "discount_percent": "10.00",
+    "final_price": "100.66",
+    "volume_per_unit": "1.0000",
+    "weight_per_unit": "222.000",
+    "volume": "1000.000",
+    "weight": "222000.00"
+  }
+},
+{
+  "model": "tenders.commercialproposalitem",
+  "pk": 8,
+  "fields": {
+    "proposal": 3,
+    "product": 14,
+    "quantity": "2000.000",
+    "unit_price": "106.75",
+    "discount_percent": "10.00",
+    "final_price": "96.08",
+    "volume_per_unit": "1.0000",
+    "weight_per_unit": "352.000",
+    "volume": "2000.000",
+    "weight": "704000.00"
+  }
+},
+{
+  "model": "tenders.commercialproposalitem",
+  "pk": 9,
+  "fields": {
+    "proposal": 3,
+    "product": 3,
+    "quantity": "3000.000",
+    "unit_price": "69.14",
+    "discount_percent": "10.00",
+    "final_price": "62.23",
+    "volume_per_unit": "1.0000",
+    "weight_per_unit": "241.000",
+    "volume": "3000.000",
+    "weight": "723000.00"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add log entry",
+    "content_type": [
+      "admin",
+      "logentry"
+    ],
+    "codename": "add_logentry"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change log entry",
+    "content_type": [
+      "admin",
+      "logentry"
+    ],
+    "codename": "change_logentry"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete log entry",
+    "content_type": [
+      "admin",
+      "logentry"
+    ],
+    "codename": "delete_logentry"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view log entry",
+    "content_type": [
+      "admin",
+      "logentry"
+    ],
+    "codename": "view_logentry"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add permission",
+    "content_type": [
+      "auth",
+      "permission"
+    ],
+    "codename": "add_permission"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change permission",
+    "content_type": [
+      "auth",
+      "permission"
+    ],
+    "codename": "change_permission"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete permission",
+    "content_type": [
+      "auth",
+      "permission"
+    ],
+    "codename": "delete_permission"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view permission",
+    "content_type": [
+      "auth",
+      "permission"
+    ],
+    "codename": "view_permission"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add group",
+    "content_type": [
+      "auth",
+      "group"
+    ],
+    "codename": "add_group"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change group",
+    "content_type": [
+      "auth",
+      "group"
+    ],
+    "codename": "change_group"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete group",
+    "content_type": [
+      "auth",
+      "group"
+    ],
+    "codename": "delete_group"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view group",
+    "content_type": [
+      "auth",
+      "group"
+    ],
+    "codename": "view_group"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add user",
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "codename": "add_user"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change user",
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "codename": "change_user"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete user",
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "codename": "delete_user"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view user",
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "codename": "view_user"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add content type",
+    "content_type": [
+      "contenttypes",
+      "contenttype"
+    ],
+    "codename": "add_contenttype"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change content type",
+    "content_type": [
+      "contenttypes",
+      "contenttype"
+    ],
+    "codename": "change_contenttype"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete content type",
+    "content_type": [
+      "contenttypes",
+      "contenttype"
+    ],
+    "codename": "delete_contenttype"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view content type",
+    "content_type": [
+      "contenttypes",
+      "contenttype"
+    ],
+    "codename": "view_contenttype"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add session",
+    "content_type": [
+      "sessions",
+      "session"
+    ],
+    "codename": "add_session"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change session",
+    "content_type": [
+      "sessions",
+      "session"
+    ],
+    "codename": "change_session"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete session",
+    "content_type": [
+      "sessions",
+      "session"
+    ],
+    "codename": "delete_session"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view session",
+    "content_type": [
+      "sessions",
+      "session"
+    ],
+    "codename": "view_session"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add Тендер",
+    "content_type": [
+      "tenders",
+      "tender"
+    ],
+    "codename": "add_tender"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change Тендер",
+    "content_type": [
+      "tenders",
+      "tender"
+    ],
+    "codename": "change_tender"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete Тендер",
+    "content_type": [
+      "tenders",
+      "tender"
+    ],
+    "codename": "delete_tender"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view Тендер",
+    "content_type": [
+      "tenders",
+      "tender"
+    ],
+    "codename": "view_tender"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add Клиент",
+    "content_type": [
+      "tenders",
+      "client"
+    ],
+    "codename": "add_client"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change Клиент",
+    "content_type": [
+      "tenders",
+      "client"
+    ],
+    "codename": "change_client"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete Клиент",
+    "content_type": [
+      "tenders",
+      "client"
+    ],
+    "codename": "delete_client"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view Клиент",
+    "content_type": [
+      "tenders",
+      "client"
+    ],
+    "codename": "view_client"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add Документ",
+    "content_type": [
+      "tenders",
+      "tenderdocument"
+    ],
+    "codename": "add_tenderdocument"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change Документ",
+    "content_type": [
+      "tenders",
+      "tenderdocument"
+    ],
+    "codename": "change_tenderdocument"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete Документ",
+    "content_type": [
+      "tenders",
+      "tenderdocument"
+    ],
+    "codename": "delete_tenderdocument"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view Документ",
+    "content_type": [
+      "tenders",
+      "tenderdocument"
+    ],
+    "codename": "view_tenderdocument"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add Запись аудита",
+    "content_type": [
+      "tenders",
+      "auditlog"
+    ],
+    "codename": "add_auditlog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change Запись аудита",
+    "content_type": [
+      "tenders",
+      "auditlog"
+    ],
+    "codename": "change_auditlog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete Запись аудита",
+    "content_type": [
+      "tenders",
+      "auditlog"
+    ],
+    "codename": "delete_auditlog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view Запись аудита",
+    "content_type": [
+      "tenders",
+      "auditlog"
+    ],
+    "codename": "view_auditlog"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add Комментарий",
+    "content_type": [
+      "tenders",
+      "comment"
+    ],
+    "codename": "add_comment"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change Комментарий",
+    "content_type": [
+      "tenders",
+      "comment"
+    ],
+    "codename": "change_comment"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete Комментарий",
+    "content_type": [
+      "tenders",
+      "comment"
+    ],
+    "codename": "delete_comment"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view Комментарий",
+    "content_type": [
+      "tenders",
+      "comment"
+    ],
+    "codename": "view_comment"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add chat message",
+    "content_type": [
+      "tenders",
+      "chatmessage"
+    ],
+    "codename": "add_chatmessage"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change chat message",
+    "content_type": [
+      "tenders",
+      "chatmessage"
+    ],
+    "codename": "change_chatmessage"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete chat message",
+    "content_type": [
+      "tenders",
+      "chatmessage"
+    ],
+    "codename": "delete_chatmessage"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view chat message",
+    "content_type": [
+      "tenders",
+      "chatmessage"
+    ],
+    "codename": "view_chatmessage"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add chat room",
+    "content_type": [
+      "tenders",
+      "chatroom"
+    ],
+    "codename": "add_chatroom"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change chat room",
+    "content_type": [
+      "tenders",
+      "chatroom"
+    ],
+    "codename": "change_chatroom"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete chat room",
+    "content_type": [
+      "tenders",
+      "chatroom"
+    ],
+    "codename": "delete_chatroom"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view chat room",
+    "content_type": [
+      "tenders",
+      "chatroom"
+    ],
+    "codename": "view_chatroom"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add Заявка на отгрузку",
+    "content_type": [
+      "tenders",
+      "shipmentrequest"
+    ],
+    "codename": "add_shipmentrequest"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change Заявка на отгрузку",
+    "content_type": [
+      "tenders",
+      "shipmentrequest"
+    ],
+    "codename": "change_shipmentrequest"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete Заявка на отгрузку",
+    "content_type": [
+      "tenders",
+      "shipmentrequest"
+    ],
+    "codename": "delete_shipmentrequest"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view Заявка на отгрузку",
+    "content_type": [
+      "tenders",
+      "shipmentrequest"
+    ],
+    "codename": "view_shipmentrequest"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add Позиция заявки",
+    "content_type": [
+      "tenders",
+      "shipmentrequestitem"
+    ],
+    "codename": "add_shipmentrequestitem"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change Позиция заявки",
+    "content_type": [
+      "tenders",
+      "shipmentrequestitem"
+    ],
+    "codename": "change_shipmentrequestitem"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete Позиция заявки",
+    "content_type": [
+      "tenders",
+      "shipmentrequestitem"
+    ],
+    "codename": "delete_shipmentrequestitem"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view Позиция заявки",
+    "content_type": [
+      "tenders",
+      "shipmentrequestitem"
+    ],
+    "codename": "view_shipmentrequestitem"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add Продукция",
+    "content_type": [
+      "tenders",
+      "product"
+    ],
+    "codename": "add_product"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change Продукция",
+    "content_type": [
+      "tenders",
+      "product"
+    ],
+    "codename": "change_product"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete Продукция",
+    "content_type": [
+      "tenders",
+      "product"
+    ],
+    "codename": "delete_product"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view Продукция",
+    "content_type": [
+      "tenders",
+      "product"
+    ],
+    "codename": "view_product"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add Коммерческое предложение",
+    "content_type": [
+      "tenders",
+      "commercialproposal"
+    ],
+    "codename": "add_commercialproposal"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change Коммерческое предложение",
+    "content_type": [
+      "tenders",
+      "commercialproposal"
+    ],
+    "codename": "change_commercialproposal"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete Коммерческое предложение",
+    "content_type": [
+      "tenders",
+      "commercialproposal"
+    ],
+    "codename": "delete_commercialproposal"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view Коммерческое предложение",
+    "content_type": [
+      "tenders",
+      "commercialproposal"
+    ],
+    "codename": "view_commercialproposal"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can add Позиция КП",
+    "content_type": [
+      "tenders",
+      "commercialproposalitem"
+    ],
+    "codename": "add_commercialproposalitem"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can change Позиция КП",
+    "content_type": [
+      "tenders",
+      "commercialproposalitem"
+    ],
+    "codename": "change_commercialproposalitem"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can delete Позиция КП",
+    "content_type": [
+      "tenders",
+      "commercialproposalitem"
+    ],
+    "codename": "delete_commercialproposalitem"
+  }
+},
+{
+  "model": "auth.permission",
+  "fields": {
+    "name": "Can view Позиция КП",
+    "content_type": [
+      "tenders",
+      "commercialproposalitem"
+    ],
+    "codename": "view_commercialproposalitem"
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$ku7EA6wFAXJzIcaZwLq7vZ$r/0LQByqvS34vxkTzqrxtFAiDwTNXNf17j6VCARlH1o=",
+    "last_login": "2026-05-16T18:13:30.389Z",
+    "is_superuser": false,
+    "username": "Кирилл",
+    "first_name": "",
+    "last_name": "",
+    "email": "",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-05-16T18:13:28.002Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$etB1jXtBFXaxso0NBvTpUH$VoiCkUeuXZTM0le7NgRwqnKgxnJZCAn+yGiDqPQLTZQ=",
+    "last_login": "2026-05-16T18:14:38.810Z",
+    "is_superuser": false,
+    "username": "Kirill",
+    "first_name": "",
+    "last_name": "",
+    "email": "",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-05-16T18:14:21.329Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$diIoBNlsZkBItgRvlZKAMs$Wk6e10wd1JxEypHsvDefr4WsGWjunzG0ULd6h3dKAnE=",
+    "last_login": "2026-05-16T18:16:37.675Z",
+    "is_superuser": false,
+    "username": "Test",
+    "first_name": "",
+    "last_name": "",
+    "email": "",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-05-16T18:16:20.767Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$taBmdypF8KHjUyOjBIHoJy$RRDJDrfMKQhskZGUae03J7GIjPKMTa+tN9OTkFtivTg=",
+    "last_login": "2026-06-26T05:47:04.796Z",
+    "is_superuser": true,
+    "username": "admin",
+    "first_name": "",
+    "last_name": "",
+    "email": "",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2026-05-16T18:18:14.584Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$iwL6umZwFgMqFnOXgQCid9$p1jrkSc3MxjpGZrYyu2Ifczq6A53umpvZs9UxRXBCCo=",
+    "last_login": "2026-05-23T17:40:38.572Z",
+    "is_superuser": false,
+    "username": "TESTTEST",
+    "first_name": "",
+    "last_name": "",
+    "email": "",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-05-23T17:22:59.253Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$MLRZBXDJ0jR9uUILe0E17j$7P7XxIN3sx80z9Qgzi7ewH5u36fO3471X6QIAko65Ns=",
+    "last_login": "2026-05-31T12:19:37Z",
+    "is_superuser": false,
+    "username": "user1",
+    "first_name": "",
+    "last_name": "",
+    "email": "vicktorlozhnikov@yandex.ru",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-05-23T17:47:32Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$BoeVny7cTONBlDQhcHqyKs$bqi4PnnGSTYQn3G79PilJMGprAhJEE7ytHLijUSpQ3w=",
+    "last_login": "2026-06-04T11:33:33.396Z",
+    "is_superuser": false,
+    "username": "user2",
+    "first_name": "",
+    "last_name": "",
+    "email": "",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-06-04T11:33:25.367Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$p0DReNcwr2IwpKW8JV5QLw$gk8H9nRBdhYVf0eRgRK2UxumkSlCfVzL5qLhb3OFvIk=",
+    "last_login": "2026-06-07T14:58:27.116Z",
+    "is_superuser": false,
+    "username": "user3",
+    "first_name": "",
+    "last_name": "",
+    "email": "lozhnvikt0801@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-06-04T11:45:40.524Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "fields": {
+    "password": "pbkdf2_sha256$1200000$bYE1ZHGL24rv480QAniblg$AJE4X41qjgl3n2MZoZrO6ZL37E//uyKlcAM/b5L2ZsM=",
+    "last_login": "2026-06-21T06:08:37.198Z",
+    "is_superuser": false,
+    "username": "viktor123",
+    "first_name": "",
+    "last_name": "",
+    "email": "lozhnvikt0801@mail.ru",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2026-06-18T20:04:02.742Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 1,
+  "fields": {
+    "customer_name": "Test",
+    "author": [
+      "Кирилл"
+    ],
+    "client": null,
+    "initial_amount": "22222.00",
+    "deadline": "2026-05-01T21:00:00Z",
+    "executor_name": "Test",
+    "procedure_url": "https://nuxaudio.com/distributors/",
+    "winner": "Test",
+    "final_amount": "1000000.00",
+    "cost": "800000.00",
+    "status": "draft",
+    "comment": null,
+    "source_url": null,
+    "external_id": null
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 2,
+  "fields": {
+    "customer_name": "TEST-Проверка",
+    "author": [
+      "Кирилл"
+    ],
+    "client": null,
+    "initial_amount": "2342423.00",
+    "deadline": "2026-05-19T21:00:00Z",
+    "executor_name": "TEST",
+    "procedure_url": "https://nuxaudio.com/distributors/",
+    "winner": "TEST",
+    "final_amount": "1234234.00",
+    "cost": "1212525.00",
+    "status": "draft",
+    "comment": null,
+    "source_url": null,
+    "external_id": null
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 3,
+  "fields": {
+    "customer_name": "dfgsdfgsdfg",
+    "author": [
+      "Кирилл"
+    ],
+    "client": null,
+    "initial_amount": "234234234.00",
+    "deadline": "2025-05-23T21:00:00Z",
+    "executor_name": "werwerqwer",
+    "procedure_url": "https://nuxaudio.com/distributors/",
+    "winner": "sgaadgfd",
+    "final_amount": "23432423.00",
+    "cost": "12512525.00",
+    "status": "won",
+    "comment": null,
+    "source_url": null,
+    "external_id": null
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 4,
+  "fields": {
+    "customer_name": "TEST-Проверка",
+    "author": [
+      "admin"
+    ],
+    "client": null,
+    "initial_amount": "35235.00",
+    "deadline": "2026-05-19T21:00:00Z",
+    "executor_name": "235",
+    "procedure_url": "https://nuxaudio.com/distributors/",
+    "winner": "2335",
+    "final_amount": "235235.00",
+    "cost": "233.00",
+    "status": "draft",
+    "comment": null,
+    "source_url": null,
+    "external_id": null
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 5,
+  "fields": {
+    "customer_name": "TEST-Проверка",
+    "author": [
+      "TESTTEST"
+    ],
+    "client": null,
+    "initial_amount": "235.00",
+    "deadline": "2026-05-19T21:00:00Z",
+    "executor_name": "23523",
+    "procedure_url": "https://nuxaudio.com/distributors/",
+    "winner": "235",
+    "final_amount": "235235.00",
+    "cost": "235.00",
+    "status": "draft",
+    "comment": null,
+    "source_url": null,
+    "external_id": null
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 6,
+  "fields": {
+    "customer_name": "Заказчик",
+    "author": [
+      "TESTTEST"
+    ],
+    "client": null,
+    "initial_amount": "123123.00",
+    "deadline": "2026-05-19T21:00:00Z",
+    "executor_name": "Исполнитель",
+    "procedure_url": "https://nuxaudio.com/distributors/",
+    "winner": "Победитель",
+    "final_amount": "123123123.00",
+    "cost": "123.00",
+    "status": "draft",
+    "comment": null,
+    "source_url": null,
+    "external_id": null
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 7,
+  "fields": {
+    "customer_name": "ООО \"КАМАЗ-ЭНЕРГО\"",
+    "author": [
+      "user1"
+    ],
+    "client": null,
+    "initial_amount": "23423423.00",
+    "deadline": "2026-06-02T21:00:00Z",
+    "executor_name": "Виктор",
+    "procedure_url": "https://zakupki.gov.ru/epz/order/notice/ea20/view/common-info.html?regNumber=0119200000126009284",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "draft",
+    "comment": null,
+    "source_url": null,
+    "external_id": null
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 8,
+  "fields": {
+    "customer_name": "Марьяновский ДИ, АСУСО",
+    "author": [
+      "user1"
+    ],
+    "client": null,
+    "initial_amount": "35673567.00",
+    "deadline": "2026-06-01T21:00:00Z",
+    "executor_name": "Ложников Виктор",
+    "procedure_url": "https://zakupki.gov.ru/epz/order/notice/notice223/common-info.html?regNumber=32616034847",
+    "winner": "Мидэкс",
+    "final_amount": "100000.00",
+    "cost": "50000.00",
+    "status": "won",
+    "comment": null,
+    "source_url": null,
+    "external_id": null
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 9,
+  "fields": {
+    "customer_name": "ООО \"КАМАЗ-ЭНЕРГО\"333",
+    "author": [
+      "user1"
+    ],
+    "client": null,
+    "initial_amount": "34343434.00",
+    "deadline": "2026-06-02T21:00:00Z",
+    "executor_name": "Ложников Виктор",
+    "procedure_url": "https://zakupki.gov.ru/epz/order/notice/notice223/common-info.html?noticeInfoId=19795479",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "draft",
+    "comment": null,
+    "source_url": null,
+    "external_id": null
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 10,
+  "fields": {
+    "customer_name": "Марьяновский ДИ, АСУСО232323",
+    "author": [
+      "user1"
+    ],
+    "client": null,
+    "initial_amount": "2332323.00",
+    "deadline": "2026-06-04T21:00:00Z",
+    "executor_name": "Ложников Виктор",
+    "procedure_url": "https://zakupki.gov.ru/epz/order/notice/notice223/common-info.html?regNumber=32616034847",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "lost",
+    "comment": "отсутствует необходимый гост на продукцию, нет СГР на репеллент",
+    "source_url": null,
+    "external_id": null
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 11,
+  "fields": {
+    "customer_name": "ООО \"АКРИЛ САЛАВАТ\"укепвп",
+    "author": [
+      "user1"
+    ],
+    "client": null,
+    "initial_amount": "345345.00",
+    "deadline": "2026-06-04T21:00:00Z",
+    "executor_name": "Ложников Виктор",
+    "procedure_url": "https://zakupki.gov.ru/epz/order/notice/notice223/common-info.html?noticeInfoId=19795479",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "cancelled",
+    "comment": null,
+    "source_url": null,
+    "external_id": null
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 12,
+  "fields": {
+    "customer_name": "ООО \"АКРИЛ САЛАВАТ\"345345",
+    "author": [
+      "user1"
+    ],
+    "client": null,
+    "initial_amount": "34545345.00",
+    "deadline": "2026-06-02T21:00:00Z",
+    "executor_name": "Ложников Виктор",
+    "procedure_url": "https://etpgpb.ru/procedures/etp/1252355-130-18-05-26-as-ko-e-postavka-zaschitnyh-kremov-past-spreya/",
+    "winner": "Мидэкс",
+    "final_amount": "100000.00",
+    "cost": "50000.00",
+    "status": "won",
+    "comment": null,
+    "source_url": null,
+    "external_id": null
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 13,
+  "fields": {
+    "customer_name": "ПАО \"РОССЕТИ СЕВЕРНЫЙ КАВКАЗ\"345",
+    "author": [
+      "user1"
+    ],
+    "client": null,
+    "initial_amount": "3453453.00",
+    "deadline": "2026-06-02T21:00:00Z",
+    "executor_name": "Ложников Виктор",
+    "procedure_url": "https://zakupki.gov.ru/epz/order/notice/ea20/view/common-info.html?regNumber=01192000001260092845345",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "draft",
+    "comment": null,
+    "source_url": null,
+    "external_id": null
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 14,
+  "fields": {
+    "customer_name": "Марьяновский 7979ДИ, АСУСО",
+    "author": [
+      "user1"
+    ],
+    "client": null,
+    "initial_amount": "100000.00",
+    "deadline": "2026-06-01T21:00:00Z",
+    "executor_name": "Ложников Виктор",
+    "procedure_url": "https://zakupki.gov.ru/epz/order/notice/notice223/common-info.html?noticeInfoId=19795479",
+    "winner": "Мидэкс",
+    "final_amount": "100000.00",
+    "cost": "50000.00",
+    "status": "lost",
+    "comment": null,
+    "source_url": null,
+    "external_id": null
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 15,
+  "fields": {
+    "customer_name": "ПАО \"РОССЕТИ-222 СЕВЕРНЫЙ КАВКАЗ\"",
+    "author": [
+      "user1"
+    ],
+    "client": null,
+    "initial_amount": "5000000.00",
+    "deadline": "2026-06-01T21:00:00Z",
+    "executor_name": "Ложников Виктор",
+    "procedure_url": "https://zakupki.gov.ru/epz/order/notice/ea20/view/common-info.html?regNumber=01192000001260092845345",
+    "winner": "Мидэкс",
+    "final_amount": "5000000.00",
+    "cost": "2500000.00",
+    "status": "lost",
+    "comment": null,
+    "source_url": null,
+    "external_id": null
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 16,
+  "fields": {
+    "customer_name": "ООО \"КАМАЗ-ЭНЕРГО\"",
+    "author": [
+      "user1"
+    ],
+    "client": null,
+    "initial_amount": "6434634.00",
+    "deadline": "2026-06-05T07:00:00Z",
+    "executor_name": "Ложников Виктор",
+    "procedure_url": "https://zakupki.gov.ru/epz/order/notice/ea20/view/common-info.html?regNumber=01192000001260092845345",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "draft",
+    "comment": "",
+    "source_url": null,
+    "external_id": null
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 17,
+  "fields": {
+    "customer_name": "Марьяновский ДИ, АСУСОertert",
+    "author": [
+      "user3"
+    ],
+    "client": null,
+    "initial_amount": "456456.00",
+    "deadline": "2026-06-19T11:21:00Z",
+    "executor_name": "Ложников Виктор",
+    "procedure_url": "https://zakupki.gov.ru/epz/order/notice/ea20/view/common-info.html?regNumber=01192000001260092845345",
+    "winner": null,
+    "final_amount": "1000000.00",
+    "cost": "500000.00",
+    "status": "won",
+    "comment": "",
+    "source_url": null,
+    "external_id": null
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 18,
+  "fields": {
+    "customer_name": "Не указан",
+    "author": [
+      "admin"
+    ],
+    "client": null,
+    "initial_amount": "0.00",
+    "deadline": "2026-06-01T11:54:00Z",
+    "executor_name": "",
+    "procedure_url": "https://zakupki.gov.ru/223/purchase/public/purchase/info/common-info.html?regNumber=32616069715",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "draft",
+    "comment": "Импортирован с zakupki.gov.ru: Иной способ №32616069715",
+    "source_url": "https://zakupki.gov.ru/223/purchase/public/purchase/info/common-info.html?regNumber=32616069715",
+    "external_id": "common-info.html?regNumber=32616069715"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 19,
+  "fields": {
+    "customer_name": "Не указан",
+    "author": [
+      "admin"
+    ],
+    "client": null,
+    "initial_amount": "0.00",
+    "deadline": "2026-06-01T11:54:00Z",
+    "executor_name": "",
+    "procedure_url": "https://zakupki.gov.ru/223/purchase/public/purchase/info/common-info.html?regNumber=32616069715",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "draft",
+    "comment": "Импортирован с zakupki.gov.ru: Иной способ №32616069715",
+    "source_url": "https://zakupki.gov.ru/223/purchase/public/purchase/info/common-info.html?regNumber=32616069715",
+    "external_id": "common-info.html?regNumber=32616069715"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 20,
+  "fields": {
+    "customer_name": "Не указан",
+    "author": [
+      "admin"
+    ],
+    "client": null,
+    "initial_amount": "0.00",
+    "deadline": "2026-05-25T12:30:00Z",
+    "executor_name": "",
+    "procedure_url": "https://zakupki.gov.ru/epz/order/notice/ea20/view/common-info.html?regNumber=0711200023626000019",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "draft",
+    "comment": "Импортирован с zakupki.gov.ru: Электронный аукцион №0711200023626000019",
+    "source_url": "https://zakupki.gov.ru/epz/order/notice/ea20/view/common-info.html?regNumber=0711200023626000019",
+    "external_id": "common-info.html?regNumber=0711200023626000019"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 21,
+  "fields": {
+    "customer_name": "ГБОУ ВО \"Московский государственный университет\"",
+    "author": [
+      "admin"
+    ],
+    "client": null,
+    "initial_amount": "7716666.00",
+    "deadline": "2026-06-24T07:29:00Z",
+    "executor_name": "Виктор",
+    "procedure_url": "https://zakupki.gov.ru/epz/order/notice/43465452600063.html",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "submitted",
+    "comment": "Импортирован с zakupki.gov.ru: Выполнение работ по паста",
+    "source_url": "https://zakupki.gov.ru/epz/order/notice/43465452600063.html",
+    "external_id": "43465452600063"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 22,
+  "fields": {
+    "customer_name": "Транснефть - Синтез, ООО",
+    "author": [
+      "admin"
+    ],
+    "client": 3,
+    "initial_amount": "723971.00",
+    "deadline": "2026-06-13T11:22:00Z",
+    "executor_name": "Иванов Владимир",
+    "procedure_url": "https://zakupki.gov.ru/epz/order/notice/76835832600051.html",
+    "winner": "Мидэкс",
+    "final_amount": "200000.00",
+    "cost": "10000.00",
+    "status": "won",
+    "comment": "Импортирован с zakupki.gov.ru: Оказание услуг по обслуживанию паста",
+    "source_url": "https://zakupki.gov.ru/epz/order/notice/76835832600051.html",
+    "external_id": "76835832600051"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 23,
+  "fields": {
+    "customer_name": "ГКОУ ДО \"Детская школа искусств\"",
+    "author": [
+      "admin"
+    ],
+    "client": null,
+    "initial_amount": "1784495.00",
+    "deadline": null,
+    "executor_name": "Ложников Виктор",
+    "procedure_url": "https://zakupki.gov.ru/epz/order/notice/99661512600080.html",
+    "winner": "Мидэкс",
+    "final_amount": "300000.00",
+    "cost": "20000.00",
+    "status": "draft",
+    "comment": "Импортирован с zakupki.gov.ru: Оказание услуг по обслуживанию крем",
+    "source_url": "https://zakupki.gov.ru/epz/order/notice/99661512600080.html",
+    "external_id": "99661512600080"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 24,
+  "fields": {
+    "customer_name": "ООО \"Компания Золотой Феникс\"",
+    "author": [
+      "admin"
+    ],
+    "client": 1,
+    "initial_amount": "456456.00",
+    "deadline": "2026-06-22T07:29:00Z",
+    "executor_name": "Иванов Владимир",
+    "procedure_url": "https://zakupki.gov.ru/epz/order/notice/notice223/common-info.html?noticeInfoId=19795479",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "draft",
+    "comment": "",
+    "source_url": null,
+    "external_id": null
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 25,
+  "fields": {
+    "customer_name": "ООО \"Компания Золотой Феникс\"",
+    "author": [
+      "admin"
+    ],
+    "client": 1,
+    "initial_amount": "763737.00",
+    "deadline": "2026-06-12T14:10:00Z",
+    "executor_name": "Ложников Виктор",
+    "procedure_url": "https://zakupki.gov.ru/epz/order/notice/notice223/common-info.html?regNumber=32616034847",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "draft",
+    "comment": "",
+    "source_url": null,
+    "external_id": null
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 26,
+  "fields": {
+    "customer_name": "ООО \"Компания Золотой Феникс\"",
+    "author": [
+      "user3"
+    ],
+    "client": 1,
+    "initial_amount": "752752762.00",
+    "deadline": "2026-06-24T07:29:00Z",
+    "executor_name": "Ложников Виктор",
+    "procedure_url": "https://zakupki.gov.ru/epz/order/notice/notice223/common-info.html?noticeInfoId=19795479",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "draft",
+    "comment": "",
+    "source_url": null,
+    "external_id": null
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 27,
+  "fields": {
+    "customer_name": "ГБУЗ \"Городская клиническая больница №1\"",
+    "author": [
+      "user3"
+    ],
+    "client": null,
+    "initial_amount": "3982640.00",
+    "deadline": "2026-06-21T07:29:00Z",
+    "executor_name": "Виктор",
+    "procedure_url": "https://zakupki.gov.ru/epz/order/notice/76922632600046.html",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "draft",
+    "comment": "Импортирован с zakupki.gov.ru: Поставка крем для государственных нужд",
+    "source_url": "https://zakupki.gov.ru/epz/order/notice/76922632600046.html",
+    "external_id": "76922632600046"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 28,
+  "fields": {
+    "customer_name": "ООО Мидэкс групп",
+    "author": [
+      "user3"
+    ],
+    "client": 2,
+    "initial_amount": "3369905.00",
+    "deadline": "2026-06-18T11:23:00Z",
+    "executor_name": "Иванов Владимир",
+    "procedure_url": "https://zakupki.gov.ru/epz/order/notice/16646502600030.html",
+    "winner": null,
+    "final_amount": "400000.00",
+    "cost": "200000.00",
+    "status": "won",
+    "comment": "Импортирован с zakupki.gov.ru: Выполнение работ по крем",
+    "source_url": "https://zakupki.gov.ru/epz/order/notice/16646502600030.html",
+    "external_id": "16646502600030"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 29,
+  "fields": {
+    "customer_name": "Белгородская сбытовая компания, АО",
+    "author": [
+      "user3"
+    ],
+    "client": 4,
+    "initial_amount": "1435326.00",
+    "deadline": "2026-06-18T11:22:00Z",
+    "executor_name": "Иванов Владимир",
+    "procedure_url": "https://zakupki.gov.ru/epz/order/notice/15722882600056.html",
+    "winner": null,
+    "final_amount": "5000000.00",
+    "cost": "250000.00",
+    "status": "lost",
+    "comment": "Импортирован с zakupki.gov.ru: Поставка крем для государственных нужд",
+    "source_url": "https://zakupki.gov.ru/epz/order/notice/15722882600056.html",
+    "external_id": "15722882600056"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 36,
+  "fields": {
+    "customer_name": "ООО \"ГК ФСК\"",
+    "author": [
+      "user3"
+    ],
+    "client": null,
+    "initial_amount": "0.00",
+    "deadline": null,
+    "executor_name": "Ложников Виктор",
+    "procedure_url": "https://tenderplan.ru/tenders/679202384d8e37a2b6bcb994",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "draft",
+    "comment": "Импортирован с tenderplan.ru: Тендер",
+    "source_url": "https://tenderplan.ru/tenders/679202384d8e37a2b6bcb994",
+    "external_id": "679202384d8e37a2b6bcb994"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 37,
+  "fields": {
+    "customer_name": "ООО \"ГК ФСК\"",
+    "author": [
+      "user3"
+    ],
+    "client": null,
+    "initial_amount": "0.00",
+    "deadline": "2026-06-25T07:28:00Z",
+    "executor_name": "Ложников Виктор",
+    "procedure_url": "https://tenderplan.ru/tenders/679202384d8e37a2b6bcb994",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "draft",
+    "comment": "Импортирован с tenderplan.ru: Тендер",
+    "source_url": "https://tenderplan.ru/tenders/679202384d8e37a2b6bcb994",
+    "external_id": "679202384d8e37a2b6bcb994"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 38,
+  "fields": {
+    "customer_name": "Фомина Анна Юрьевна",
+    "author": [
+      "user3"
+    ],
+    "client": null,
+    "initial_amount": "287090877.60",
+    "deadline": null,
+    "executor_name": "Ложников Виктор",
+    "procedure_url": "https://tenderplan.ru/tenders/69fb47cf735a1aaca41eda83",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "draft",
+    "comment": "Импортирован с tenderplan.ru: Тендер",
+    "source_url": "https://tenderplan.ru/tenders/69fb47cf735a1aaca41eda83",
+    "external_id": "69fb47cf735a1aaca41eda83"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 40,
+  "fields": {
+    "customer_name": "ФКУ Упрдор \\u0022Прикамье\\u0022",
+    "author": [
+      "admin"
+    ],
+    "client": null,
+    "initial_amount": "11818801.00",
+    "deadline": null,
+    "executor_name": "Ложников Виктор",
+    "procedure_url": "https://zakupki.gov.ru/epz/order/notice/53642582600043.html",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "draft",
+    "comment": "Импортирован с zakupki.gov.ru: Выполнение работ по крем",
+    "source_url": "https://zakupki.gov.ru/epz/order/notice/53642582600043.html",
+    "external_id": "53642582600043"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 42,
+  "fields": {
+    "customer_name": "ООО \"Компания Золотой Феникс\"",
+    "author": [
+      "admin"
+    ],
+    "client": 1,
+    "initial_amount": "2512681.00",
+    "deadline": "2026-06-15T11:21:00Z",
+    "executor_name": "Ложников Виктор",
+    "procedure_url": "https://zakupki.gov.ru/epz/order/notice/68519952600060.html",
+    "winner": null,
+    "final_amount": "1200000.00",
+    "cost": "500000.00",
+    "status": "won",
+    "comment": "Импортирован с zakupki.gov.ru: Поставка крем для государственных нужд",
+    "source_url": "https://zakupki.gov.ru/epz/order/notice/68519952600060.html",
+    "external_id": "68519952600060"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 43,
+  "fields": {
+    "customer_name": "Фомина Анна Юрьевна",
+    "author": [
+      "admin"
+    ],
+    "client": null,
+    "initial_amount": "287090877.60",
+    "deadline": "2026-06-23T21:00:00Z",
+    "executor_name": "",
+    "procedure_url": "https://tenderplan.ru/tenders/69fb47cf735a1aaca41eda83",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "draft",
+    "comment": "Импортирован с tenderplan.ru: Тендер",
+    "source_url": "https://tenderplan.ru/tenders/69fb47cf735a1aaca41eda83",
+    "external_id": "69fb47cf735a1aaca41eda83"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 44,
+  "fields": {
+    "customer_name": "Белгородская сбытовая компания, АО",
+    "author": [
+      "admin"
+    ],
+    "client": 4,
+    "initial_amount": "20000.00",
+    "deadline": "2026-07-02T06:30:00Z",
+    "executor_name": "Иванов Владимир",
+    "procedure_url": "https://tenderplan.ru/tenders/6a2a459b735a1aaca4cbf8be",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "won",
+    "comment": "Импортирован с tenderplan.ru: Тендер",
+    "source_url": "https://tenderplan.ru/tenders/6a2a459b735a1aaca4cbf8be",
+    "external_id": "6a2a459b735a1aaca4cbf8be"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 45,
+  "fields": {
+    "customer_name": "ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ \"БАШКИРСКАЯ МЕДЬ\"",
+    "author": [
+      "admin"
+    ],
+    "client": null,
+    "initial_amount": "0.00",
+    "deadline": "2026-07-03T06:30:00Z",
+    "executor_name": "Иванов Владимир",
+    "procedure_url": "https://tenderplan.ru/tenders/6a295710735a1aaca4861e45",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "submitted",
+    "comment": "Импортирован с tenderplan.ru: Тендер",
+    "source_url": "https://tenderplan.ru/tenders/6a295710735a1aaca4861e45",
+    "external_id": "6a295710735a1aaca4861e45"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 46,
+  "fields": {
+    "customer_name": "ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ \"БАШКИРСКАЯ МЕДЬ\"",
+    "author": [
+      "admin"
+    ],
+    "client": null,
+    "initial_amount": "0.00",
+    "deadline": "2026-06-26T06:06:00Z",
+    "executor_name": "Иванов Владимир",
+    "procedure_url": "https://tenderplan.ru/tenders/6a2a459b735a1aaca4cbf8be",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "draft",
+    "comment": "Импортирован с tenderplan.ru: Тендер",
+    "source_url": "https://tenderplan.ru/tenders/6a2a459b735a1aaca4cbf8be",
+    "external_id": "6a2a459b735a1aaca4cbf8be"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 47,
+  "fields": {
+    "customer_name": "ГКУЗ \\u0022Стоматологическая поликлиника\\u0022",
+    "author": [
+      "admin"
+    ],
+    "client": null,
+    "initial_amount": "4921001.00",
+    "deadline": null,
+    "executor_name": "Иванов Владимир",
+    "procedure_url": "https://zakupki.gov.ru/epz/order/notice/40102342600099.html",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "draft",
+    "comment": "Импортирован с zakupki.gov.ru: Выполнение работ по крем",
+    "source_url": "https://zakupki.gov.ru/epz/order/notice/40102342600099.html",
+    "external_id": "40102342600099"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 48,
+  "fields": {
+    "customer_name": "ФГБУ \\u0022Росрезерв\\u0022",
+    "author": [
+      "admin"
+    ],
+    "client": null,
+    "initial_amount": "1363681.00",
+    "deadline": "2026-07-03T07:05:00Z",
+    "executor_name": "Ложников Виктор",
+    "procedure_url": "https://zakupki.gov.ru/epz/order/notice/10445942600062.html",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "submitted",
+    "comment": "Импортирован с zakupki.gov.ru: Оказание услуг по обслуживанию крем",
+    "source_url": "https://zakupki.gov.ru/epz/order/notice/10445942600062.html",
+    "external_id": "10445942600062"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 51,
+  "fields": {
+    "customer_name": "ООО \"АММААТ\"",
+    "author": [
+      "admin"
+    ],
+    "client": null,
+    "initial_amount": "10800000.00",
+    "deadline": "2026-06-30T06:06:00Z",
+    "executor_name": "Иванов Владимир",
+    "procedure_url": "https://tenderplan.ru/tenders/6a35604a735a1aaca4c5a6a2",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "draft",
+    "comment": "Импортирован с tenderplan.ru: Тендер",
+    "source_url": "https://tenderplan.ru/tenders/6a35604a735a1aaca4c5a6a2",
+    "external_id": "6a35604a735a1aaca4c5a6a2"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 52,
+  "fields": {
+    "customer_name": "ООО \"ГК ФСК\"",
+    "author": [
+      "admin"
+    ],
+    "client": null,
+    "initial_amount": "0.00",
+    "deadline": "2026-06-28T19:17:00Z",
+    "executor_name": "Ложников Виктор",
+    "procedure_url": "https://tenderplan.ru/tenders/679202384d8e37a2b6bcb994",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "draft",
+    "comment": "Импортирован с tenderplan.ru: Тендер",
+    "source_url": "https://tenderplan.ru/tenders/679202384d8e37a2b6bcb994",
+    "external_id": "679202384d8e37a2b6bcb994"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 53,
+  "fields": {
+    "customer_name": "ИНДИВИДУАЛЬНЫЙ ПРЕДПРИНИМАТЕЛЬ СТАВИЦКИЙ ВЛАДИМИР АЛЕКСАНДРОВИЧ",
+    "author": [
+      "admin"
+    ],
+    "client": null,
+    "initial_amount": "466247.88",
+    "deadline": "2026-06-27T06:06:00Z",
+    "executor_name": "Иванов Владимир",
+    "procedure_url": "https://tenderplan.ru/tenders/6a26549d735a1aaca477769a",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "draft",
+    "comment": "Импортирован с tenderplan.ru: Тендер",
+    "source_url": "https://tenderplan.ru/tenders/6a26549d735a1aaca477769a",
+    "external_id": "6a26549d735a1aaca477769a"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 54,
+  "fields": {
+    "customer_name": "ФГБУК \\u0022Государственный музей\\u0022",
+    "author": [
+      "admin"
+    ],
+    "client": null,
+    "initial_amount": "489768.00",
+    "deadline": "2026-07-03T06:50:00Z",
+    "executor_name": "Ложников Виктор",
+    "procedure_url": "https://zakupki.gov.ru/epz/order/notice/94922252600065.html",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "submitted",
+    "comment": "Импортирован с zakupki.gov.ru: Оказание услуг по обслуживанию паста",
+    "source_url": "https://zakupki.gov.ru/epz/order/notice/94922252600065.html",
+    "external_id": "94922252600065"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 55,
+  "fields": {
+    "customer_name": "ООО Мидэкс групп",
+    "author": [
+      "admin"
+    ],
+    "client": 2,
+    "initial_amount": "854469.00",
+    "deadline": "2026-07-09T06:54:00Z",
+    "executor_name": "Ложников Виктор",
+    "procedure_url": "https://zakupki.gov.ru/epz/order/notice/52925572600053.html",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "draft",
+    "comment": "Импортирован с zakupki.gov.ru: Оказание услуг по обслуживанию крем",
+    "source_url": "https://zakupki.gov.ru/epz/order/notice/52925572600053.html",
+    "external_id": "52925572600053"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 56,
+  "fields": {
+    "customer_name": "Фомина Анна Юрьевна",
+    "author": [
+      "admin"
+    ],
+    "client": null,
+    "initial_amount": "287090877.60",
+    "deadline": "2026-06-23T21:00:00Z",
+    "executor_name": "",
+    "procedure_url": "https://tenderplan.ru/tenders/69fb47cf735a1aaca41eda83",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "draft",
+    "comment": "Импортирован с tenderplan.ru: Тендер",
+    "source_url": "https://tenderplan.ru/tenders/69fb47cf735a1aaca41eda83",
+    "external_id": "69fb47cf735a1aaca41eda83"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 57,
+  "fields": {
+    "customer_name": "ГБУЗ \\u0022Поликлиника №7\\u0022",
+    "author": [
+      "admin"
+    ],
+    "client": null,
+    "initial_amount": "1891948.00",
+    "deadline": "2026-07-02T23:54:00Z",
+    "executor_name": "",
+    "procedure_url": "https://zakupki.gov.ru/epz/order/notice/85237652600077.html",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "draft",
+    "comment": "Импортирован с zakupki.gov.ru: Оказание услуг по обслуживанию паста",
+    "source_url": "https://zakupki.gov.ru/epz/order/notice/85237652600077.html",
+    "external_id": "85237652600077"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 58,
+  "fields": {
+    "customer_name": "ООО \"ГК ФСК\"",
+    "author": [
+      "admin"
+    ],
+    "client": null,
+    "initial_amount": "0.00",
+    "deadline": "2030-01-01T21:00:00Z",
+    "executor_name": "",
+    "procedure_url": "https://tenderplan.ru/tenders/679202384d8e37a2b6bcb994",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "draft",
+    "comment": "Импортирован с tenderplan.ru: Тендер",
+    "source_url": "https://tenderplan.ru/tenders/679202384d8e37a2b6bcb994",
+    "external_id": "679202384d8e37a2b6bcb994"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 59,
+  "fields": {
+    "customer_name": "ООО \"ГК ФСК\"",
+    "author": [
+      "admin"
+    ],
+    "client": null,
+    "initial_amount": "0.00",
+    "deadline": "2030-01-01T21:00:00Z",
+    "executor_name": "",
+    "procedure_url": "https://tenderplan.ru/tenders/679202384d8e37a2b6bcb994",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "draft",
+    "comment": "Импортирован с tenderplan.ru: Тендер",
+    "source_url": "https://tenderplan.ru/tenders/679202384d8e37a2b6bcb994",
+    "external_id": "679202384d8e37a2b6bcb994"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 60,
+  "fields": {
+    "customer_name": "ООО \"ГК ФСК\"",
+    "author": [
+      "admin"
+    ],
+    "client": null,
+    "initial_amount": "0.00",
+    "deadline": "2030-01-01T21:00:00Z",
+    "executor_name": "",
+    "procedure_url": "https://tenderplan.ru/tenders/679202384d8e37a2b6bcb994",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "draft",
+    "comment": "Импортирован с tenderplan.ru: Тендер",
+    "source_url": "https://tenderplan.ru/tenders/679202384d8e37a2b6bcb994",
+    "external_id": "679202384d8e37a2b6bcb994"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 61,
+  "fields": {
+    "customer_name": "Фомина Анна Юрьевна",
+    "author": [
+      "admin"
+    ],
+    "client": null,
+    "initial_amount": "287090877.60",
+    "deadline": "2026-06-23T21:00:00Z",
+    "executor_name": "",
+    "procedure_url": "https://tenderplan.ru/tenders/69fb47cf735a1aaca41eda83",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "draft",
+    "comment": "Импортирован с tenderplan.ru: Тендер",
+    "source_url": "https://tenderplan.ru/tenders/69fb47cf735a1aaca41eda83",
+    "external_id": "69fb47cf735a1aaca41eda83"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 62,
+  "fields": {
+    "customer_name": "ООО \"ГК ФСК\"",
+    "author": [
+      "admin"
+    ],
+    "client": null,
+    "initial_amount": "0.00",
+    "deadline": "2030-01-01T21:00:00Z",
+    "executor_name": "",
+    "procedure_url": "https://tenderplan.ru/tenders/679202384d8e37a2b6bcb994",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "draft",
+    "comment": "Импортирован с tenderplan.ru: Тендер",
+    "source_url": "https://tenderplan.ru/tenders/679202384d8e37a2b6bcb994",
+    "external_id": "679202384d8e37a2b6bcb994"
+  }
+},
+{
+  "model": "tenders.tender",
+  "pk": 63,
+  "fields": {
+    "customer_name": "ООО \"ГК ФСК\"",
+    "author": [
+      "admin"
+    ],
+    "client": null,
+    "initial_amount": "0.00",
+    "deadline": "2030-01-01T21:00:00Z",
+    "executor_name": "",
+    "procedure_url": "https://tenderplan.ru/tenders/679202384d8e37a2b6bcb994",
+    "winner": null,
+    "final_amount": null,
+    "cost": null,
+    "status": "draft",
+    "comment": "Импортирован с tenderplan.ru: Тендер",
+    "source_url": "https://tenderplan.ru/tenders/679202384d8e37a2b6bcb994",
+    "external_id": "679202384d8e37a2b6bcb994"
+  }
+},
+{
+  "model": "tenders.client",
+  "pk": 1,
+  "fields": {
+    "name": "ООО \"Компания Золотой Феникс\"",
+    "inn": "3120346577",
+    "email": "kzf_buh@mail.ru",
+    "phone": "+79103209256",
+    "contact_person": "Камаев Ислан Исакович",
+    "contact_position": "специалист по охране труда",
+    "manager": [
+      "viktor123"
+    ],
+    "address": "г. Воронеж, ул. Михайловское шоссе, 27А",
+    "website": "https://company.ru",
+    "notes": "",
+    "status": "active",
+    "created_at": "2026-06-07T07:20:28.119Z",
+    "updated_at": "2026-06-20T19:30:03.552Z",
+    "created_by": [
+      "admin"
+    ]
+  }
+},
+{
+  "model": "tenders.client",
+  "pk": 2,
+  "fields": {
+    "name": "ООО Мидэкс групп",
+    "inn": "3123392466",
+    "email": "info@midex.ru.com",
+    "phone": "+74722516022",
+    "contact_person": "Селезнев Алексей Павлович",
+    "contact_position": "Коммерческий директор",
+    "manager": [
+      "user2"
+    ],
+    "address": "г. Белгород, ул. Михайловское шоссе, д. 27А",
+    "website": "https://midex.ru.com/",
+    "notes": "",
+    "status": "active",
+    "created_at": "2026-06-13T16:42:34.096Z",
+    "updated_at": "2026-06-13T17:38:08.337Z",
+    "created_by": [
+      "admin"
+    ]
+  }
+},
+{
+  "model": "tenders.client",
+  "pk": 3,
+  "fields": {
+    "name": "Транснефть - Синтез, ООО",
+    "inn": "1646043226",
+    "email": "kzf_buh@mail.ru",
+    "phone": "+79803298349",
+    "contact_person": "Петров Владимир Дмитриевич",
+    "contact_position": "менеджер по закупкам",
+    "manager": [
+      "user3"
+    ],
+    "address": "респ. Татарстан, Елабужский р-н, тер. ОЭЗ Алабуга, ул. Ш-3, стр. 6,",
+    "website": "https://transneftenergo.ru/sites/?group=ncsp",
+    "notes": "",
+    "status": "prospect",
+    "created_at": "2026-06-13T17:31:20.814Z",
+    "updated_at": "2026-06-13T17:31:20.814Z",
+    "created_by": [
+      "admin"
+    ]
+  }
+},
+{
+  "model": "tenders.client",
+  "pk": 4,
+  "fields": {
+    "name": "Белгородская сбытовая компания, АО",
+    "inn": "3123110760",
+    "email": "kastrov@belsbyt.ru",
+    "phone": "+7 (4722) 23-07-73",
+    "contact_person": "Кастров Сергей Иванович",
+    "contact_position": "специалист по охране труда",
+    "manager": [
+      "user2"
+    ],
+    "address": "г. Белгород, ул. Николая Чумичова, д. 37, 308009",
+    "website": "https://belsbyt.ru/",
+    "notes": "",
+    "status": "prospect",
+    "created_at": "2026-06-13T17:37:58.372Z",
+    "updated_at": "2026-06-13T17:37:58.372Z",
+    "created_by": [
+      "admin"
+    ]
+  }
+},
+{
+  "model": "tenders.client",
+  "pk": 5,
+  "fields": {
+    "name": "ПАО Тплюс",
+    "inn": "6315376946",
+    "email": "Natalya.Meteleva_@tplusgroup.ru",
+    "phone": null,
+    "contact_person": "Метелева Наталья Валерьевна",
+    "contact_position": "Руководитель направления УМТР",
+    "manager": [
+      "viktor123"
+    ],
+    "address": "143421, Московская область, г.о. Красногорск, тер. автодороги «Балтия», км 26-й, д.5, стр. 3, офис 506",
+    "website": "https://www.tplusgroup.ru/",
+    "notes": "",
+    "status": "active",
+    "created_at": "2026-06-20T18:49:54.328Z",
+    "updated_at": "2026-06-20T18:49:54.328Z",
+    "created_by": [
+      "admin"
+    ]
+  }
+},
+{
+  "model": "tenders.tenderdocument",
+  "pk": 1,
+  "fields": {
+    "tender": 22,
+    "file": "tender_documents/2026/06/07/коммерческое_предложение_14.05.2026_GECO.pdf",
+    "name": "ООО \"Компания Золотой Феникс\"",
+    "description": "",
+    "uploaded_by": [
+      "admin"
+    ],
+    "uploaded_at": "2026-06-07T11:17:42.027Z"
+  }
+},
+{
+  "model": "tenders.tenderdocument",
+  "pk": 3,
+  "fields": {
+    "tender": 37,
+    "file": "tender_documents/2026/06/09/dashboard_09062026_10_42_yyvyN4W.pdf",
+    "name": "кп",
+    "description": "",
+    "uploaded_by": [
+      "user3"
+    ],
+    "uploaded_at": "2026-06-09T13:09:41.519Z"
+  }
+},
+{
+  "model": "tenders.auditlog",
+  "pk": 1,
+  "fields": {
+    "user": [
+      "admin"
+    ],
+    "action": "create",
+    "model_name": "Tender",
+    "object_id": 25,
+    "object_repr": "ООО \"Компания Золотой Феникс\" | 763,737.00 ₽",
+    "changes": null,
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 YaBrowser/26.4.0.0 Safari/537.36",
+    "timestamp": "2026-06-07T14:10:16.596Z"
+  }
+},
+{
+  "model": "tenders.auditlog",
+  "pk": 2,
+  "fields": {
+    "user": [
+      "user3"
+    ],
+    "action": "create",
+    "model_name": "Tender",
+    "object_id": 26,
+    "object_repr": "ООО \"Компания Золотой Феникс\" | 752,752,762.00 ₽",
+    "changes": null,
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 YaBrowser/26.4.0.0 Safari/537.36",
+    "timestamp": "2026-06-07T14:59:02.135Z"
+  }
+},
+{
+  "model": "tenders.auditlog",
+  "pk": 3,
+  "fields": {
+    "user": [
+      "user3"
+    ],
+    "action": "update",
+    "model_name": "Tender",
+    "object_id": 36,
+    "object_repr": "ООО \"ГК ФСК\" | 0.00 ₽",
+    "changes": null,
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 YaBrowser/26.4.0.0 Safari/537.36",
+    "timestamp": "2026-06-09T12:22:12.499Z"
+  }
+},
+{
+  "model": "tenders.auditlog",
+  "pk": 4,
+  "fields": {
+    "user": [
+      "user3"
+    ],
+    "action": "update",
+    "model_name": "Tender",
+    "object_id": 38,
+    "object_repr": "Фомина Анна Юрьевна | 287,090,877.60 ₽",
+    "changes": null,
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 YaBrowser/26.4.0.0 Safari/537.36",
+    "timestamp": "2026-06-09T12:27:18.158Z"
+  }
+},
+{
+  "model": "tenders.auditlog",
+  "pk": 5,
+  "fields": {
+    "user": [
+      "user3"
+    ],
+    "action": "update",
+    "model_name": "Tender",
+    "object_id": 37,
+    "object_repr": "ООО \"ГК ФСК\" | 0.00 ₽",
+    "changes": null,
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 YaBrowser/26.4.0.0 Safari/537.36",
+    "timestamp": "2026-06-11T07:28:38.922Z"
+  }
+},
+{
+  "model": "tenders.auditlog",
+  "pk": 6,
+  "fields": {
+    "user": [
+      "user3"
+    ],
+    "action": "update",
+    "model_name": "Tender",
+    "object_id": 28,
+    "object_repr": "ГКУЗ \"Стоматологическая поликлиника\" | 3,369,905.00 ₽",
+    "changes": null,
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 YaBrowser/26.4.0.0 Safari/537.36",
+    "timestamp": "2026-06-11T07:28:57.382Z"
+  }
+},
+{
+  "model": "tenders.auditlog",
+  "pk": 7,
+  "fields": {
+    "user": [
+      "user3"
+    ],
+    "action": "update",
+    "model_name": "Tender",
+    "object_id": 27,
+    "object_repr": "ГБУЗ \"Городская клиническая больница №1\" | 3,982,640.00 ₽",
+    "changes": null,
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 YaBrowser/26.4.0.0 Safari/537.36",
+    "timestamp": "2026-06-11T07:29:09.941Z"
+  }
+},
+{
+  "model": "tenders.auditlog",
+  "pk": 8,
+  "fields": {
+    "user": [
+      "user3"
+    ],
+    "action": "update",
+    "model_name": "Tender",
+    "object_id": 21,
+    "object_repr": "ГБОУ ВО \"Московский государственный университет\" | 7,716,666.00 ₽",
+    "changes": null,
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 YaBrowser/26.4.0.0 Safari/537.36",
+    "timestamp": "2026-06-11T07:29:22.954Z"
+  }
+},
+{
+  "model": "tenders.auditlog",
+  "pk": 9,
+  "fields": {
+    "user": [
+      "user3"
+    ],
+    "action": "update",
+    "model_name": "Tender",
+    "object_id": 24,
+    "object_repr": "ООО \"Компания Золотой Феникс\" | 456,456.00 ₽",
+    "changes": null,
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 YaBrowser/26.4.0.0 Safari/537.36",
+    "timestamp": "2026-06-11T07:29:33.852Z"
+  }
+},
+{
+  "model": "tenders.auditlog",
+  "pk": 10,
+  "fields": {
+    "user": [
+      "user3"
+    ],
+    "action": "update",
+    "model_name": "Tender",
+    "object_id": 26,
+    "object_repr": "ООО \"Компания Золотой Феникс\" | 752,752,762.00 ₽",
+    "changes": null,
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 YaBrowser/26.4.0.0 Safari/537.36",
+    "timestamp": "2026-06-11T07:29:41.643Z"
+  }
+},
+{
+  "model": "tenders.auditlog",
+  "pk": 11,
+  "fields": {
+    "user": [
+      "user3"
+    ],
+    "action": "update",
+    "model_name": "Tender",
+    "object_id": 22,
+    "object_repr": "ООО \"Компания Золотой Феникс\" | 723,971.00 ₽",
+    "changes": null,
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 YaBrowser/26.4.0.0 Safari/537.36",
+    "timestamp": "2026-06-11T07:29:47.892Z"
+  }
+},
+{
+  "model": "tenders.auditlog",
+  "pk": 12,
+  "fields": {
+    "user": [
+      "user3"
+    ],
+    "action": "update",
+    "model_name": "Tender",
+    "object_id": 17,
+    "object_repr": "Марьяновский ДИ, АСУСОertert | 456,456.00 ₽",
+    "changes": null,
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 YaBrowser/26.4.0.0 Safari/537.36",
+    "timestamp": "2026-06-11T07:30:01.282Z"
+  }
+},
+{
+  "model": "tenders.auditlog",
+  "pk": 13,
+  "fields": {
+    "user": [
+      "admin"
+    ],
+    "action": "update",
+    "model_name": "Tender",
+    "object_id": 17,
+    "object_repr": "Марьяновский ДИ, АСУСОertert | 456,456.00 ₽",
+    "changes": null,
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+    "timestamp": "2026-06-19T11:21:26.368Z"
+  }
+},
+{
+  "model": "tenders.auditlog",
+  "pk": 14,
+  "fields": {
+    "user": [
+      "admin"
+    ],
+    "action": "update",
+    "model_name": "Tender",
+    "object_id": 42,
+    "object_repr": "ООО \"Компания Золотой Феникс\" | 2,512,681.00 ₽",
+    "changes": null,
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+    "timestamp": "2026-06-19T11:22:03.660Z"
+  }
+},
+{
+  "model": "tenders.auditlog",
+  "pk": 15,
+  "fields": {
+    "user": [
+      "admin"
+    ],
+    "action": "update",
+    "model_name": "Tender",
+    "object_id": 22,
+    "object_repr": "Транснефть - Синтез, ООО | 723,971.00 ₽",
+    "changes": null,
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+    "timestamp": "2026-06-19T11:22:22.502Z"
+  }
+},
+{
+  "model": "tenders.auditlog",
+  "pk": 16,
+  "fields": {
+    "user": [
+      "admin"
+    ],
+    "action": "update",
+    "model_name": "Tender",
+    "object_id": 29,
+    "object_repr": "Белгородская сбытовая компания, АО | 1,435,326.00 ₽",
+    "changes": null,
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+    "timestamp": "2026-06-19T11:23:03.687Z"
+  }
+},
+{
+  "model": "tenders.auditlog",
+  "pk": 17,
+  "fields": {
+    "user": [
+      "admin"
+    ],
+    "action": "update",
+    "model_name": "Tender",
+    "object_id": 28,
+    "object_repr": "ООО Мидэкс групп | 3,369,905.00 ₽",
+    "changes": null,
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+    "timestamp": "2026-06-19T11:23:47.148Z"
+  }
+},
+{
+  "model": "tenders.auditlog",
+  "pk": 18,
+  "fields": {
+    "user": [
+      "admin"
+    ],
+    "action": "update",
+    "model_name": "Tender",
+    "object_id": 52,
+    "object_repr": "ООО \"ГК ФСК\" | 0.00 ₽",
+    "changes": null,
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+    "timestamp": "2026-06-20T19:17:10.214Z"
+  }
+},
+{
+  "model": "tenders.auditlog",
+  "pk": 19,
+  "fields": {
+    "user": [
+      "admin"
+    ],
+    "action": "update",
+    "model_name": "Tender",
+    "object_id": 40,
+    "object_repr": "ФКУ Упрдор \\u0022Прикамье\\u0022 | 11,818,801.00 ₽",
+    "changes": null,
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+    "timestamp": "2026-06-20T19:33:46.791Z"
+  }
+},
+{
+  "model": "tenders.auditlog",
+  "pk": 20,
+  "fields": {
+    "user": [
+      "admin"
+    ],
+    "action": "update",
+    "model_name": "Tender",
+    "object_id": 47,
+    "object_repr": "ГКУЗ \\u0022Стоматологическая поликлиника\\u0022 | 4,921,001.00 ₽",
+    "changes": null,
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+    "timestamp": "2026-06-20T19:34:14.607Z"
+  }
+},
+{
+  "model": "tenders.auditlog",
+  "pk": 21,
+  "fields": {
+    "user": [
+      "admin"
+    ],
+    "action": "update",
+    "model_name": "Tender",
+    "object_id": 53,
+    "object_repr": "ИНДИВИДУАЛЬНЫЙ ПРЕДПРИНИМАТЕЛЬ СТАВИЦКИЙ ВЛАДИМИР АЛЕКСАНДРОВИЧ | 466,247.88 ₽",
+    "changes": null,
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+    "timestamp": "2026-06-21T06:06:13.958Z"
+  }
+},
+{
+  "model": "tenders.auditlog",
+  "pk": 22,
+  "fields": {
+    "user": [
+      "admin"
+    ],
+    "action": "update",
+    "model_name": "Tender",
+    "object_id": 51,
+    "object_repr": "ООО \"АММААТ\" | 10,800,000.00 ₽",
+    "changes": null,
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+    "timestamp": "2026-06-21T06:06:40.041Z"
+  }
+},
+{
+  "model": "tenders.auditlog",
+  "pk": 23,
+  "fields": {
+    "user": [
+      "admin"
+    ],
+    "action": "update",
+    "model_name": "Tender",
+    "object_id": 46,
+    "object_repr": "ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ \"БАШКИРСКАЯ МЕДЬ\" | 0.00 ₽",
+    "changes": null,
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+    "timestamp": "2026-06-21T06:06:51.653Z"
+  }
+},
+{
+  "model": "tenders.auditlog",
+  "pk": 24,
+  "fields": {
+    "user": [
+      "admin"
+    ],
+    "action": "update",
+    "model_name": "Tender",
+    "object_id": 44,
+    "object_repr": "ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ \"БАШКИРСКАЯ МЕДЬ\" | 0.00 ₽",
+    "changes": null,
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+    "timestamp": "2026-06-21T06:07:01.213Z"
+  }
+},
+{
+  "model": "tenders.auditlog",
+  "pk": 25,
+  "fields": {
+    "user": [
+      "admin"
+    ],
+    "action": "update",
+    "model_name": "Tender",
+    "object_id": 48,
+    "object_repr": "ФГБУ \\u0022Росрезерв\\u0022 | 1,363,681.00 ₽",
+    "changes": null,
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+    "timestamp": "2026-06-21T06:07:09.292Z"
+  }
+},
+{
+  "model": "tenders.auditlog",
+  "pk": 26,
+  "fields": {
+    "user": [
+      "admin"
+    ],
+    "action": "update",
+    "model_name": "Tender",
+    "object_id": 45,
+    "object_repr": "ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ \"БАШКИРСКАЯ МЕДЬ\" | 0.00 ₽",
+    "changes": null,
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+    "timestamp": "2026-06-21T06:07:20.996Z"
+  }
+},
+{
+  "model": "tenders.auditlog",
+  "pk": 27,
+  "fields": {
+    "user": [
+      "admin"
+    ],
+    "action": "update",
+    "model_name": "Tender",
+    "object_id": 54,
+    "object_repr": "ФГБУК \\u0022Государственный музей\\u0022 | 489,768.00 ₽",
+    "changes": null,
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+    "timestamp": "2026-06-21T06:07:29.961Z"
+  }
+},
+{
+  "model": "tenders.auditlog",
+  "pk": 28,
+  "fields": {
+    "user": [
+      "admin"
+    ],
+    "action": "update",
+    "model_name": "Tender",
+    "object_id": 45,
+    "object_repr": "ОБЩЕСТВО С ОГРАНИЧЕННОЙ ОТВЕТСТВЕННОСТЬЮ \"БАШКИРСКАЯ МЕДЬ\" | 0.00 ₽",
+    "changes": null,
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+    "timestamp": "2026-06-21T06:30:14.604Z"
+  }
+},
+{
+  "model": "tenders.auditlog",
+  "pk": 29,
+  "fields": {
+    "user": [
+      "admin"
+    ],
+    "action": "update",
+    "model_name": "Tender",
+    "object_id": 44,
+    "object_repr": "Белгородская сбытовая компания, АО | 20,000.00 ₽",
+    "changes": null,
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.119.0 Chrome/142.0.7444.265 Electron/39.8.8 Safari/537.36",
+    "timestamp": "2026-06-21T06:31:08.762Z"
+  }
+},
+{
+  "model": "tenders.auditlog",
+  "pk": 30,
+  "fields": {
+    "user": [
+      "admin"
+    ],
+    "action": "update",
+    "model_name": "Tender",
+    "object_id": 48,
+    "object_repr": "ФГБУ \\u0022Росрезерв\\u0022 | 1,363,681.00 ₽",
+    "changes": "{\"deadline\": {\"old\": \"2026-07-11 06:07:00+00:00\", \"new\": \"2026-07-03 10:05:00+03:00\"}}",
+    "ip_address": "127.0.0.1",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+    "timestamp": "2026-06-21T07:05:46.450Z"
+  }
+},
+{
+  "model": "tenders.chatroom",
+  "pk": 1,
+  "fields": {
+    "room_type": "client",
+    "tender": null,
+    "client": 2,
+    "created_at": "2026-06-19T13:09:21.410Z",
+    "updated_at": "2026-06-19T13:09:21.410Z",
+    "participants": [
+      [
+        "admin"
+      ],
+      [
+        "viktor123"
+      ]
+    ]
+  }
+},
+{
+  "model": "tenders.chatroom",
+  "pk": 3,
+  "fields": {
+    "room_type": "tender",
+    "tender": 45,
+    "client": null,
+    "created_at": "2026-06-21T06:07:46.118Z",
+    "updated_at": "2026-06-21T06:07:46.118Z",
+    "participants": [
+      [
+        "admin"
+      ],
+      [
+        "viktor123"
+      ]
+    ]
+  }
+},
+{
+  "model": "tenders.chatroom",
+  "pk": 4,
+  "fields": {
+    "room_type": "client",
+    "tender": null,
+    "client": 1,
+    "created_at": "2026-06-21T06:33:05.071Z",
+    "updated_at": "2026-06-21T06:33:05.071Z",
+    "participants": [
+      [
+        "admin"
+      ]
+    ]
+  }
+},
+{
+  "model": "tenders.chatmessage",
+  "pk": 1,
+  "fields": {
+    "room": 1,
+    "author": [
+      "admin"
+    ],
+    "content": "коллеги данный клиент закреплен за менеджером Ложников Виктор",
+    "created_at": "2026-06-19T13:25:56.118Z",
+    "read_by": [
+      [
+        "viktor123"
+      ]
+    ]
+  }
+},
+{
+  "model": "tenders.chatmessage",
+  "pk": 2,
+  "fields": {
+    "room": 1,
+    "author": [
+      "viktor123"
+    ],
+    "content": "коллеги, приветствую, я отправил КП этому клиенту в прошлом месяце",
+    "created_at": "2026-06-19T13:26:47.424Z",
+    "read_by": []
+  }
+},
+{
+  "model": "tenders.chatmessage",
+  "pk": 5,
+  "fields": {
+    "room": 3,
+    "author": [
+      "admin"
+    ],
+    "content": "Коллеги по данной процедуре будет участвовать наш Дилер - Комос",
+    "created_at": "2026-06-21T06:08:14.841Z",
+    "read_by": [
+      [
+        "viktor123"
+      ]
+    ]
+  }
+},
+{
+  "model": "tenders.chatmessage",
+  "pk": 6,
+  "fields": {
+    "room": 3,
+    "author": [
+      "viktor123"
+    ],
+    "content": "я по этому тендеру не планирую принимать участие",
+    "created_at": "2026-06-21T06:09:16.297Z",
+    "read_by": [
+      [
+        "admin"
+      ]
+    ]
+  }
+},
+{
+  "model": "tenders.shipmentrequest",
+  "pk": 1,
+  "fields": {
+    "client": 2,
+    "contact_person": "Виктор Ложников",
+    "contact_phone": "89803298349",
+    "contact_email": "lozhnvikt0801@mail.ru",
+    "status": "new",
+    "comment": "",
+    "created_at": "2026-06-20T01:34:26.601Z",
+    "updated_at": "2026-06-20T01:35:15.303Z",
+    "created_by": [
+      "admin"
+    ],
+    "exported_to_1c": false,
+    "exported_at": null
+  }
+},
+{
+  "model": "tenders.shipmentrequest",
+  "pk": 2,
+  "fields": {
+    "client": 4,
+    "contact_person": "Ложников Виктор Сергеевич",
+    "contact_phone": "89058601010",
+    "contact_email": "lozhnvikt0801@mail.ru",
+    "status": "new",
+    "comment": "",
+    "created_at": "2026-06-20T01:38:57.736Z",
+    "updated_at": "2026-06-20T01:39:01.043Z",
+    "created_by": [
+      "admin"
+    ],
+    "exported_to_1c": false,
+    "exported_at": null
+  }
+},
+{
+  "model": "tenders.shipmentrequest",
+  "pk": 3,
+  "fields": {
+    "client": 3,
+    "contact_person": "Ложников Виктор Сергеевич",
+    "contact_phone": "89058601010",
+    "contact_email": "lozhnvikt0801@mail.ru",
+    "status": "new",
+    "comment": "",
+    "created_at": "2026-06-20T01:39:35.615Z",
+    "updated_at": "2026-06-20T01:39:38.937Z",
+    "created_by": [
+      "admin"
+    ],
+    "exported_to_1c": false,
+    "exported_at": null
+  }
+},
+{
+  "model": "tenders.commercialproposal",
+  "pk": 1,
+  "fields": {
+    "shipment_request": null,
+    "client": 2,
+    "manager": [
+      "admin"
+    ],
+    "valid_until": "2026-07-12",
+    "payment_terms": "100% отсрочка, оплата через 30 дней после получения продукции",
+    "delivery_cost": "11111.00",
+    "delivery_address": "г. Белгород, ул. Михайловское шоссе, д. 27А",
+    "total_volume": "4888.000",
+    "total_weight": "227710.00",
+    "subtotal": "280309.37",
+    "grand_total": "291420.37",
+    "status": "draft",
+    "comment": "",
+    "created_at": "2026-06-20T02:38:11.136Z",
+    "updated_at": "2026-06-20T19:56:51.737Z",
+    "sent_at": null
+  }
+},
+{
+  "model": "tenders.commercialproposal",
+  "pk": 2,
+  "fields": {
+    "shipment_request": null,
+    "client": 4,
+    "manager": [
+      "admin"
+    ],
+    "valid_until": "2026-08-22",
+    "payment_terms": "100% отсрочка, оплата через  дней после получения продукции",
+    "delivery_cost": "25000.00",
+    "delivery_address": "г. Белгород, ул Преображенская 69",
+    "total_volume": "550.000",
+    "total_weight": "63770.00",
+    "subtotal": "42677.78",
+    "grand_total": "67677.78",
+    "status": "draft",
+    "comment": "",
+    "created_at": "2026-06-20T02:40:37.429Z",
+    "updated_at": "2026-06-20T02:40:37.485Z",
+    "sent_at": null
+  }
+},
+{
+  "model": "tenders.commercialproposal",
+  "pk": 3,
+  "fields": {
+    "shipment_request": null,
+    "client": 1,
+    "manager": [
+      "admin"
+    ],
+    "valid_until": "2026-09-26",
+    "payment_terms": "100% отсрочка, оплата через  дней после получения продукции",
+    "delivery_cost": "50000.00",
+    "delivery_address": "г. Москва, ул. Мясницкая 35 корпус 2",
+    "total_volume": "6000.000",
+    "total_weight": "1649000.00",
+    "subtotal": "479510.00",
+    "grand_total": "529510.00",
+    "status": "draft",
+    "comment": "",
+    "created_at": "2026-06-20T02:42:13.174Z",
+    "updated_at": "2026-06-20T02:42:13.224Z",
+    "sent_at": null
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 1,
+  "fields": {
+    "action_time": "2026-06-04T11:42:38.961Z",
+    "user": [
+      "admin"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "6",
+    "object_repr": "user1",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Email address\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 2,
+  "fields": {
+    "action_time": "2026-06-04T12:02:09.971Z",
+    "user": [
+      "admin"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "6",
+    "object_repr": "user1",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Email address\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 3,
+  "fields": {
+    "action_time": "2026-06-04T12:03:24.480Z",
+    "user": [
+      "admin"
+    ],
+    "content_type": [
+      "auth",
+      "user"
+    ],
+    "object_id": "6",
+    "object_repr": "user1",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Email address\"]}}]"
+  }
+}
+]

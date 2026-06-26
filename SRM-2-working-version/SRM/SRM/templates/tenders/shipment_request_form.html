@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+{% block title %}Новая заявка на отгрузку{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📦 Новая заявка на отгрузку</h2>
+        <a href="{% url 'tenders:shipment_list' %}" class="btn btn-outline-secondary">← К реестру</a>
+    </div>
+    
+    <form method="post">
+        {% csrf_token %}
+        
+        <!-- Информация о покупателе -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">👤 Информация о покупателе</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Покупатель <span class="text-danger">*</span></label>
+                        {{ form.client }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Контактное лицо</label>
+                        {{ form.contact_person }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Телефон</label>
+                        {{ form.contact_phone }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Email</label>
+                        {{ form.contact_email }}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Комментарий</label>
+                        {{ form.comment }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Позиции заявки -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">📦 Позиции заявки</h5>
+            </div>
+            <div class="card-body">
+                {{ formset.management_form }}
+                
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 30%">Продукция</th>
+                                <th style="width: 15%">Количество</th>
+                                <th style="width: 15%">Цена прайс</th>
+                                <th style="width: 15%">Скидка, %</th>
+                                <th style="width: 15%">Цена с скидкой</th>
+                                <th style="width: 10%">Сумма</th>
+                                <th style="width: 5%">Удалить</th>
+                            </tr>
+                        </thead>
+                        <tbody id="items-tbody">
+                            {% for item_form in formset %}
+                            <tr class="item-row">
+                                <td>{{ item_form.product }}</td>
+                                <td>{{ item_form.quantity }}</td>
+                                <td>{{ item_form.unit_price }}</td>
+                                <td>{{ item_form.discount_percent }}</td>
+                                <td class="final-price-cell">0.00</td>
+                                <td class="total-cell">0.00</td>
+                                <td>
+                                    {% if item_form.instance.pk %}
+                                        {{ item_form.DELETE }}
+                                    {% endif %}
+                                    {{ item_form.id }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <button type="button" class="btn btn-outline-success" id="add-item-btn">
+                    ➕ Добавить позицию
+                </button>
+            </div>
+        </div>
+        
+        <!-- Итого -->
+        <div class="card shadow-sm mb-4 bg-light">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h4>💰 Итого: <span id="grand-total" class="text-success">0.00 ₽</span></h4>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <a href="{% url 'tenders:shipment_list' %}" class="btn btn-secondary me-2">Отмена</a>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            📤 Отправить заявку
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+// Получаем данные о продуктах через AJAX
+fetch('/api/products/prices/')
+    .then(r => r.json())
+    .then(data => {
+        window.productsData = data;
+        console.log('Загружены данные о продуктах:', data);
+    })
+    .catch(err => {
+        console.error('Ошибка загрузки продуктов:', err);
+        window.productsData = {};
+    });
+
+// Пересчёт при изменении
+document.addEventListener('input', function(e) {
+    if (e.target.classList.contains('price-input') || 
+        e.target.classList.contains('discount-input') || 
+        e.target.classList.contains('quantity-input')) {
+        recalculateRow(e.target.closest('.item-row'));
+        recalculateTotal();
+    }
+});
+
+// Автозаполнение цены при выборе продукта
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('product-select')) {
+        const row = e.target.closest('.item-row');
+        const productId = e.target.value;
+        
+        if (window.productsData && window.productsData[productId]) {
+            const product = window.productsData[productId];
+            row.querySelector('.price-input').value = product.price;
+            recalculateRow(row);
+            recalculateTotal();
+        }
+    }
+});
+
+function recalculateRow(row) {
+    if (!row) return;
+    
+    const price = parseFloat(row.querySelector('.price-input').value) || 0;
+    const discount = parseFloat(row.querySelector('.discount-input').value) || 0;
+    const quantity = parseFloat(row.querySelector('.quantity-input').value) || 0;
+    
+    const finalPrice = price * (1 - discount / 100);
+    const total = finalPrice * quantity;
+    
+    row.querySelector('.final-price-cell').textContent = finalPrice.toFixed(2);
+    row.querySelector('.total-cell').textContent = total.toFixed(2);
+}
+
+function recalculateTotal() {
+    let grandTotal = 0;
+    document.querySelectorAll('.item-row').forEach(row => {
+        const totalText = row.querySelector('.total-cell').textContent;
+        grandTotal += parseFloat(totalText) || 0;
+    });
+    document.getElementById('grand-total').textContent = grandTotal.toFixed(2) + ' ₽';
+}
+
+// Добавление новой строки
+document.getElementById('add-item-btn').addEventListener('click', function() {
+    const totalForms = parseInt(document.querySelector('#id_items-TOTAL_FORMS').value);
+    const tbody = document.getElementById('items-tbody');
+    const lastRow = tbody.querySelector('tr:last-child');
+    const newRow = lastRow.cloneNode(true);
+    
+    // Обновляем имена и ID
+    newRow.querySelectorAll('input, select').forEach(el => {
+        const name = el.getAttribute('name');
+        if (name) {
+            el.setAttribute('name', name.replace(/-\d+-/, `-${totalForms}-`));
+            el.setAttribute('id', el.id.replace(/-\d+-/, `-${totalForms}-`));
+        }
+        if (el.tagName === 'INPUT' && el.type !== 'hidden') {
+            el.value = '';
+        }
+        if (el.tagName === 'SELECT') {
+            el.selectedIndex = 0;
+        }
+    });
+    
+    newRow.querySelector('.final-price-cell').textContent = '0.00';
+    newRow.querySelector('.total-cell').textContent = '0.00';
+    
+    tbody.appendChild(newRow);
+    document.querySelector('#id_items-TOTAL_FORMS').value = totalForms + 1;
+});
+</script>
+{% endblock %}

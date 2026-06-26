@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}Чат{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Боковая панель -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    {% if tender %}
+                        📄 Информация о тендере
+                    {% elif client %}
+                        👥 Информация о клиенте
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if tender %}
+                        <h6>{{ tender.customer_name }}</h6>
+                        <p class="small">Сумма: {{ tender.initial_amount|floatformat:0 }} ₽</p>
+                        <p class="small">Дедлайн: {{ tender.deadline|date:"d.m.Y" }}</p>
+                        <p class="small">Статус: {{ tender.get_status_display }}</p>
+                    {% elif client %}
+                        <h6>{{ client.name }}</h6>
+                        <p class="small">ИНН: {{ client.inn|default:"—" }}</p>
+                        <p class="small">Email: {{ client.email|default:"—" }}</p>
+                    {% endif %}
+                    
+                    <hr>
+                    <h6>Участники:</h6>
+                    <ul class="list-unstyled small">
+                        {% for user in room.participants.all %}
+                            <li>👤 {{ user.username }}</li>
+                        {% empty %}
+                            <li class="text-muted">Нет участников</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            
+            <a href="{% url 'tenders:chat_list' %}" class="btn btn-outline-secondary w-100 mt-3">
+                ← Все чаты
+            </a>
+        </div>
+        
+        <!-- Основная область чата -->
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    {% if tender %}
+                        💬 Чат по тендеру: {{ tender.customer_name|truncatechars:50 }}
+                    {% elif client %}
+                        💬 Чат по клиенту: {{ client.name|truncatechars:50 }}
+                    {% endif %}
+                </div>
+                
+                <div class="card-body" id="chat-messages" style="height: 500px; overflow-y: auto; background: #f8f9fa;">
+                 {% for message in messages %}
+    {% if message.author == request.user %}
+        {% include "tenders/chat_message.html" with is_own=True %}
+    {% else %}
+        {% include "tenders/chat_message.html" with is_own=False %}
+    {% endif %}
+{% empty %}
+                        <div class="text-center text-muted mt-5">
+                            <h5>💬 Пока нет сообщений</h5>
+                            <p>Начните общение первым!</p>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="card-footer">
+                    <form id="chat-form" method="post" action="{% url 'tenders:chat_send_message' room.id %}">
+                        {% csrf_token %}
+                        <div class="input-group">
+                            <textarea name="content" class="form-control" rows="2" placeholder="Введите сообщение..." required></textarea>
+                            <button type="submit" class="btn btn-primary">
+                                📤 Отправить
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chatMessages = document.getElementById('chat-messages');
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    // Безопасное получение ID последнего сообщения
+    let lastMessageId = 0;
+    const lastMsg = chatMessages.querySelector('.message:last-child');
+    if (lastMsg && lastMsg.dataset.messageId) {
+        lastMessageId = parseInt(lastMsg.dataset.messageId);
+    }
+    
+    // Polling для новых сообщений каждые 3 секунды
+    setInterval(function() {
+        fetch('{% url "tenders:chat_get_messages" room.id %}?last_id=' + lastMessageId)
+            .then(response => response.json())
+            .then(data => {
+                if (data.messages_html) {
+                    chatMessages.insertAdjacentHTML('beforeend', data.messages_html);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    lastMessageId = data.last_id;
+                }
+            })
+            .catch(error => console.error('Ошибка polling:', error));
+    }, 3000);
+    
+    // Отправка формы через AJAX
+    const chatForm = document.getElementById('chat-form');
+    chatForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const textarea = this.querySelector('textarea');
+        
+        if (!textarea.value.trim()) return;
+        
+        fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                chatMessages.insertAdjacentHTML('beforeend', data.message_html);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+                textarea.value = '';
+                lastMessageId = data.message_id;
+            } else {
+                alert('Ошибка: ' + (data.error || 'Неизвестная ошибка'));
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка отправки:', error);
+            alert('Ошибка сети. Сообщение не отправлено.');
+        });
+    });
+});
+</script>
+{% endblock %}

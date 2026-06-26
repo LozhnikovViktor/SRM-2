@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Журнал КП{% endblock %}
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📋 Журнал исходящих коммерческих предложений</h2>
+        <a href="{% url 'tenders:cp_create' %}" class="btn btn-success">➕ Новое КП</a>
+    </div>
+    
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <select name="status" class="form-select">
+                        <option value="">Все статусы</option>
+                        {% for v, l in status_choices %}
+                            <option value="{{ v }}" {% if request.GET.status == v %}selected{% endif %}>{{ l }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2"><button type="submit" class="btn btn-primary w-100">🔍</button></div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="card shadow-sm">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>№</th>
+                    <th>Дата</th>
+                    <th>Покупатель</th>
+                    <th>Менеджер</th>
+                    <th>Сумма</th>
+                    <th>Статус</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cp in proposals %}
+                <tr>
+                    <td><strong>#{{ cp.id }}</strong></td>
+                    <td>{{ cp.created_at|date:"d.m.Y H:i" }}</td>
+                    <td>{{ cp.client.name }}</td>
+                    <td>{{ cp.manager|default:"—" }}</td>
+                    <td class="fw-bold">{{ cp.grand_total|floatformat:2 }} ₽</td>
+                    <td>
+                        <span class="badge bg-{% if cp.status == 'draft' %}secondary{% elif cp.status == 'sent' %}info{% elif cp.status == 'accepted' %}success{% elif cp.status == 'rejected' %}danger{% else %}warning{% endif %}">
+                            {{ cp.get_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{% url 'tenders:cp_detail' cp.pk %}" class="btn btn-sm btn-outline-primary">👁️</a>
+                        {% if cp.status == 'draft' %}
+                        <a href="{% url 'tenders:cp_edit' cp.pk %}" class="btn btn-sm btn-outline-warning">✏️</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="text-center text-muted py-5">КП не созданы</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

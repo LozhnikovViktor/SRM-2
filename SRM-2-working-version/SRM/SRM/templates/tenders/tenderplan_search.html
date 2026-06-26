@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+{% block title %}Поиск на Tenderplan.ru{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>🔍 Поиск тендеров на Tenderplan.ru</h2>
+        <a href="{% url 'tenders:external_search' %}" class="btn btn-outline-secondary">
+            ← Поиск на zakupki.gov.ru
+        </a>
+    </div>
+    
+    <!-- Форма поиска -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <label class="form-label">🔎 Ключевое слово</label>
+                        {{ form.keyword }}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">📍 Регион (код)</label>
+                        {{ form.region }}
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">📊 Макс. результатов</label>
+                        {{ form.max_results }}
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            🔍 Искать
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    {% if error %}
+    <div class="alert alert-danger">
+        <strong>❌ Ошибка:</strong> {{ error }}
+    </div>
+    {% endif %}
+    
+    {% if search_performed %}
+        {% if tenders %}
+        <div class="alert alert-success">
+            ✅ Найдено тендеров: <strong>{{ tenders|length }}</strong>
+        </div>
+        
+        <div class="card shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="5%">№</th>
+                            <th width="30%">Название</th>
+                            <th width="20%">Заказчик</th>
+                            <th width="12%">Сумма</th>
+                            <th width="10%">Дедлайн</th>
+                            <th width="10%">Регион</th>
+                            <th width="13%">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tender in tenders %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>
+                                <strong>{{ tender.title|truncatechars:60 }}</strong>
+                                {% if tender.procedure_url %}
+                                <br><a href="{{ tender.procedure_url }}" target="_blank" class="small text-muted">
+                                    🔗 Открыть на Tenderplan
+                                </a>
+                                {% endif %}
+                            </td>
+                            <td>{{ tender.customer_name|truncatechars:40 }}</td>
+                            <td class="fw-bold">
+                                {% if tender.initial_amount %}
+                                    {{ tender.initial_amount|floatformat:0 }} ₽
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if tender.deadline %}
+                                    {{ tender.deadline|date:"d.m.Y" }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            <td>{{ tender.region|default:"—" }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-success import-tender-btn"
+                                        data-id="{{ tender.external_id }}"
+                                        data-customer="{{ tender.customer_name }}"
+                                        data-amount="{{ tender.initial_amount }}"
+                                        data-deadline="{% if tender.deadline %}{{ tender.deadline|date:'Y-m-d' }}{% endif %}"
+                                        data-url="{{ tender.procedure_url }}"
+                                        data-title="{{ tender.title }}">
+                                    📥 Импорт
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        {% else %}
+        <div class="alert alert-warning">
+            😔 По вашему запросу ничего не найдено. Попробуйте изменить ключевые слова.
+        </div>
+        {% endif %}
+    {% endif %}
+</div>
+
+<!-- Модальное окно импорта -->
+<div class="modal fade" id="importModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">📥 Импорт тендера</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="importStatus"></div>
+                <p><strong>Заказчик:</strong> <span id="importCustomer"></span></p>
+                <p><strong>Сумма:</strong> <span id="importAmount"></span> ₽</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const importModal = new bootstrap.Modal(document.getElementById('importModal'));
+    
+    document.querySelectorAll('.import-tender-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const data = {
+                external_id: this.dataset.id,
+                customer_name: this.dataset.customer,
+                initial_amount: this.dataset.amount,
+                deadline: this.dataset.deadline,
+                procedure_url: this.dataset.url,
+                title: this.dataset.title,
+            };
+            
+            document.getElementById('importCustomer').textContent = data.customer_name;
+            document.getElementById('importAmount').textContent = 
+                parseFloat(data.amount || 0).toLocaleString('ru-RU');
+            document.getElementById('importStatus').innerHTML = 
+                '<div class="alert alert-info">⏳ Импортируем...</div>';
+            
+            importModal.show();
+            
+            // Отправляем AJAX-запрос
+            const formData = new FormData();
+            for (let key in data) {
+                formData.append(key, data[key]);
+            }
+            
+            fetch('{% url "tenders:import_tenderplan" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                }
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    document.getElementById('importStatus').innerHTML = 
+                        `<div class="alert alert-${result.status}">${result.message}</div>`;
+                    
+                    setTimeout(() => {
+                        window.location.href = `/tenders/${result.tender_id}/edit/`;
+                    }, 1500);
+                } else {
+                    document.getElementById('importStatus').innerHTML = 
+                        `<div class="alert alert-danger">${result.message}</div>`;
+                }
+            })
+            .catch(error => {
+                document.getElementById('importStatus').innerHTML = 
+                    `<div class="alert alert-danger">❌ Ошибка: ${error}</div>`;
+            });
+        });
+    });
+});
+</script>
+{% endblock %}
