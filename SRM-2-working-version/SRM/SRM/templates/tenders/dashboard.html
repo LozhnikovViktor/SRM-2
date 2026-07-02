@@ -5,16 +5,103 @@
 <div class="container-fluid">
     <h2 class="mb-4">📊 Дашборд</h2>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <a href="{% url 'tenders:export_dashboard_word' %}" class="btn btn-success me-2">
-            📄 Экспорт в Word
-        </a>
-        <a href="{% url 'tenders:export_dashboard_excel' %}" class="btn btn-info me-2">
-            📊 Экспорт в Excel
-        </a>
+    <!-- 🔹 БЛОК ФИЛЬТРОВ -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">🔍 Фильтры</h5>
+            <a href="{% url 'tenders:dashboard' %}" class="btn btn-sm btn-light">
+                ✖ Сбросить все фильтры
+            </a>
+        </div>
+        <div class="card-body">
+            <form method="get" action="{% url 'tenders:dashboard' %}">
+                <div class="row g-3">
+                    <!-- Менеджер -->
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">👤 Менеджер</label>
+                        <select name="manager" class="form-select">
+                            <option value="">Все менеджеры</option>
+                            {% for manager in managers %}
+                            <option value="{{ manager.id }}" {% if selected_manager == manager.id|stringformat:"s" %}selected{% endif %}>
+                                {{ manager.get_full_name|default:manager.username }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Период (быстрый выбор) -->
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">📅 Быстрый период</label>
+                        <select name="period" class="form-select" id="periodSelect">
+                            <option value="">Выберите период</option>
+                            <option value="today" {% if selected_period == 'today' %}selected{% endif %}>Сегодня</option>
+                            <option value="week" {% if selected_period == 'week' %}selected{% endif %}>Неделя</option>
+                            <option value="month" {% if selected_period == 'month' %}selected{% endif %}>Месяц</option>
+                            <option value="quarter" {% if selected_period == 'quarter' %}selected{% endif %}>Квартал</option>
+                            <option value="year" {% if selected_period == 'year' %}selected{% endif %}>Год</option>
+                            <option value="custom" {% if selected_period == 'custom' %}selected{% endif %}>Свой период</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Дата от -->
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold">📅 С</label>
+                        <input type="date" name="date_from" class="form-control" value="{{ date_from }}" id="dateFrom">
+                    </div>
+                    
+                    <!-- Дата до -->
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold">📅 По</label>
+                        <input type="date" name="date_to" class="form-control" value="{{ date_to }}" id="dateTo">
+                    </div>
+                    
+                    <!-- Кнопка применить -->
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            ✅ Применить
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Активные фильтры -->
+                {% if selected_manager or date_from or date_to %}
+                <div class="mt-3 pt-3 border-top">
+                    <small class="text-muted">🎯 Активные фильтры: </small>
+                    {% if selected_manager %}
+                    <span class="badge bg-primary me-1">
+                        👤 {{ selected_manager_name }}
+                    </span>
+                    {% endif %}
+                    {% if date_from %}
+                    <span class="badge bg-info me-1">
+                        📅 С: {{ date_from }}
+                    </span>
+                    {% endif %}
+                    {% if date_to %}
+                    <span class="badge bg-info me-1">
+                        📅 По: {{ date_to }}
+                    </span>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </form>
+        </div>
     </div>
-</div>
+
+    <!-- Кнопки экспорта -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a href="{% url 'tenders:export_dashboard_word' %}" class="btn btn-success me-2">
+                📄 Экспорт в Word
+            </a>
+            <a href="{% url 'tenders:export_dashboard_excel' %}" class="btn btn-info me-2">
+                📊 Экспорт в Excel
+            </a>
+        </div>
+        <div class="text-muted">
+            <small>📋 Найдено тендеров: <strong>{{ total_tenders }}</strong></small>
+        </div>
+    </div>
     
     <!-- КАРТОЧКИ СО СТАТИСТИКОЙ -->
     <div class="row mb-4">
@@ -376,6 +463,55 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    
+    // 🔹 ЛОГИКА БЫСТРОГО ВЫБОРА ПЕРИОДА
+    const periodSelect = document.getElementById('periodSelect');
+    const dateFrom = document.getElementById('dateFrom');
+    const dateTo = document.getElementById('dateTo');
+    
+    periodSelect.addEventListener('change', function() {
+        const today = new Date();
+        const formatDate = (date) => {
+            return date.toISOString().split('T')[0];
+        };
+        
+        switch(this.value) {
+            case 'today':
+                dateFrom.value = formatDate(today);
+                dateTo.value = formatDate(today);
+                break;
+            case 'week':
+                const weekAgo = new Date(today);
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                dateFrom.value = formatDate(weekAgo);
+                dateTo.value = formatDate(today);
+                break;
+            case 'month':
+                const monthAgo = new Date(today);
+                monthAgo.setMonth(monthAgo.getMonth() - 1);
+                dateFrom.value = formatDate(monthAgo);
+                dateTo.value = formatDate(today);
+                break;
+            case 'quarter':
+                const quarterAgo = new Date(today);
+                quarterAgo.setMonth(quarterAgo.getMonth() - 3);
+                dateFrom.value = formatDate(quarterAgo);
+                dateTo.value = formatDate(today);
+                break;
+            case 'year':
+                const yearAgo = new Date(today);
+                yearAgo.setFullYear(yearAgo.getFullYear() - 1);
+                dateFrom.value = formatDate(yearAgo);
+                dateTo.value = formatDate(today);
+                break;
+            case 'custom':
+                // Очищаем даты для ручного ввода
+                dateFrom.value = '';
+                dateTo.value = '';
+                dateFrom.focus();
+                break;
+        }
+    });
 });
 </script>
 

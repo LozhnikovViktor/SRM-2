@@ -1,0 +1,84 @@
+﻿import os
+import json
+from django.contrib import admin
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
+from django.http import JsonResponse, HttpResponse
+
+
+# ============================================
+#  PWA: View РґР»СЏ manifest.json
+# ============================================
+def manifest_view(request):
+    manifest_path = os.path.join(str(settings.BASE_DIR), 'static', 'pwa', 'manifest.json')
+    
+    try:
+        # utf-8-sig Р°РІС‚РѕРјР°С‚РёС‡РµСЃРєРё СѓРґР°Р»СЏРµС‚ BOM
+        with open(manifest_path, 'r', encoding='utf-8-sig') as f:
+            manifest = json.load(f)
+        return JsonResponse(manifest, content_type='application/manifest+json')
+    except FileNotFoundError:
+        print(f"вќЊ Manifest not found at: {manifest_path}")
+        return JsonResponse({'error': 'Manifest not found', 'path': manifest_path}, status=404)
+    except json.JSONDecodeError as e:
+        print(f"вќЊ JSON decode error: {e}")
+        return JsonResponse({'error': f'Invalid JSON: {str(e)}'}, status=500)
+
+
+# ============================================
+# рџ”№ PWA: View РґР»СЏ service worker
+# ============================================
+def sw_view(request):
+    sw_path = os.path.join(str(settings.BASE_DIR), 'static', 'pwa', 'sw.js')
+    
+    try:
+        with open(sw_path, 'r', encoding='utf-8-sig') as f:
+            sw_content = f.read()
+        return HttpResponse(sw_content, content_type='application/javascript')
+    except FileNotFoundError:
+        print(f"вќЊ Service Worker not found at: {sw_path}")
+        return HttpResponse('Service Worker not found', status=404)
+
+def offline_view(request):
+    """Offline СЃС‚СЂР°РЅРёС†Р°"""
+    return render(request, 'offline.html')
+
+# ============================================
+# рџ”№ РћСЃРЅРѕРІРЅС‹Рµ URL-РјР°СЂС€СЂСѓС‚С‹
+# ============================================
+urlpatterns = [
+    # path('admin/', admin.site.urls),
+    path('', include('tenders.urls')),
+    
+    # PWA С„Р°Р№Р»С‹
+    path('manifest.json', manifest_view, name='manifest'),
+    path('static/pwa/sw.js', sw_view, name='service_worker'),
+    path('api/', include('tenders.api_urls')),
+      # Offline СЃС‚СЂР°РЅРёС†Р°
+    path('offline/', offline_view, name='offline')
+]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# ============================================
+# рџ”№ Service Worker View
+# ============================================
+def service_worker_view(request):
+    \"\"\"Service Worker РёР· РєРѕСЂРЅСЏ СЃР°Р№С‚Р°\"\"\"
+    from django.http import HttpResponse
+    import os
+    
+    sw_path = os.path.join(settings.BASE_DIR, 'static', 'pwa', 'sw.js')
+    
+    try:
+        with open(sw_path, 'r', encoding='utf-8') as f:
+            sw_content = f.read()
+        
+        # Р”РѕР±Р°РІР»СЏРµРј Р·Р°РіРѕР»РѕРІРѕРє РґР»СЏ СЂР°СЃС€РёСЂРµРЅРёСЏ scope
+        response = HttpResponse(sw_content, content_type='application/javascript')
+        response['Service-Worker-Allowed'] = '/'
+        return response
+    except FileNotFoundError:
+        return HttpResponse('Service Worker not found', status=404)
+

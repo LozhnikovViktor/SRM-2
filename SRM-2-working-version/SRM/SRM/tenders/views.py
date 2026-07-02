@@ -43,20 +43,10 @@ from django.conf import settings
 from .models import CommercialProposal, CommercialProposalItem
 from .forms import CommercialProposalForm, CPItemFormSet
 from django.core.mail import EmailMessage
-
-
-
-
-
-
-
-
-
-
-# Импорты из приложения
-
+from django.db.models.functions import TruncMonth
 from .utils import export_tenders_to_excel, export_dashboard_stats_to_excel, search_tenders_on_zakupki
 from .models import Tender, Client, TenderDocument
+
 
 def get_client_ip(request):
     """Получает IP-адрес клиента"""
@@ -362,26 +352,54 @@ class TenderDeleteView(LoginRequiredMixin, DeleteView):
 # ============================================
 # 🔹 ДАШБОРД
 # ============================================
-import json
-from collections import defaultdict
 
+
+
+@login_required
 def dashboard(request):
-    """Дашборд со статистикой и графиками"""
+    """Дашборд со статистикой, графиками и фильтрами"""
     now = timezone.now()
-    six_months_ago = now - timedelta(days=180)
+    
+    # 🔹 ПОЛУЧАЕМ ФИЛЬТРЫ ИЗ ЗАПРОСА
+    manager_id = request.GET.get('manager')
+    period = request.GET.get('period')
+    date_from = request.GET.get('date_from')
+    date_to = request.GET.get('date_to')
+    
+    # 🔹 БАЗОВЫЙ QUERYSET С ФИЛЬТРАМИ
+    tenders_qs = Tender.objects.all()
+    
+    # Фильтр по менеджеру (автору тендера)
+    if manager_id:
+        tenders_qs = tenders_qs.filter(author_id=manager_id)
+    
+    # Фильтр по периоду (по deadline)
+    if date_from:
+        try:
+            date_from_dt = datetime.strptime(date_from, '%Y-%m-%d').date()
+            tenders_qs = tenders_qs.filter(deadline__gte=date_from_dt)
+        except (ValueError, TypeError):
+            pass
+    
+    if date_to:
+        try:
+            date_to_dt = datetime.strptime(date_to, '%Y-%m-%d').date()
+            tenders_qs = tenders_qs.filter(deadline__lte=date_to_dt)
+        except (ValueError, TypeError):
+            pass
     
     # 🔹 БАЗОВАЯ СТАТИСТИКА
-    total_tenders = Tender.objects.count()
-    won_tenders = Tender.objects.filter(status='won').count()
-    active_tenders = Tender.objects.filter(status__in=['submitted', 'published']).count()
-    lost_tenders = Tender.objects.filter(status='lost').count()
-    draft_tenders = Tender.objects.filter(status='draft').count()
+    total_tenders = tenders_qs.count()
+    won_tenders = tenders_qs.filter(status='won').count()
+    active_tenders = tenders_qs.filter(status__in=['submitted', 'published']).count()
+    lost_tenders = tenders_qs.filter(status='lost').count()
+    draft_tenders = tenders_qs.filter(status='draft').count()
     
     # Конверсия
     conversion = round((won_tenders / total_tenders * 100), 1) if total_tenders > 0 else 0
     
     # 🔹 ФИНАНСЫ
-    won_qs = Tender.objects.filter(status='won')
+    won_qs = tenders_qs.filter(status='won')
     totals = won_qs.aggregate(
         total_final=Sum('final_amount'),
         total_cost=Sum('cost')
@@ -396,7 +414,7 @@ def dashboard(request):
         markup_percent = 0
 
     # 🔹 ГРАФИК 1: Статусы тендеров (круговая)
-    status_stats = Tender.objects.values('status').annotate(count=Count('id')).order_by('status')
+    status_stats = tenders_qs.values('status').annotate(count=Count('id')).order_by('status')
     status_labels = []
     status_data = []
     status_colors = {
@@ -422,13 +440,14 @@ def dashboard(request):
         status_data.append(item['count'])
     
     # 🔹 ГРАФИК 2: Тендеры по месяцам (линейный)
-    tenders_qs = Tender.objects.filter(
+    six_months_ago = now - timedelta(days=180)
+    tenders_by_deadline = tenders_qs.filter(
         deadline__isnull=False,
         deadline__gte=six_months_ago
     ).values('deadline', 'status')
     
     monthly_data = defaultdict(lambda: {'total': 0, 'won': 0})
-    for t in tenders_qs:
+    for t in tenders_by_deadline:
         month = t['deadline'].strftime('%Y-%m')
         monthly_data[month]['total'] += 1
         if t['status'] == 'won':
@@ -440,7 +459,7 @@ def dashboard(request):
     month_won = [m[1]['won'] for m in monthly_stats]
     
     # 🔹 ГРАФИК 3: Прибыль по клиентам (столбчатый)
-    client_profit = Tender.objects.filter(
+    client_profit = tenders_qs.filter(
         status='won',
         client__isnull=False
     ).values('client__name').annotate(
@@ -452,9 +471,9 @@ def dashboard(request):
     
     # 🔹 ВОРОНКА ПРОДАЖ
     funnel_data = {
-        'draft': Tender.objects.filter(status='draft').count(),
-        'submitted': Tender.objects.filter(status__in=['submitted', 'published']).count(),
-        'won': Tender.objects.filter(status='won').count(),
+        'draft': tenders_qs.filter(status='draft').count(),
+        'submitted': tenders_qs.filter(status__in=['submitted', 'published']).count(),
+        'won': tenders_qs.filter(status='won').count(),
     }
     
     funnel_conversion = {}
@@ -473,9 +492,24 @@ def dashboard(request):
         funnel_conversion['submitted_to_won'] = 0
     
     # 🔹 Ближайшие дедлайны
-    upcoming_deadlines = Tender.objects.filter(
+    upcoming_deadlines = tenders_qs.filter(
         deadline__gte=now,
     ).order_by('deadline')[:5]
+    
+    # 🔹 ПОЛУЧАЕМ МЕНЕДЖЕРОВ ДЛЯ ФИЛЬТРА
+    # ✅ ИСПРАВЛЕНО: используем 'tenders' вместо 'authored_tenders'
+    managers = User.objects.filter(
+        Q(tenders__isnull=False) | Q(is_superuser=True)
+    ).distinct().order_by('username')
+    
+    # Имя выбранного менеджера
+    selected_manager_name = ''
+    if manager_id:
+        try:
+            manager = User.objects.get(id=manager_id)
+            selected_manager_name = manager.get_full_name() or manager.username
+        except User.DoesNotExist:
+            pass
     
     # 🔹 ОТЛАДКА
     print("📊 DEBUG status_labels:", status_labels)
@@ -483,6 +517,12 @@ def dashboard(request):
     print("📊 DEBUG month_labels:", month_labels)
     print("📊 DEBUG client_labels:", client_labels)
     print("📊 DEBUG funnel_data:", funnel_data)
+    print("📊 DEBUG filters:", {
+        'manager_id': manager_id,
+        'period': period,
+        'date_from': date_from,
+        'date_to': date_to,
+    })
     
     # 🔹 КОНТЕКСТ
     context = {
@@ -510,12 +550,20 @@ def dashboard(request):
         'funnel_data': funnel_data,
         'funnel_conversion': funnel_conversion,
         'funnel_data_json': json.dumps(funnel_data),
+        
+        # 🔹 ФИЛЬТРЫ
+        'managers': managers,
+        'selected_manager': manager_id,
+        'selected_manager_name': selected_manager_name,
+        'selected_period': period,
+        'date_from': date_from,
+        'date_to': date_to,
     }
     
     return render(request, 'tenders/dashboard.html', context)
 
 
-    
+
 
 # ============================================
 # 🔹 ЭКСПОРТ В EXCEL
