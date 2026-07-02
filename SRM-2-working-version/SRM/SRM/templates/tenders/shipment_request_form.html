@@ -19,9 +19,15 @@
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label">Покупатель <span class="text-danger">*</span></label>
-                        {{ form.client }}
-                    </div>
+                <label class="form-label">Покупатель <span class="text-danger">*</span></label>
+                {% if is_client_user %}
+                    <!-- 🔹 Для клиента - показываем только название, поле заблокировано -->
+                    <input type="text" class="form-control" value="{{ form.client.value }}" readonly>
+                    <small class="text-muted">Ваша организация</small>
+                {% else %}
+                    {{ form.client }}
+                {% endif %}
+            </div>
                     <div class="col-md-6">
                         <label class="form-label">Контактное лицо</label>
                         {{ form.contact_person }}

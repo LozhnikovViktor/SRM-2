@@ -28,6 +28,7 @@ urlpatterns = [
     path('register/', views.RegisterView.as_view(), name='register'),
     path('login/', LoginView.as_view(template_name='tenders/login.html'), name='login'),
     path('logout/', LogoutView.as_view(next_page='tenders:list'), name='logout'),
+    path('client-login/', views.client_login, name='client_login'),
     
     # ============================================
     # 🔹 ВОССТАНОВЛЕНИЕ ПАРОЛЯ
@@ -76,7 +77,7 @@ urlpatterns = [
     path('clients/<int:pk>/', views.ClientDetailView.as_view(), name='client_detail'),
     path('clients/<int:pk>/edit/', views.ClientUpdateView.as_view(), name='client_edit'),
     path('clients/<int:pk>/delete/', views.ClientDeleteView.as_view(), name='client_delete'),
-    
+    path('clients/<int:pk>/activate/', views.activate_client_access, name='client_activate'),
     # ============================================
     # 🔹 ДОКУМЕНТЫ
     # ============================================

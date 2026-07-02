@@ -46,6 +46,8 @@ from django.core.mail import EmailMessage
 from django.db.models.functions import TruncMonth
 from .utils import export_tenders_to_excel, export_dashboard_stats_to_excel, search_tenders_on_zakupki
 from .models import Tender, Client, TenderDocument
+from django.contrib.auth import authenticate, login
+from .forms import ClientLoginForm
 
 
 def get_client_ip(request):
@@ -68,6 +70,90 @@ class RegisterView(CreateView):
         user = form.save()
         login(self.request, user)
         return super().form_valid(form)
+
+
+
+# ============================================
+# 🔹 ВХОД ДЛЯ КЛИЕНТОВ (ПО ИНН)
+# ============================================
+def client_login(request):
+    """Вход для сотрудников клиентов по ИНН"""
+    
+    # Если пользователь уже авторизован - редирект
+    if request.user.is_authenticated:
+        # Если это клиент - на страницу заявок
+        if hasattr(request.user, 'client_profile'):
+            return redirect('tenders:shipment_list')
+        # Если сотрудник - на главную
+        return redirect('tenders:list')
+    
+    if request.method == 'POST':
+        form = ClientLoginForm(request.POST)
+        if form.is_valid():
+            inn = form.cleaned_data['inn']
+            email = form.cleaned_data['email']
+            password = form.cleaned_data['password']
+            
+            # 1. Ищем организацию по ИНН
+            try:
+                client = Client.objects.get(inn=inn)
+            except Client.DoesNotExist:
+                messages.error(request, '❌ Организация с таким ИНН не найдена в системе')
+                return render(request, 'tenders/client_login.html', {'form': form})
+            
+            # 2. Проверяем, что у организации есть привязанный пользователь
+            if not client.user:
+                messages.error(
+                    request, 
+                    '❌ Для этой организации не настроен доступ. '
+                    'Обратитесь к менеджеру для получения учётных данных.'
+                )
+                return render(request, 'tenders/client_login.html', {'form': form})
+            
+            # 3. Проверяем, что email совпадает с email пользователя
+            if client.user.email.lower() != email.lower():
+                messages.error(request, '❌ Email не соответствует учётной записи организации')
+                return render(request, 'tenders/client_login.html', {'form': form})
+            
+            # 4. Аутентифицируем пользователя
+            user = authenticate(request, username=client.user.username, password=password)
+            
+            if user is not None:
+                if not user.is_active:
+                    messages.error(request, '❌ Учётная запись деактивирована')
+                    return render(request, 'tenders/client_login.html', {'form': form})
+                
+                # ✅ Успешный вход
+                login(request, user)
+                messages.success(
+                    request, 
+                    f'✅ Добро пожаловать, {client.name}!'
+                )
+                
+                # Логируем вход в аудит
+                try:
+                    from .audit import log_action
+                    log_action(
+                        user=user,
+                        action='login',
+                        model_name='Client',
+                        object_id=client.id,
+                        object_repr=f'Вход клиента: {client.name}',
+                        changes={'message': 'Вход через ИНН'},
+                        request=request
+                    )
+                except Exception as e:
+                    print(f'Ошибка логирования: {e}')
+                
+                return redirect('tenders:shipment_create')
+            else:
+                messages.error(request, '❌ Неверный пароль')
+                return render(request, 'tenders/client_login.html', {'form': form})
+    else:
+        form = ClientLoginForm()
+    
+    return render(request, 'tenders/client_login.html', {'form': form})
+
 
 
 # ============================================
@@ -592,6 +678,252 @@ def dashboard(request):
     }
     
     return render(request, 'tenders/dashboard.html', context)
+
+
+
+
+# ============================================
+# 🔹 АКТИВАЦИЯ ДОСТУПА ДЛЯ КЛИЕНТОВ
+# ============================================
+from django.utils.crypto import get_random_string
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+
+
+@login_required
+def activate_client_access(request, pk):
+    """Активация доступа для клиента (создание пользователя + отправка email)"""
+    client = get_object_or_404(Client, pk=pk)
+    
+    # Проверка прав: только менеджер клиента или суперпользователь
+    if not request.user.is_superuser and client.manager != request.user:
+        messages.error(request, '❌ У вас нет прав для активации доступа')
+        return redirect('tenders:client_detail', pk=pk)
+    
+    # Проверяем, есть ли email у клиента
+    if not client.email:
+        messages.error(
+            request, 
+            '❌ У клиента не указан email. Сначала заполните email клиента.'
+        )
+        return redirect('tenders:client_edit', pk=pk)
+    
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        try:
+            if action == 'activate':
+                # === СОЗДАНИЕ НОВОГО ДОСТУПА ===
+                if client.user:
+                    messages.warning(
+                        request, 
+                        f'⚠️ У клиента уже есть доступ ({client.user.username}). '
+                        f'Используйте "Сбросить пароль".'
+                    )
+                    return redirect('tenders:client_detail', pk=pk)
+                
+                # Генерируем username на основе ИНН
+                username = f'client_{client.inn}'
+                
+                # Проверяем, не занят ли username
+                if User.objects.filter(username=username).exists():
+                    username = f'client_{client.inn}_{get_random_string(4)}'
+                
+                # Генерируем пароль (12 символов)
+                password = get_random_string(
+                    length=12, 
+                    allowed_chars='abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$'
+                )
+                
+                # Создаём пользователя
+                user = User.objects.create_user(
+                    username=username,
+                    email=client.email,
+                    password=password,
+                    first_name=client.contact_person or client.name[:30],
+                    is_staff=False,  # Не сотрудник компании
+                    is_active=True
+                )
+                
+                # Привязываем к клиенту
+                client.user = user
+                client.save()
+                
+                # Отправляем email
+                _send_client_access_email(client, user, password, is_new=True)
+                
+                messages.success(
+                    request, 
+                    f'✅ Доступ активирован! Логин: {username}. '
+                    f'Письмо отправлено на {client.email}'
+                )
+                
+                # Логируем
+                from .audit import log_action
+                log_action(
+                    user=request.user,
+                    action='create',
+                    model_name='Client',
+                    object_id=client.id,
+                    object_repr=f'Активирован доступ для: {client.name}',
+                    changes={'username': username, 'email': client.email},
+                    request=request
+                )
+                
+            elif action == 'reset_password':
+                # === СБРОС ПАРОЛЯ ===
+                if not client.user:
+                    messages.error(request, '❌ У клиента нет активной учётной записи')
+                    return redirect('tenders:client_detail', pk=pk)
+                
+                # Генерируем новый пароль
+                new_password = get_random_string(
+                    length=12,
+                    allowed_chars='abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$'
+                )
+                
+                client.user.set_password(new_password)
+                client.user.save()
+                
+                # Отправляем email
+                _send_client_access_email(client, client.user, new_password, is_new=False)
+                
+                messages.success(
+                    request, 
+                    f'✅ Пароль сброшен! Новый пароль отправлен на {client.email}'
+                )
+                
+                # Логируем
+                from .audit import log_action
+                log_action(
+                    user=request.user,
+                    action='update',
+                    model_name='Client',
+                    object_id=client.id,
+                    object_repr=f'Сброшен пароль для: {client.name}',
+                    changes={'message': 'Пароль сброшен'},
+                    request=request
+                )
+            
+            elif action == 'deactivate':
+                # === ДЕАКТИВАЦИЯ ДОСТУПА ===
+                if not client.user:
+                    messages.warning(request, '⚠️ У клиента нет активной учётной записи')
+                    return redirect('tenders:client_detail', pk=pk)
+                
+                username = client.user.username
+                client.user.delete()
+                client.user = None
+                client.save()
+                
+                messages.success(
+                    request, 
+                    f'🗑️ Доступ удалён для пользователя {username}'
+                )
+        
+        except Exception as e:
+            messages.error(request, f'❌ Ошибка: {e}')
+    
+    return redirect('tenders:client_detail', pk=pk)
+
+
+def _send_client_access_email(client, user, password, is_new=True):
+    """Отправка email с данными доступа клиенту"""
+    from django.conf import settings
+    
+    subject = '🔐 Доступ к личному кабинету SRM Тендеры' if is_new else '🔑 Новый пароль для SRM Тендеры'
+    
+    # Формируем URL для входа
+    site_url = 'http://127.0.0.1:8000'  # В продакшене заменить на домен
+    
+    # HTML версия письма
+    html_content = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: #0d6efd; color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="margin: 0;">🏢 SRM Тендеры</h1>
+            <p style="margin: 5px 0 0 0;">Личный кабинет клиента</p>
+        </div>
+        
+        <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #dee2e6;">
+            <h2>Здравствуйте, {client.contact_person or client.name}!</h2>
+            
+            <p>{'Вам предоставлен доступ к личному кабинету.' if is_new else 'Ваш пароль был сброшен по запросу менеджера.'}</p>
+            
+            <div style="background: white; padding: 20px; border-radius: 5px; border-left: 4px solid #0d6efd; margin: 20px 0;">
+                <h3 style="margin-top: 0;">🔑 Данные для входа:</h3>
+                <p style="margin: 5px 0;"><strong>Организация:</strong> {client.name}</p>
+                <p style="margin: 5px 0;"><strong>ИНН:</strong> {client.inn}</p>
+                <p style="margin: 5px 0;"><strong>Email:</strong> {user.email}</p>
+                <p style="margin: 5px 0;"><strong>Логин:</strong> <code style="background: #f8f9fa; padding: 2px 6px;">{user.username}</code></p>
+                <p style="margin: 5px 0;"><strong>Пароль:</strong> <code style="background: #fff3cd; padding: 2px 6px; font-size: 14px;">{password}</code></p>
+            </div>
+            
+            <p>Для входа используйте специальную страницу:</p>
+            <a href="{site_url}/client-login/" style="display: inline-block; background: #0d6efd; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                🚪 Войти в личный кабинет
+            </a>
+            
+            <h3 style="margin-top: 30px;">💡 Что вы можете делать:</h3>
+            <ul>
+                <li>✅ Создавать заявки на отгрузку продукции</li>
+                <li>✅ Выбирать номенклатуру из каталога</li>
+                <li>✅ Указывать скидки или финальную цену</li>
+                <li>✅ Отслеживать статус своих заявок</li>
+            </ul>
+            
+            <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <strong>⚠️ Важно:</strong> Сохраните эти данные в надёжном месте. 
+                При утере пароля обратитесь к вашему менеджеру для сброса.
+            </div>
+            
+            <p style="color: #6c757d; font-size: 12px; margin-top: 30px;">
+                Если вы не запрашивали доступ, проигнорируйте это письмо.<br>
+                С уважением, команда SRM Тендеры
+            </p>
+        </div>
+    </div>
+    """
+    
+    # Текстовая версия
+    text_content = f"""
+Здравствуйте, {client.contact_person or client.name}!
+
+{'Вам предоставлен доступ к личному кабинету SRM Тендеры.' if is_new else 'Ваш пароль был сброшен.'}
+
+Данные для входа:
+- Организация: {client.name}
+- ИНН: {client.inn}
+- Email: {user.email}
+- Логин: {user.username}
+- Пароль: {password}
+
+Ссылка для входа: {site_url}/client-login/
+
+Что вы можете делать:
+✅ Создавать заявки на отгрузку продукции
+✅ Выбирать номенклатуру из каталога
+✅ Указывать скидки или финальную цену
+✅ Отслеживать статус своих заявок
+
+С уважением,
+Команда SRM Тендеры
+    """
+    
+    # Отправляем
+    email = EmailMultiAlternatives(
+        subject=subject,
+        body=text_content,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[client.email],
+    )
+    email.attach_alternative(html_content, "text/html")
+    
+    try:
+        email.send(fail_silently=False)
+        print(f'✅ Email отправлен на {client.email}')
+    except Exception as e:
+        print(f'❌ Ошибка отправки email: {e}')
+        # Не прерываем процесс, просто логируем
 
 
 
@@ -2076,9 +2408,14 @@ def start_chat(request, content_type, object_id):
 # ============================================
 # 🔹 ФОРМА ЗАЯВКИ НА ОТГРУЗКУ
 # ============================================
+
 @login_required
 def create_shipment_request(request):
     """Создание заявки на отгрузку"""
+    
+    # 🔹 ПРОВЕРКА: определяем, клиент ли это
+    is_client_user = hasattr(request.user, 'client_profile')
+    
     if request.method == 'POST':
         form = ShipmentRequestForm(request.POST)
         formset = ShipmentItemFormSet(request.POST)
@@ -2086,6 +2423,11 @@ def create_shipment_request(request):
         if form.is_valid() and formset.is_valid():
             shipment = form.save(commit=False)
             shipment.created_by = request.user
+            
+            # 🔹 Если клиент - автоматически подставляем его организацию
+            if is_client_user:
+                shipment.client = request.user.client_profile
+            
             shipment.save()
             
             # Сохраняем позиции
@@ -2101,21 +2443,34 @@ def create_shipment_request(request):
                         item.final_price = item.unit_price
                     item.save()
             
-            # 🔔 Отправляем email менеджеру
-            try:
-                _send_shipment_notification(shipment)
-                messages.success(request, f'✅ Заявка #{shipment.id} создана и отправлена менеджеру!')
-            except Exception as e:
-                messages.warning(request, f'⚠️ Заявка создана, но email не отправлен: {e}')
+            # 🔔 Отправляем email менеджеру (только если не клиент)
+            if not is_client_user:
+                try:
+                    _send_shipment_notification(shipment)
+                    messages.success(request, f'✅ Заявка #{shipment.id} создана и отправлена менеджеру!')
+                except Exception as e:
+                    messages.warning(request, f'⚠️ Заявка создана, но email не отправлен: {e}')
+            else:
+                messages.success(request, f'✅ Заявка #{shipment.id} создана!')
             
             return redirect('tenders:shipment_request_detail', pk=shipment.pk)
     else:
-        form = ShipmentRequestForm()
+        # 🔹 Для клиента - предзаполняем организацию и блокируем поле
+        if is_client_user:
+            form = ShipmentRequestForm(initial={
+                'client': request.user.client_profile,
+                'contact_person': request.user.client_profile.contact_person,
+                'contact_email': request.user.client_profile.email,
+                'contact_phone': request.user.client_profile.phone,
+            })
+        else:
+            form = ShipmentRequestForm()
         formset = ShipmentItemFormSet()
     
     return render(request, 'tenders/shipment_request_form.html', {
         'form': form,
         'formset': formset,
+        'is_client_user': is_client_user,
     })
 
 def _send_shipment_notification(shipment):
@@ -2176,19 +2531,30 @@ Email: {shipment.contact_email or '—'}
 # ============================================
 # 🔹 СПИСОК ЗАЯВОК (РЕЕСТР)
 # ============================================
+
 @login_required
 def shipment_request_list(request):
     """Реестр заявок на отгрузку"""
-    requests_qs = ShipmentRequest.objects.select_related('client', 'created_by').all()
     
-    # Фильтрация
-    status = request.GET.get('status')
-    if status:
-        requests_qs = requests_qs.filter(status=status)
+    # 🔹 ПРОВЕРКА: клиент видит только свои заявки
+    if hasattr(request.user, 'client_profile'):
+        # Клиент - показываем только его организации
+        requests_qs = ShipmentRequest.objects.filter(
+            client=request.user.client_profile
+        ).select_related('client', 'created_by')
+    else:
+        # Сотрудник компании - видит все заявки
+        requests_qs = ShipmentRequest.objects.select_related('client', 'created_by').all()
     
-    client_id = request.GET.get('client')
-    if client_id:
-        requests_qs = requests_qs.filter(client_id=client_id)
+    # Фильтрация (только для сотрудников компании)
+    if not hasattr(request.user, 'client_profile'):
+        status = request.GET.get('status')
+        if status:
+            requests_qs = requests_qs.filter(status=status)
+        
+        client_id = request.GET.get('client')
+        if client_id:
+            requests_qs = requests_qs.filter(client_id=client_id)
     
     search = request.GET.get('search')
     if search:
@@ -2201,7 +2567,8 @@ def shipment_request_list(request):
     return render(request, 'tenders/shipment_request_list.html', {
         'requests': requests_qs,
         'status_choices': ShipmentRequest.STATUS_CHOICES,
-        'clients': Client.objects.all(),
+        'clients': Client.objects.all() if not hasattr(request.user, 'client_profile') else [],
+        'is_client_user': hasattr(request.user, 'client_profile'),
     })
 
 
@@ -2215,12 +2582,31 @@ def shipment_request_detail(request, pk):
         ShipmentRequest.objects.select_related('client', 'created_by'),
         pk=pk
     )
+
+
+# 🔹 ПРОВЕРКА: клиент может смотреть только свои заявки
+    if hasattr(request.user, 'client_profile'):
+        if shipment.client != request.user.client_profile:
+            messages.error(request, '❌ У вас нет прав для просмотра этой заявки')
+            return redirect('tenders:shipment_list')
+    
+    items = shipment.items.select_related('product').all()
+    
+    return render(request, 'tenders/shipment_request_detail.html', {
+        'shipment': shipment,
+        'items': items,
+        'is_client_user': hasattr(request.user, 'client_profile'),
+    })
+
+
     items = shipment.items.select_related('product').all()
     
     return render(request, 'tenders/shipment_request_detail.html', {
         'shipment': shipment,
         'items': items,
     })
+
+
 
 
 # ============================================

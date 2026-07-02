@@ -1,0 +1,66 @@
+﻿{% extends "base.html" %}
+{% block title %}Вход для клиентов{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white text-center">
+                <h4 class="mb-0">🏢 Вход для клиентов</h4>
+                <small>Вход по ИНН организации</small>
+            </div>
+            <div class="card-body p-4">
+                <p class="text-muted text-center mb-4">
+                    Введите ИНН вашей организации, email и пароль,<br>
+                    которые вам предоставил менеджер
+                </p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">📋 ИНН организации</label>
+                        {{ form.inn }}
+                        {% if form.inn.errors %}
+                            <div class="text-danger small mt-1">{{ form.inn.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">📧 Email сотрудника</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">🔒 Пароль</label>
+                        {{ form.password }}
+                        {% if form.password.errors %}
+                            <div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100 mt-3">
+                        🚪 Войти в систему
+                    </button>
+                </form>
+                
+                <hr class="my-4">
+                
+                <div class="text-center">
+                    <a href="{% url 'tenders:login' %}" class="text-decoration-none">
+                        👤 Вход для сотрудников компании
+                    </a>
+                </div>
+                
+                <div class="alert alert-info mt-4 small">
+                    <strong>💡 Нет доступа?</strong><br>
+                    Обратитесь к вашему менеджеру для получения учётных данных.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

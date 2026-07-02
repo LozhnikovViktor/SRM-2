@@ -461,3 +461,40 @@ CPItemFormSet = inlineformset_factory(
     form=CommercialProposalItemForm,
     extra=3, can_delete=True,
 )
+
+# ============================================
+# 🔹 ВХОД ДЛЯ КЛИЕНТОВ (ПО ИНН)
+# ============================================
+class ClientLoginForm(forms.Form):
+    """Форма входа для сотрудников клиентов по ИНН"""
+    inn = forms.CharField(
+        label='ИНН организации',
+        max_length=12,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Введите ИНН вашей организации',
+            'maxlength': '12'
+        })
+    )
+    email = forms.EmailField(
+        label='Email сотрудника',
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ваш email в системе'
+        })
+    )
+    password = forms.CharField(
+        label='Пароль',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ваш пароль'
+        })
+    )
+    
+    def clean_inn(self):
+        inn = self.cleaned_data.get('inn')
+        if inn and not inn.isdigit():
+            raise forms.ValidationError('ИНН должен содержать только цифры')
+        if inn and len(inn) not in (10, 12):
+            raise forms.ValidationError('ИНН должен содержать 10 или 12 цифр')
+        return inn

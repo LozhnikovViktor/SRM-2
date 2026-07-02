@@ -110,6 +110,13 @@ class Tender(models.Model):
 class Client(models.Model):
     """Модель клиента (покупателя)"""
     
+
+    @property
+    def is_client_user(self):
+        """Проверяет, является ли пользователь представителем клиента"""
+        return hasattr(self, 'user') and self.user is not None
+
+    
     name = models.CharField(
         'Наименование',
         max_length=200,
@@ -155,6 +162,19 @@ class Client(models.Model):
         related_name='managed_clients',  # ✅ Проверьте, что есть related_name
         verbose_name='Менеджер'
     )
+    # ✅ НОВОЕ: Связь с пользователем-представителем клиента
+    user = models.OneToOneField(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='client_profile',
+        verbose_name='Пользователь клиента',
+        help_text='Сотрудник организации-клиента, который может входить в систему'
+    )
+
+
+
     address = models.TextField(
         'Адрес',
         blank=True,

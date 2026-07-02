@@ -148,6 +148,14 @@
             background: #495057 !important;
             color: #e9ecef !important;
         }
+        
+        /* 🔹 Бейдж роли пользователя */
+        .user-role-badge {
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 5px;
+        }
     </style>
     
     <!-- 🔹 Скрипт для мгновенной загрузки темы (без мерцания) -->
@@ -161,58 +169,125 @@
     </script>
     
     <!-- iOS PWA Support -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="SRM">
-<link rel="apple-touch-icon" href="/static/pwa/icons/icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SRM">
+    <link rel="apple-touch-icon" href="/static/pwa/icons/icon-192.png">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 rounded">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'tenders:list' %}">🏢 SRM Тендеры</a>
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% if user.is_authenticated and user.client_profile %}{% url 'tenders:shipment_create' %}{% else %}{% url 'tenders:list' %}{% endif %}">
+                🏢 SRM Тендеры
+            </a>
             
-            <a href="{% url 'tenders:dashboard' %}" class="btn btn-sm btn-outline-info me-2">📊 Дашборд</a>
-            <a href="{% url 'tenders:client_list' %}" class="btn btn-sm btn-outline-warning me-2">👥 Клиенты</a>
-            <a href="{% url 'tenders:external_search' %}" class="btn btn-sm btn-outline-light me-2">🔍 Поиск</a>
-            <a href="{% url 'tenders:tenderplan_search' %}" class="btn btn-sm btn-outline-primary me-2">🔎 Tenderplan</a>
-            <a href="{% url 'tenders:audit_log' %}" class="btn btn-sm btn-outline-secondary me-2">📝 Аудит</a>
-            <a href="{% url 'tenders:kanban' %}" class="btn btn-sm btn-warning me-2">📋 Канбан</a>
-            <a href="{% url 'tenders:calendar' %}" class="btn btn-sm btn-info me-2">📆 Календарь</a>
-            <a href="{% url 'tenders:export_kanban_word' %}" class="btn btn-sm btn-success me-2"> 📄 Канбан Word</a>
-            <a href="{% url 'tenders:export_dashboard_word' %}" class="btn btn-sm btn-success me-2">📊 Dashboard Word</a>
-            <a href="{% url 'tenders:chat_list' %}" class="btn btn-sm btn-info me-2">    💬 Чаты </a>
-            <a href="{% url 'tenders:shipment_list' %}" class="btn btn-sm btn-warning me-2">📦 Заявки</a>
-            <a href="{% url 'tenders:product_list' %}" class="btn btn-sm btn-secondary me-2">📋 Номенклатура</a>
-            <a href="{% url 'tenders:cp_list' %}" class="btn btn-sm btn-danger me-2">📄 КП</a>
-                <!-- Кнопка API -->
-<a href="{% url 'tenders:swagger-ui' %}" class="btn btn-sm btn-outline-primary me-2">
-    🌐 API
-</a>
-    
-
+            <!-- Кнопка сворачивания для мобильных -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
             
-            <div class="d-flex align-items-center">
-                <!-- 🔹 ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ -->
-                <button type="button" class="theme-toggle me-2" id="themeToggle" title="Переключить тему">
-                    <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
-                </button>
-                
+            <div class="collapse navbar-collapse" id="navbarNav">
                 {% if user.is_authenticated %}
-                    <span class="navbar-text text-light me-3">👤 {{ user.username }}</span>
-                    <a href="{% url 'tenders:create' %}" class="btn btn-sm btn-success me-2">➕ Новый тендер</a>
-                    <form method="post" action="{% url 'tenders:logout' %}">{% csrf_token %}
-                        <button class="btn btn-sm btn-outline-light">Выйти</button>
-                    </form>
-                {% else %}
-                    <a href="{% url 'tenders:login' %}" class="btn btn-sm btn-outline-light me-2">Войти</a>
-                    <a href="{% url 'tenders:register' %}" class="btn btn-sm btn-primary">Регистрация</a>
+                    {% if user.is_staff or user.is_superuser %}
+                        <!-- 🔹 ПОЛНОЕ МЕНЮ ДЛЯ СОТРУДНИКОВ КОМПАНИИ -->
+                        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                            <li class="nav-item">
+                                <a class="nav-link btn btn-sm btn-outline-info me-1 mb-1" href="{% url 'tenders:dashboard' %}">📊 Дашборд</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link btn btn-sm btn-outline-warning me-1 mb-1" href="{% url 'tenders:client_list' %}">👥 Клиенты</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link btn btn-sm btn-outline-light me-1 mb-1" href="{% url 'tenders:list' %}">📋 Тендеры</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link btn btn-sm btn-outline-light me-1 mb-1" href="{% url 'tenders:external_search' %}">🔍 Поиск</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link btn btn-sm btn-outline-primary me-1 mb-1" href="{% url 'tenders:tenderplan_search' %}">🔎 Tenderplan</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link btn btn-sm btn-outline-secondary me-1 mb-1" href="{% url 'tenders:audit_log' %}">📝 Аудит</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link btn btn-sm btn-warning me-1 mb-1" href="{% url 'tenders:kanban' %}">📋 Канбан</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link btn btn-sm btn-info me-1 mb-1" href="{% url 'tenders:calendar' %}">📆 Календарь</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link btn btn-sm btn-info me-1 mb-1" href="{% url 'tenders:chat_list' %}">💬 Чаты</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link btn btn-sm btn-warning me-1 mb-1" href="{% url 'tenders:shipment_list' %}">📦 Заявки</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link btn btn-sm btn-secondary me-1 mb-1" href="{% url 'tenders:product_list' %}">📋 Номенклатура</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link btn btn-sm btn-danger me-1 mb-1" href="{% url 'tenders:cp_list' %}">📄 КП</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link btn btn-sm btn-outline-primary me-1 mb-1" href="{% url 'tenders:swagger-ui' %}">🌐 API</a>
+                            </li>
+                        </ul>
+                    {% elif user.client_profile %}
+                        <!-- 🔹 УПРОЩЁННОЕ МЕНЮ ДЛЯ КЛИЕНТОВ -->
+                        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                            <li class="nav-item">
+                                <a class="nav-link btn btn-sm btn-success me-1 mb-1" href="{% url 'tenders:shipment_create' %}">
+                                    📦 Новая заявка
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link btn btn-sm btn-warning me-1 mb-1" href="{% url 'tenders:shipment_list' %}">
+                                    📋 Мои заявки
+                                </a>
+                            </li>
+                        </ul>
+                    {% endif %}
                 {% endif %}
+                
+                <!-- 🔹 Блок пользователя (справа) -->
+                <div class="d-flex align-items-center flex-wrap gap-2">
+                    <!-- 🔹 ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ -->
+                    <button type="button" class="theme-toggle me-2" id="themeToggle" title="Переключить тему">
+                        <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+                    </button>
+                    
+                    {% if user.is_authenticated %}
+                        <!-- Информация о пользователе -->
+                        <div class="navbar-text text-light me-2">
+                            👤 {{ user.username }}
+                            {% if user.is_staff or user.is_superuser %}
+                                <span class="badge bg-primary user-role-badge">Сотрудник</span>
+                            {% elif user.client_profile %}
+                                <span class="badge bg-success user-role-badge">Клиент</span>
+                                <br>
+                                <small class="text-muted">{{ user.client_profile.name|truncatechars:30 }}</small>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Кнопка "Новый тендер" только для сотрудников -->
+                        {% if user.is_staff or user.is_superuser %}
+                            <a href="{% url 'tenders:create' %}" class="btn btn-sm btn-success me-2">➕ Новый тендер</a>
+                        {% endif %}
+                        
+                        <form method="post" action="{% url 'tenders:logout' %}">{% csrf_token %}
+                            <button class="btn btn-sm btn-outline-light">Выйти</button>
+                        </form>
+                    {% else %}
+                        <a href="{% url 'tenders:login' %}" class="btn btn-sm btn-outline-light me-2">Войти</a>
+                        <a href="{% url 'tenders:client_login' %}" class="btn btn-sm btn-outline-info me-2">🏢 Для клиентов</a>
+                        <a href="{% url 'tenders:register' %}" class="btn btn-sm btn-primary">Регистрация</a>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </nav>
     
-    <div class="container">
+    <div class="container-fluid">
         {% if messages %}
             {% for message in messages %}
                 <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
@@ -248,7 +323,6 @@
             const themeToggle = document.getElementById('themeToggle');
             const themeIcon = document.getElementById('themeIcon');
             
-            // Обновление иконки в зависимости от темы
             function updateIcon() {
                 const currentTheme = document.documentElement.getAttribute('data-bs-theme');
                 if (currentTheme === 'dark') {
@@ -260,10 +334,8 @@
                 }
             }
             
-            // Инициализация иконки при загрузке
             updateIcon();
             
-            // Обработчик клика по кнопке
             themeToggle.addEventListener('click', function() {
                 const currentTheme = document.documentElement.getAttribute('data-bs-theme');
                 const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -273,7 +345,6 @@
                 
                 updateIcon();
                 
-                // 🔹 Уведомляем графики о смене темы
                 if (typeof window.updateChartsTheme === 'function') {
                     window.updateChartsTheme(newTheme);
                 }
@@ -282,61 +353,58 @@
     </script>
 
     <!-- PWA Install Prompt -->
-<div id="installPrompt" style="display: none; position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
-    <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-width: 300px;">
-        <h4 style="margin: 0 0 10px 0; font-size: 16px;">📱 Установить приложение</h4>
-        <p style="margin: 0 0 15px 0; font-size: 14px; color: #666;">
-            Добавьте SRM на главный экран для быстрого доступа
-        </p>
-        <div style="display: flex; gap: 10px;">
-            <button id="installBtn" style="flex: 1; padding: 10px; background: #0d6efd; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">
-                Установить
-            </button>
-            <button id="dismissBtn" style="padding: 10px 15px; background: #f8f9fa; color: #666; border: none; border-radius: 5px; cursor: pointer;">
-                Позже
-            </button>
+    <div id="installPrompt" style="display: none; position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
+        <div style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-width: 300px;">
+            <h4 style="margin: 0 0 10px 0; font-size: 16px;">📱 Установить приложение</h4>
+            <p style="margin: 0 0 15px 0; font-size: 14px; color: #666;">
+                Добавьте SRM на главный экран для быстрого доступа
+            </p>
+            <div style="display: flex; gap: 10px;">
+                <button id="installBtn" style="flex: 1; padding: 10px; background: #0d6efd; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">
+                    Установить
+                </button>
+                <button id="dismissBtn" style="padding: 10px 15px; background: #f8f9fa; color: #666; border: none; border-radius: 5px; cursor: pointer;">
+                    Позже
+                </button>
+            </div>
         </div>
     </div>
-</div>
 
-<script>
-// PWA Install Prompt
-let deferredPrompt;
-const installPromptDiv = document.getElementById('installPrompt');
-const installBtn = document.getElementById('installBtn');
-const dismissBtn = document.getElementById('dismissBtn');
+    <script>
+    let deferredPrompt;
+    const installPromptDiv = document.getElementById('installPrompt');
+    const installBtn = document.getElementById('installBtn');
+    const dismissBtn = document.getElementById('dismissBtn');
 
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  
-  // Показываем промпт, если пользователь ещё не отклонял его
-  if (!localStorage.getItem('installDismissed')) {
-    installPromptDiv.style.display = 'block';
-  }
-});
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      
+      if (!localStorage.getItem('installDismissed')) {
+        installPromptDiv.style.display = 'block';
+      }
+    });
 
-installBtn.addEventListener('click', async () => {
-  if (deferredPrompt) {
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log(`User response to install prompt: ${outcome}`);
-    deferredPrompt = null;
-    installPromptDiv.style.display = 'none';
-  }
-});
+    installBtn.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`User response to install prompt: ${outcome}`);
+        deferredPrompt = null;
+        installPromptDiv.style.display = 'none';
+      }
+    });
 
-dismissBtn.addEventListener('click', () => {
-  installPromptDiv.style.display = 'none';
-  localStorage.setItem('installDismissed', 'true');
-});
+    dismissBtn.addEventListener('click', () => {
+      installPromptDiv.style.display = 'none';
+      localStorage.setItem('installDismissed', 'true');
+    });
 
-// Скрываем промпт, если приложение уже установлено
-window.addEventListener('appinstalled', () => {
-  installPromptDiv.style.display = 'none';
-  deferredPrompt = null;
-});
-</script>
+    window.addEventListener('appinstalled', () => {
+      installPromptDiv.style.display = 'none';
+      deferredPrompt = null;
+    });
+    </script>
     
     {% block extra_js %}{% endblock %}
 </body>
