@@ -152,9 +152,8 @@ class Client(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        verbose_name='Менеджер',
-        related_name='managed_clients',
-        help_text='Пользователь системы, ведущий этого клиента'
+        related_name='managed_clients',  # ✅ Проверьте, что есть related_name
+        verbose_name='Менеджер'
     )
     address = models.TextField(
         'Адрес',

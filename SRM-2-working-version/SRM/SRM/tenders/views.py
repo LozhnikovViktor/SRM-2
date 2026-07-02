@@ -365,6 +365,7 @@ def dashboard(request):
     period = request.GET.get('period')
     date_from = request.GET.get('date_from')
     date_to = request.GET.get('date_to')
+    status_filter = request.GET.get('status')  # ✅ Фильтр по статусу
     
     # 🔹 БАЗОВЫЙ QUERYSET С ФИЛЬТРАМИ
     tenders_qs = Tender.objects.all()
@@ -372,6 +373,21 @@ def dashboard(request):
     # Фильтр по менеджеру (автору тендера)
     if manager_id:
         tenders_qs = tenders_qs.filter(author_id=manager_id)
+    
+    # ✅ Фильтр по статусу
+    if status_filter:
+        if status_filter == 'active':
+            # Активные = submitted + published
+            tenders_qs = tenders_qs.filter(status__in=['submitted', 'published'])
+        elif status_filter == 'overdue':
+            # Просроченные
+            tenders_qs = tenders_qs.filter(
+                deadline__lt=now,
+                status__in=['submitted', 'published', 'draft']
+            )
+        else:
+            # Конкретный статус
+            tenders_qs = tenders_qs.filter(status=status_filter)
     
     # Фильтр по периоду (по deadline)
     if date_from:
@@ -497,7 +513,6 @@ def dashboard(request):
     ).order_by('deadline')[:5]
     
     # 🔹 ПОЛУЧАЕМ МЕНЕДЖЕРОВ ДЛЯ ФИЛЬТРА
-    # ✅ ИСПРАВЛЕНО: используем 'tenders' вместо 'authored_tenders'
     managers = User.objects.filter(
         Q(tenders__isnull=False) | Q(is_superuser=True)
     ).distinct().order_by('username')
@@ -522,10 +537,12 @@ def dashboard(request):
         'period': period,
         'date_from': date_from,
         'date_to': date_to,
+        'status': status_filter,
     })
     
     # 🔹 КОНТЕКСТ
     context = {
+        # Статистика
         'total_tenders': total_tenders,
         'active_tenders': active_tenders,
         'won_tenders': won_tenders,
@@ -556,8 +573,22 @@ def dashboard(request):
         'selected_manager': manager_id,
         'selected_manager_name': selected_manager_name,
         'selected_period': period,
+        'selected_status': status_filter,
         'date_from': date_from,
         'date_to': date_to,
+        
+        # ✅ Варианты статусов для фильтра
+        'status_choices': [
+            ('', '📊 Все статусы'),
+            ('active', '⚡ Активные'),
+            ('draft', '📝 Черновики'),
+            ('submitted', '📤 Поданные'),
+            ('published', '📢 Опубликованные'),
+            ('won', '🏆 Выигранные'),
+            ('lost', '❌ Проигранные'),
+            ('cancelled', '🚫 Отменённые'),
+            ('overdue', '⚠️ Просроченные'),
+        ],
     }
     
     return render(request, 'tenders/dashboard.html', context)
@@ -720,27 +751,77 @@ class ClientListView(LoginRequiredMixin, ListView):
         
         return queryset
     
+ 
+class ClientListView(LoginRequiredMixin, ListView):
+    """Список клиентов"""
+    model = Client
+    template_name = 'tenders/client_list.html'
+    context_object_name = 'clients'
+    paginate_by = 20
+    
+    def get_queryset(self):
+        queryset = Client.objects.select_related('manager', 'created_by')
+        
+        # Фильтрация по поиску
+        search = self.request.GET.get('search')
+        if search:
+            queryset = queryset.filter(
+                db_models.Q(name__icontains=search) |
+                db_models.Q(inn__icontains=search) |
+                db_models.Q(email__icontains=search) |
+                db_models.Q(contact_person__icontains=search)
+            )
+        
+        # Фильтрация по статусу
+        status = self.request.GET.get('status')
+        if status:
+            queryset = queryset.filter(status=status)
+        
+        # ✅ Фильтрация по менеджеру
+        manager = self.request.GET.get('manager')
+        if manager and manager != '':
+            queryset = queryset.filter(manager_id=manager)
+        
+        return queryset
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['now'] = timezone.now() 
+        context['now'] = timezone.now()
         
-        # 🔹 Индикаторы срочности
+        # ✅ Передаём варианты статусов
+        context['status_choices'] = [
+            ('', 'Все статусы'),
+            ('active', '🟢 Активный'),
+            ('potential', '🟡 Потенциальный'),
+            ('inactive', '🔴 Неактивный'),
+        ]
+        
+        # ✅ Передаём текущий выбранный статус
+        context['current_status'] = self.request.GET.get('status', '')
+        
+        # ✅ Передаём всех менеджеров для фильтра
+        context['managers'] = User.objects.filter(
+            Q(created_clients__isnull=False) | 
+            Q(is_superuser=True) |
+            Q(managed_clients__isnull=False)
+        ).distinct().order_by('username')
+        
+        # ✅ Передаём текущего выбранного менеджера
+        context['current_manager'] = self.request.GET.get('manager', '')
+        
+        # Индикаторы срочности
         now = timezone.now()
-        
-        # Количество просроченных тендеров
         context['overdue_count'] = Tender.objects.filter(
             deadline__lt=now,
             status__in=['submitted', 'published', 'draft']
         ).count()
         
-        # Количество срочных (в ближайшие 24 часа)
         context['urgent_count'] = Tender.objects.filter(
             deadline__gte=now,
             deadline__lte=now + timedelta(hours=24),
             status__in=['submitted', 'published', 'draft']
         ).count()
         
-        # Количество с дедлайном в ближайшие 3 дня
         context['upcoming_count'] = Tender.objects.filter(
             deadline__gte=now,
             deadline__lte=now + timedelta(days=3),
@@ -748,6 +829,7 @@ class ClientListView(LoginRequiredMixin, ListView):
         ).count()
         
         return context
+
 
 class ClientCreateView(LoginRequiredMixin, CreateView):
     #Создание клиента"""
@@ -1854,38 +1936,6 @@ from django.contrib.auth.decorators import user_passes_test
 
 def is_admin(user):
     return user.is_superuser
-
-@user_passes_test(is_admin)
-def user_management(request):
-    """Управление пользователями (только для суперпользователя)"""
-    users = User.objects.all().order_by('-date_joined')
-    
-    if request.method == 'POST':
-        action = request.POST.get('action')
-        user_id = request.POST.get('user_id')
-        
-        if user_id:
-            user = User.objects.get(id=user_id)
-            
-            if action == 'reset_password':
-                from django.utils.crypto import get_random_string
-                new_password = get_random_string(length=12)
-                user.set_password(new_password)
-                user.save()
-                messages.success(request, f'Пароль пользователя {user.username} сброшен. Новый пароль: {new_password}')
-            
-            elif action == 'activate':
-                user.is_active = True
-                user.save()
-                messages.success(request, f'Пользователь {user.username} активирован')
-            
-            elif action == 'deactivate':
-                user.is_active = False
-                user.save()
-                messages.success(request, f'Пользователь {user.username} деактивирован')
-    
-    return render(request, 'tenders/user_management.html', {'users': users})
-
 
 
 
